@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserReceiveAddressManageDao">
+    <!--<resultMap id="userReceiveAddressManageMap" type="UserReceiveAddressManage">
+        <result property="addrId" column="Addr_Id" />
+        <result property="userId" column="User_Id" />
+        <result property="receiverName" column="Receiver_Name" />
+        <result property="receiverTel" column="Receiver_Tel" />
+        <result property="receiverProvinceId" column="Receiver_Province_Id" />
+        <result property="receiverCityId" column="Receiver_City_Id" />
+        <result property="receiverCountyId" column="Receiver_County_Id" />
+        <result property="receiverAddr" column="Receiver_Addr" />
+        <result property="createTime" column="Create_Time" />
+        <result property="updateTime" column="Update_Time" />
+    </resultMap>-->
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        Is_Default_Addr,Addr_Id, User_Id, Receiver_Name, Receiver_Tel, Receiver_Province_Id, Receiver_City_Id, Receiver_County_Id, Receive_Town_ID, Receive_Village_ID, Receiver_Addr, Create_Time, Update_Time
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="UserReceiveAddressManage" useGeneratedKeys="true" keyProperty="Addr_Id">
+	    INSERT INTO user_receive_address_manage (
+	        Is_Default_Addr,
+	        Receiver_Name,
+	        Receiver_Tel,
+	        Receiver_Province_Id,
+	        Receiver_City_Id,
+	        Receiver_County_Id,
+	        Receive_Town_ID,
+	        Receive_Village_ID,
+	        Receiver_Addr,
+	        Create_Time,
+	        User_Id
+	    ) VALUES (
+	        #{isDefaultAddr},
+	        #{receiverName}, 
+	        #{receiverTel}, 
+	        #{receiverProvinceId}, 
+	        #{receiverCityId}, 
+	        #{receiverCountyId}, 
+	        #{receiveTownId},
+	        #{receiveVillageId},
+	        #{receiverAddr},
+	        #{createTime},   
+	        #{userId}    
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="UserReceiveAddressManage">
+        UPDATE user_receive_address_manage SET
+
+        <if test="receiverTel !=null">
+            Receiver_Tel =#{receiverTel},
+        </if>
+        <if test="isDefaultAddr !=null">
+            Is_Default_Addr =#{isDefaultAddr},
+        </if>
+        <if test="receiverProvinceId !=null">
+            Receiver_Province_Id =#{receiverProvinceId},
+        </if>
+        <if test="receiverCityId !=null">
+            Receiver_City_Id =#{receiverCityId},
+        </if>
+        <if test="receiverCountyId !=null">
+            Receiver_County_Id =#{receiverCountyId},
+        </if>
+        <if test="receiveTownId !=null">
+            Receive_Town_ID =#{receiveTownId},
+        </if>
+        <if test="receiveVillageId !=null">
+            Receive_Village_ID =#{receiveVillageId},
+        </if>
+        <if test="receiverAddr !=null ">
+            Receiver_Addr =#{receiverAddr},
+        </if>
+        <if test="receiverName !=null">
+            Receiver_Name =#{receiverName},
+        </if>
+        <if test="createTime !=null">
+            Create_Time = #{createTime},
+        </if>
+        <if test="updateTime !=null">
+            Update_Time =#{updateTime},
+        </if>
+        <if test="isDefaultAddr != null">
+            Is_Default_Addr = #{isDefaultAddr}
+        </if>
+        <if test="userId !=null">
+            WHERE
+            User_Id =#{userId}
+            <if test="addrId !=null">
+                and Addr_Id = #{addrId}
+            </if>
+        </if>
+
+    </update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM user_receive_address_manage where Addr_Id = #{addrId}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="UserReceiveAddressManage" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM user_receive_address_manage
+        WHERE
+        Addr_Id=#{addrId}
+    </select>
+    <!-- 根据主键获取 -->
+    <select id="getById" resultType="UserReceiveAddressManage" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM user_receive_address_manage
+        WHERE
+        Addr_Id=#{addrId}
+    </select>
+
+    <!-- 根据用户获取 -->
+    <select id="findByUserId" resultType="UserReceiveAddressManage" parameterType="int">
+        SELECT
+        u.*,a.Area_Name as countyName,a1.Area_Name as townName,a2.Area_Name as villageName,
+        a3.Area_Name as receiverProvinceName,a4.Area_Name as receiverCityName
+        From user_receive_address_manage u
+        LEFT JOIN area a ON u.Receiver_County_Id=a.Id
+        LEFT JOIN area a1 ON u.Receive_Town_ID= a1.id
+        LEFT JOIN area a2 ON u.Receive_Village_ID= a2.id
+        LEFT JOIN area a3 ON u.Receiver_Province_Id=a3.Id
+        LEFT JOIN area a4 ON u.Receiver_City_ID= a4.id
+        WHERE
+        User_Id=#{userId}
+        <!--  <if test="addr_Id != null">ordey by ${addr_Id}</if> -->
+        order by Is_Default_Addr DESC, Update_Time DESC,Create_Time DESC
+    </select>
+
+    <!-- 根据用户和默认获取 -->
+    <select id="findByDefaultUserId" resultType="UserReceiveAddressManage" parameterType="int">
+        SELECT
+        Addr_Id
+        From user_receive_address_manage
+        WHERE
+        User_Id=#{userId} and Is_Default_Addr=#{isDefaultAddr}
+        <!--  <if test="addr_Id != null">ordey by ${addr_Id}</if> -->
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="UserReceiveAddressManage">
+        select
+        <include refid="allColumns"/>
+        from user_receive_address_manage
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findList" resultType="UserReceiveAddressManage" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from user_receive_address_manage a
+        where 1=1
+        <if test="addrId != null">and a.Addr_Id = #{addrId}</if>
+        <if test="userId != null">and a.User_Id = #{userId}</if>
+        <if test="receiverName != null">and a.Receiver_Name = #{receiverName}</if>
+        <if test="receiverTel != null">and a.Receiver_Tel = #{receiverTel}</if>
+        <if test="receiverProvinceId != null">and a.Receiver_Province_Id = #{receiverProvinceId}</if>
+        <if test="receiverCityId != null">and a.Receiver_City_Id = #{receiverCityId}</if>
+        <if test="receiverCountyId != null">and a.Receiver_County_Id = #{receiverCountyId}</if>
+        <if test="receiveTownId != null">and a.Receive_Town_ID = #{receiveTownId}</if>
+        <if test="receiveVillageId != null">and a.Receive_Village_ID = #{receiveVillageId}</if>
+        <if test="receiverAddr != null">and a.Receiver_Addr = #{receiverAddr}</if>
+        <if test="createTime != null">and a.Create_Time = #{createTime}</if>
+        <if test="updateTime != null">and a.Update_Time = #{updateTime}</if>
+        <if test="isDefaultAddr !=null">and a.Is_Default_Addr = #{isDefaultAddr}</if>
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <!-- 根据用户获取 -->
+    <select id="findDefaultByUserId" resultType="UserReceiveAddressManage" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        From user_receive_address_manage
+        WHERE
+        User_Id=#{userId}
+        and Is_Default_Addr = 1
+    </select>
+
+    <!-- 取消默认收货地址 -->
+    <update id="cancelIsDefaultAddrByUserId" parameterType="java.lang.Integer">
+		update user_receive_address_manage set Is_Default_Addr = 0 where User_Id = #{0}
+	</update>
+
+    <!-- 根据查询条件获取 用户收货地址信息 -->
+    <select id="getByMapCondition" resultType="UserReceiveAddressManage" parameterType="java.util.Map">
+        SELECT
+        <include refid="allColumns"/>
+        From user_receive_address_manage
+        WHERE
+        User_Id=#{userId}
+        and Receiver_Province_Id = #{receiverProvinceId}
+        and Receiver_City_Id = #{receiverCityId}
+        and Receiver_County_Id = #{receiverCountyId}
+        and Receive_Town_ID = #{receiveTownId}
+        and Receive_Village_ID = #{receiveVillageId}
+        <if test="receiverTel != null">and Receiver_Tel = #{receiverTel}</if>
+        <if test="receiverName != null">and Receiver_Name = #{receiverName}</if>
+        and Receiver_Addr = #{receiverAddr}
+        limit 0,1
+    </select>
+    
+    <select id="getDefaultAddressWithName" resultType="Map" parameterType="Integer">
+    	SELECT 
+			ua.`Addr_Id` AS addrId,
+			ua.`Receiver_Name` AS receiverName,
+			ua.`Receiver_Tel` AS tel,
+			ua.`Receiver_Addr` AS addr,
+			ua.Receiver_City_Id AS areaId,
+			(SELECT a.area_name FROM AREA a WHERE a.`Id` = ua.`Receiver_Province_Id`) AS province,
+			(SELECT a.area_name FROM AREA a WHERE a.`Id` = ua.`Receiver_City_Id`) AS city,
+			(SELECT a.area_name FROM AREA a WHERE a.`Id` = ua.`Receiver_County_Id`) AS county
+		FROM `user_receive_address_manage` ua
+		WHERE Is_Default_Addr = 1 AND ua.`User_Id` = #{0}
+    </select>
+    
+    <select id="getAddressWithName" resultType="Map" parameterType="Integer">
+    	SELECT 
+			ua.`Addr_Id` AS addrId,
+			ua.`Receiver_Name` AS receiverName,
+			ua.`Receiver_Tel` AS tel,
+			ua.`Receiver_Addr` AS addr,
+			ua.Receiver_City_Id AS areaId,
+			ua.Is_Default_Addr AS isDefaultAddr,
+			(SELECT a.area_name FROM AREA a WHERE a.`Id` = ua.`Receiver_Province_Id`) AS province,
+			(SELECT a.area_name FROM AREA a WHERE a.`Id` = ua.`Receiver_City_Id`) AS city,
+			(SELECT a.area_name FROM AREA a WHERE a.`Id` = ua.`Receiver_County_Id`) AS county
+		FROM `user_receive_address_manage` ua
+		WHERE ua.`Addr_Id` = #{0}
+		ORDER BY ua.Is_Default_Addr DESC
+    </select>
+
+    <select id="getAreaIdByName" resultType="Long" parameterType="String">
+        SELECT id FROM `area` WHERE Area_Name LIKE #{0}
+    </select>
+    <!-- 用来验证是否存在相同收货地址 -->
+    <select id="validation" resultType="UserReceiveAddressManage" parameterType="UserReceiveAddressManage">
+        select
+        <include refid="allColumns"/>
+        from user_receive_address_manage a
+        where 1=1
+        <if test="addrId != null">and a.Addr_Id = #{addrId}</if>
+        <if test="userId != null">and a.User_Id = #{userId}</if>
+        <if test="receiverName != null">and a.Receiver_Name = #{receiverName}</if>
+        <if test="receiverTel != null">and a.Receiver_Tel = #{receiverTel}</if>
+        <if test="receiverProvinceId != null">and a.Receiver_Province_Id = #{receiverProvinceId}</if>
+        <if test="receiverCityId != null">and a.Receiver_City_Id = #{receiverCityId}</if>
+        <if test="receiverCountyId != null">and a.Receiver_County_Id = #{receiverCountyId}</if>
+        <if test="receiveTownId != null">and a.Receive_Town_ID = #{receiveTownId}</if>
+        <if test="receiveVillageId != null">and a.Receive_Village_ID = #{receiveVillageId}</if>
+        <if test="receiverAddr != null">and a.Receiver_Addr = #{receiverAddr}</if>
+        <if test="createTime != null">and a.Create_Time = #{createTime}</if>
+        <if test="updateTime != null">and a.Update_Time = #{updateTime}</if>
+       <!--<if test="isDefaultAddr !=null">and a.Is_Default_Addr = #{isDefaultAddr}</if>  -->
+
+    </select>
+
+</mapper>

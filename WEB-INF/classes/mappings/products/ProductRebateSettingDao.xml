@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductRebateSettingDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_ID, Rebate_Type_Cd, Is_Enable, Is_Fix_Amount, Rebate_Fix_Amount, Rebete_Fix_Percent, Create_Time, Last_Update_Time, Is_Show_In_Page
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductRebateSetting" useGeneratedKeys="true" keyProperty="productId">
+	    INSERT INTO product_rebate_setting (
+	        Product_ID, Rebate_Type_Cd, Is_Enable, Is_Fix_Amount, Rebate_Fix_Amount, Rebete_Fix_Percent, Create_Time, Last_Update_Time, Is_Show_In_Page
+	    ) VALUES (
+	        #{productId}, #{rebateTypeCd}, #{isEnable}, #{isFixAmount}, #{rebateFixAmount}, #{rebeteFixPercent}, #{createTime}, #{lastUpdateTime}, #{isShowInPage}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductRebateSetting">
+	   UPDATE product_rebate_setting SET
+		   Is_Enable = #{isEnable}, 
+		   Is_Fix_Amount = #{isFixAmount}, 
+		   Rebate_Fix_Amount = #{rebateFixAmount}, 
+		   Rebete_Fix_Percent = #{rebeteFixPercent}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}, 
+		   Is_Show_In_Page = #{isShowInPage}
+	   WHERE Product_ID = #{productId}
+		   and Rebate_Type_Cd = #{rebateTypeCd}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM product_rebate_setting where Product_ID=#{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductRebateSetting" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_rebate_setting 
+	     WHERE 
+			  Product_ID=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductRebateSetting">  
+	    select 
+		<include refid="allColumns" />
+	    from product_rebate_setting
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductRebateSetting" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_rebate_setting
+	    where 1=1
+		<if test="productId != null"> and Product_ID = #{productId}</if>
+		<if test="rebateTypeCd != null"> and Rebate_Type_Cd = #{rebateTypeCd}</if>
+		<if test="isEnable != null"> and Is_Enable = #{isEnable}</if>
+		<if test="isFixAmount != null"> and Is_Fix_Amount = #{isFixAmount}</if>
+		<if test="rebateFixAmount != null"> and Rebate_Fix_Amount = #{rebateFixAmount}</if>
+		<if test="rebeteFixPercent != null"> and Rebete_Fix_Percent = #{rebeteFixPercent}</if>
+		<if test="createTime != null"> and Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="isShowInPage != null"> and Is_Show_In_Page = #{isShowInPage}</if>
+	</select>
+	
+	<!-- 根据类型查询商品返利信息 -->
+	<select id="getProductRebateSettingByType" resultType="ProductRebateSetting" parameterType="java.util.Map">  
+	    select 
+		<include refid="allColumns" />
+	    from product_rebate_setting
+	    where 1=1
+		<if test="productId != null"> and Product_ID = #{productId}</if>
+		<if test="rebateTypeCd != null"> and Rebate_Type_Cd = #{rebateTypeCd}</if>
+	</select>
+	
+	<!-- 根据商品Id查询该商品所有的返利信息 -->
+	<select id="findProductRebateSettingList" resultType="ProductRebateSetting" parameterType="Integer">  
+	    select 
+		<include refid="allColumns" />
+	    from product_rebate_setting
+	    where Product_ID = #{productId}
+	</select>
+
+</mapper>

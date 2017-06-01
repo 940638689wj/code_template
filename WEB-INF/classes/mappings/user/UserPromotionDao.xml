@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserPromotionDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Coupon_Code_Id,
+			p1.Coupon_Code,
+			p1.Promotion_Id,
+			p1.User_Id,
+			p1.Take_Time,
+			p1.Used_Time,
+			p1.Coupon_Status_Cd,
+			p1.Create_Time,
+			p1.promotion_dis_rule_id,
+			p1.Sub_ID,
+			p1.Coupon_Code_Value
+	</sql>
+
+	<sql id="findListByLimitSql">
+		,
+			<![CDATA[(select Group_CONCAT(Discount_Desc SEPARATOR '<br>') from promotion_discount_rule where Promotion_Id = p1.Promotion_Id) Discount_Desc]]>,
+			<!--pd.Discount_Desc,  -->
+			p.Promotion_Name,
+			p.Promotion_Desc,
+			p.Enable_Start_Time,
+			p.Enable_End_Time,
+			p.Encrypt_Code,
+			p.Status_Cd
+		FROM promotion_coupon_code p1
+		LEFT JOIN promotion p ON p1.Promotion_Id = p.promotion_id
+	    <!--  LEFT JOIN promotion_discount_rule pd ON p1.Promotion_Id = pd.Promotion_Id -->
+		WHERE p1.User_id=#{userId}
+		AND p.Promotion_Type_Cd IN (${promotionTypeCd})
+		<if test="type != null"> 
+		<if test="type != 3">AND p.Enable_End_Time <![CDATA[ > ]]>  NOW() AND p.Status_Cd IN (${statusCd})</if>
+		<if test="type == 3">AND (p.Enable_End_Time <![CDATA[ < ]]>  NOW() OR p.Status_Cd IN (${statusCd}))</if>
+		</if>
+		<if test="couponStatusCd != null">AND p1.Coupon_Status_Cd IN (${couponStatusCd})</if>
+	</sql>
+
+	<!-- 分页获取红包/优惠券数据 -->
+	<select id="findListByLimit" resultType="cn.yr.chile.user.dto.PromotionDTO"
+			parameterType="cn.yr.chile.user.dto.PromotionLimitDTO">
+		SELECT
+		<include refid="allColumns"/>
+		<include refid="findListByLimitSql"/>
+		ORDER BY p1.Coupon_Code_Id DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+
+	<!-- 获取红包/优惠券总数 -->
+	<select id="findListByLimitCount" resultType="java.lang.Integer"
+			parameterType="cn.yr.chile.user.dto.PromotionLimitDTO">
+		SELECT COUNT(*) FROM(
+		SELECT
+		<include refid="allColumns"/>
+		<include refid="findListByLimitSql"/>
+		) AS a
+	</select>
+</mapper>

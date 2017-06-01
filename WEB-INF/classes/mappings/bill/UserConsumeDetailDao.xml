@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.UserConsumeDetailDao">
+
+
+    <!-- 查询列表 -->
+ 	<select id="findUserConsumeDetailList" parameterType="map" resultType="cn.yr.chile.bill.dto.UserConsumeDetailDTO">
+ 		select 
+ 			t.orderNumber as orderNumber,
+ 			t.orderCreateTime as orderCreateTime,
+ 			t.orderCompleteTime as orderCompleteTime,
+ 			t.orderTotalAmt as orderTotalAmt,
+ 			sum(b.Quantity) as quantity,
+ 			c.Phone as phone from(SELECT
+			a.order_number AS orderNumber,
+			a.create_time AS orderCreateTime,
+			a.Order_Complete_Time AS orderCompleteTime,
+			a.order_total_amt AS orderTotalAmt,
+			a.order_id AS orderId,
+			a.order_pay_status_cd,
+			a.User_Id as userId
+		FROM
+			order_header a
+		WHERE
+			a.Order_Pay_Status_Cd = 2) t
+		LEFT JOIN
+			user c
+		ON
+			t.userId=c.User_Id
+		LEFT JOIN
+			order_item b
+		ON
+			t.orderId=b.Order_Id
+		GROUP BY
+			t.orderNumber
+		HAVING
+        <if test="beginTime != null and beginTime != ''">
+             DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> orderCreateTime
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> orderCreateTime
+        </if>
+        <if test="loginName != null and loginName != ''">
+            and c.phone LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        order by
+        	t.orderNumber desc 
+ 	</select>
+	
+	<!-- 统计消费总数 -->
+	<resultMap type="java.util.HashMap" id="totalMap">
+		<result property="totalQuantity" column="totalQuantity"/>
+		<result property="totalAmt" column="totalAmt"/>
+		<result property="totalOrderNumber" column="totalOrderNumber"/>
+	</resultMap>
+	<select id="getUserConsumeTotal" parameterType="map" resultMap="totalMap">
+		select 
+			sum(t2.quantity) as totalQuantity,
+			sum(t2.orderTotalAmt) as totalAmt,
+			count(t2.orderNumber) as totalOrderNumber 
+		from (select 
+		 			t.orderNumber as orderNumber,
+		 			t.orderCreateTime as orderCreateTime,
+		 			t.orderCompleteTime as orderCompleteTime,
+		 			t.orderTotalAmt as orderTotalAmt,
+		 			sum(b.Quantity) as quantity,
+		 			c.Phone as phone from(SELECT
+					a.order_number AS orderNumber,
+					a.create_time AS orderCreateTime,
+					a.Order_Complete_Time AS orderCompleteTime,
+					a.order_total_amt AS orderTotalAmt,
+					a.order_id AS orderId,
+					a.order_pay_status_cd,
+					a.User_Id as userId
+				FROM
+					order_header a
+				WHERE
+					a.Order_Pay_Status_Cd = 2) t
+				LEFT JOIN
+					user c
+				ON
+					t.userId=c.User_Id
+				LEFT JOIN
+					order_item b
+				ON
+					t.orderId=b.Order_Id
+				GROUP BY
+					t.orderNumber
+				HAVING
+				<if test="beginTime != null and beginTime != ''">
+		             DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> orderCreateTime
+		        </if>
+		        <if test="endTime != null and endTime != ''">
+		            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> orderCreateTime
+		        </if>
+		        <if test="loginName != null and loginName != ''">
+		            and c.phone like CONCAT('%',#{loginName},'%')
+		        </if>
+		 		order by t.orderNumber) t2
+	</select>
+</mapper>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductLabelDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Label_Id, Label_Num, Label_Name, Label_Status_Cd, Label_Img_Url, Is_Show_In_Product_List, Create_Time, Last_Update_Time, Label_Page_Url
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductLabel" useGeneratedKeys="true" keyProperty="labelId">
+	    INSERT INTO product_label (
+	        Label_Id, Label_Num, Label_Name, Label_Status_Cd, Label_Img_Url, Is_Show_In_Product_List, Create_Time, Last_Update_Time, Label_Page_Url
+	    ) VALUES (
+	        #{labelId}, #{labelNum}, #{labelName}, #{labelStatusCd}, #{labelImgUrl}, #{isShowInProductList}, #{createTime}, #{lastUpdateTime}, #{labelPageUrl}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductLabel">
+	   UPDATE product_label SET
+	       Label_Num = #{labelNum}, 
+		   Label_Name = #{labelName}, 
+		   Label_Status_Cd = #{labelStatusCd}, 
+		   Label_Img_Url = #{labelImgUrl}, 
+		   Is_Show_In_Product_List = #{isShowInProductList},
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}, 
+		   Label_Page_Url = #{labelPageUrl}
+	   WHERE 
+		   Label_Id = #{labelId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_label where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductLabel" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_label 
+	     WHERE 
+			  Label_Id = #{labelId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductLabel">  
+	    select 
+		<include refid="allColumns" />
+	    from product_label
+	    order by Create_Time Desc 
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductLabel" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_label a
+	    where 1=1
+		<if test="labelId != null"> and a.Label_Id = #{labelId}</if>
+		<if test="labelNum != null"> and a.Label_Num = #{labelNum}</if>
+		<if test="labelName != null"> and a.Label_Name = #{labelName}</if>
+		<if test="labelStatusCd != null"> and a.Label_Status_Cd = #{labelStatusCd}</if>
+		<if test="labelImgUrl != null"> and a.Label_Img_Url = #{labelImgUrl}</if>
+		<if test="isShowInProductList != null"> and a.Is_Show_In_Product_List = #{isShowInProductList}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and a.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="labelPageUrl != null"> and a.Label_Page_Url = #{labelPageUrl}</if>
+		order by a.Create_Time Desc 
+	</select>
+	
+	<!-- 查询各分类(个性化分类)下微店上架的商品 -->
+	<select id="findProductBYLabelAndMstore" parameterType="cn.yr.chile.products.dto.ProductMstoreXrefDTO" resultType="cn.yr.chile.products.dto.ProductMstoreXrefDTO">
+		SELECT pux.User_Id, pux.Display_Id, ppi.Pic_Url, 
+			p.Product_Id, p.Product_Name, p.Product_Status_Cd, p.Category_Id, p.Brand_Id,
+			p.Product_Type_Cd, p.Basic_Unit_Type_Cd, p.Sale_Unit_Type_Cd, p.Bar_Code,
+			p.Default_Price, p.Tag_Price
+		FROM product_label_xref plx LEFT JOIN product_user_xref pux ON (plx.Product_Id=pux.Product_Id AND pux.Product_Status_Cd=1)
+			 LEFT JOIN product p ON (p.Product_Id=plx.Product_Id AND p.Product_Status_Cd=1)
+			 LEFT JOIN product_pic_info ppi ON (p.Product_Id=ppi.Product_Id AND ppi.Is_Default_Pic=1)
+		WHERE plx.Label_Id=#{categoryId} AND pux.User_Id=#{userId} 
+	</select>
+</mapper>

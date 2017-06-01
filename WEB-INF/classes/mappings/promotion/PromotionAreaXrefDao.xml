@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionAreaXrefDao">
+	<!--<resultMap id="promotionAreaXrefMap" type="PromotionAreaXref">
+		<result property="promotionAreaXrefId" column="Promotion_Area_Xref_Id" />
+		<result property="promotionId" column="Promotion_Id" />
+		<result property="countryId" column="Country_Id" />
+		<result property="provinceId" column="Province_Id" />
+		<result property="cityId" column="City_Id" />
+		<result property="createTime" column="Create_Time" />
+		<result property="displayId" column="Display_Id" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Area_Xref_Id,
+			p1.Promotion_Id,
+			p1.Country_Id,
+			p1.Province_Id,
+			p1.City_Id,
+			p1.Create_Time,
+			p1.Display_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionAreaXref" useGeneratedKeys="true" keyProperty="promotionAreaXrefId">
+	    INSERT INTO promotion_area_xref (
+			Promotion_Id, 
+			Country_Id, 
+			Province_Id, 
+			City_Id, 
+			Create_Time, 
+			Display_Id
+	    ) VALUES (
+			#{promotionId}, 
+			#{countryId}, 
+			#{provinceId}, 
+			#{cityId}, 
+			#{createTime}, 
+			#{displayId}
+	    )
+	</insert>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionAreaXref">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_area_xref p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionAreaXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_area_xref p1
+	    where 1=1
+		<if test="promotionAreaXrefId != null"> and p1.Promotion_Area_Xref_Id = #{promotionAreaXrefId}</if>
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="countryId != null"> and p1.Country_Id = #{countryId}</if>
+		<if test="provinceId != null"> and p1.Province_Id = #{provinceId}</if>
+		<if test="cityId != null"> and p1.City_Id = #{cityId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="displayId != null"> and p1.Display_Id = #{displayId}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<select id="findByPromotionId" resultType="PromotionAreaXref" parameterType="java.lang.Integer">
+		select
+		<include refid="allColumns" />
+		from promotion_area_xref p1
+		where p1.Promotion_Id = #{0}
+	</select>
+
+</mapper>

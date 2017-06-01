@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderStoreOperationDao">
+<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Order_Id, Src_Store_ID, Deal_Status_Cd, Last_Update_Time,Is_Store_Checked,Is_Store_Distribute_Fee_Checked
+	</sql>
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderStoreOperation" >
+	    INSERT INTO order_store_operation (
+	        Order_Id, 
+	        Src_Store_ID,
+	        Deal_Status_Cd, 
+	        Last_Update_Time,
+	        Is_Store_Checked,
+	        Is_Store_Distribute_Fee_Checked
+	    ) VALUES (
+	        #{orderId},
+	        #{srcStoreId},
+	        #{dealStatusCd},
+	        #{lastUpdateTime},
+	        #{isStoreChecked},
+	        #{isStoreDistributeFeeChecked}
+	    )
+	   </insert>
+	   <!-- 修改 -->
+	<update id="update" parameterType="OrderStoreOperation">
+	   UPDATE order_store_operation SET
+		   Src_Store_ID = #{srcStoreId}, 
+		   Deal_Status_Cd=#{dealStatusCd},
+		   Last_Update_Time = #{lastUpdateTime},
+		   Is_Store_Checked=#{isStoreChecked},
+		   Is_Store_Distribute_Fee_Checked=#{isStoreDistributeFeeChecked}
+	   WHERE 
+		   Order_Id = #{orderId} AND
+		   Src_Store_ID = #{srcStoreId}
+	</update>
+	
+	<update id="updateOrderStoreOperation" parameterType="OrderStoreOperation">
+	   UPDATE order_store_operation SET
+		   Src_Store_ID = #{srcStoreId}, 
+		   Deal_Status_Cd=#{dealStatusCd},
+		   Last_Update_Time = #{lastUpdateTime},
+		   Is_Store_Checked=#{isStoreChecked},
+		   Is_Store_Distribute_Fee_Checked=#{isStoreDistributeFeeChecked}
+	   WHERE 
+		   Order_Id = #{orderId} AND
+		   Src_Store_ID = #{oldSrcStoreId}
+	</update>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderStoreOperation">  
+	    select 
+		<include refid="allColumns" />
+	    from order_store_operation
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderStoreOperation" parameterType="OrderStoreOperation">  
+	    select 
+		<include refid="allColumns" />
+	    from order_store_operation a
+	    where 1=1
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="srcStoreId != null"> and a.Src_Store_ID = #{srcStoreId}</if>
+		<if test="dealStatusCd != null"> and a.Deal_Status_Cd = #{dealStatusCd}</if>
+	</select>
+	<select id="findOrderStoreOperationsByOrderId"  resultType="OrderStoreOperation">
+		 select 
+		<include refid="allColumns" />
+	    from order_store_operation o
+	    where o.Order_Id = #{orderId}
+	    order by o.Last_Update_Time asc
+	</select>
+	<select id="getOrderStoreOperationByOrderIdAndDealStatusCd" resultType="OrderStoreOperation">
+		select * from order_store_operation where Order_Id = #{orderId} and Deal_Status_Cd = #{dealStatusCd} limit 0 ,1 
+	</select>
+
+	<select id="getByOrderId" resultType="OrderStoreOperation">
+		select <include refid="allColumns" /> from order_store_operation where Order_Id = #{orderId}
+	</select>
+
+	<select id="getByOrderIdAndStoreId" resultType="OrderStoreOperation" parameterType="java.util.Map">
+		select <include refid="allColumns" /> from order_store_operation where Order_Id = #{orderId} AND Src_Store_ID=#{storeId}
+	</select>
+
+	<select id="getOrderStoreOperationByOrderIdAndSrcStoreId" resultType="OrderStoreOperation">
+		select * from order_store_operation where Order_Id = #{orderId} and Src_Store_ID = #{srcStoreId} 
+	</select>
+	
+	
+	 <select id="findOrdersByStoreId" parameterType="java.util.Map" resultType="cn.yr.chile.order.dto.StoreOrderDTO">
+   select
+    a.order_Id,a.Deal_Status_Cd,
+    c.Receive_Name,c.Receive_Tel,
+    c.Distrbute_Store_Id,c.Distribute_Shopper_ID,c.Order_Distrbute_Type_Cd,
+    d.Order_Product_Amt,
+    b.Store_Number,b.store_name,
+    c.Receive_Name,c.Receive_Tel,
+    d.order_number,d.Order_Property_Cd,
+    d.Order_Type_Cd,
+    d.Order_Status_Cd,d.Create_Time,
+    d.Order_Pay_Status_Cd,
+    d.Order_Remark,
+    d.Order_Review_Status_CD as orderReviewStatusCd,
+    GROUP_CONCAT(e.Product_Name) as Product_Name
+    from order_store_operation a
+    left join  store b on a.Src_Store_ID = b.store_id
+    left join  order_receive_info c on a.order_id = c.order_id
+    left join  order_header d on a.order_id = d.order_id
+    left join  order_item e on d.Order_Id=e.Order_Id 
+    where  1 = 1
+    and a.Src_Store_ID = #{storeId}  
+    
+     <if test="orderNumber !=null and orderNumber !=''">
+     		and d.order_number like CONCAT('%',#{orderNumber},'%')
+        </if>
+    <if test="dealStatusCd != null"> 
+			<if test="dealStatusCd == -1 ">
+				and ((a.Deal_Status_Cd in(1,2,3,9)  or d.Order_Status_Cd=6 or d.Order_Status_Cd=5)   and d.Order_Status_Cd &lt;&gt; 4)
+			</if>
+			<if test="dealStatusCd != -1 and dealStatusCd != 5 and dealStatusCd != 6">
+				and (a.Deal_Status_Cd = #{dealStatusCd} 	and d.Order_Status_Cd &lt;&gt; 4 and d.Order_Status_Cd &lt;&gt; 5 and d.Order_Status_Cd &lt;&gt; 6)
+			</if>
+			<if test="dealStatusCd == 6">
+				and d.Order_Status_Cd=6
+			</if>
+			<if test="dealStatusCd == 5">
+				and d.Order_Status_Cd=5
+			</if>
+   </if>
+     GROUP BY a.Order_id
+       ORDER BY
+       d.Create_Time DESC
+   </select>
+   
+   
+    <select id="findOrderStoreOperationList" parameterType="java.util.Map" resultType="OrderStoreOperation">
+   select
+    a.order_Id,
+    c.Receive_Name,
+    c.Receive_Tel,
+    SUM(IFNULL(e.Product_Total,0)) as productTotal,
+    c.Distrbute_Store_Id,
+    c.Distribute_Shopper_ID,
+    c.Order_Distrbute_Type_Cd,
+    c.Receive_Name,c.Receive_Tel,
+    d.order_number,
+    d.Order_Status_Cd,
+    d.Create_Time,
+    d.Order_Remark,
+    GROUP_CONCAT(e.Product_Name) as Product_Name
+    from order_store_operation a
+    left join  store b on a.Src_Store_ID = b.store_id
+    left join  order_receive_info c on a.order_id = c.order_id
+    left join  order_header d on a.order_id = d.order_id
+    left join  order_item e on d.Order_Id=e.Order_Id
+    WHERE 1=1 and d.Order_Status_Cd=5
+    and a.Src_Store_ID = #{storeId}   and c.Distrbute_Store_Id = #{storeId}
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> d.Create_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> d.Create_Time
+        </if>
+        <if test="orderNumber !=null and orderNumber !=''">
+        	and d.order_number like CONCAT('%',#{orderNumber},'%')
+        </if>
+       
+       GROUP BY a.Order_id
+       ORDER BY
+       d.Create_Time DESC
+   </select>
+   
+</mapper>

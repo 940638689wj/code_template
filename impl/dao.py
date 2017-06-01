@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def dao(param):
 
   text = 'import cn.yr.chile.common.persistence.CrudDao;\n'
@@ -19,5 +20,5 @@ def dao(param):
     text += '\n'
   text += '}\n'
 
-  with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\' + param['table_name_convert_type'] + 'Dao.java', 'wb') as f:
+  with open(param['path'] + param['table_name_convert_type'] + 'Dao.java', 'wb') as f:
     f.write(text.encode('utf-8'))

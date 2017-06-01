@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderExceptionInfoDao">
+
+	<resultMap type="cn.yr.chile.order.domain.OrderExceptionInfo" id="orderExceptionInfoMap">
+		<id property="id" column="Order_Except_ID" />
+		<result property="orderId" column="Order_Id" />
+		<result property="orderProblemId" column="Order_Problem_ID"/>
+		<result property="content" column="content"/>
+		<result property="createTime" column="Create_Time"/>
+		<result property="srcStoreId" column="Src_Store_ID" />
+		<result property="srcShopperId" column="Src_Shoppper_ID" />
+		<result property="isSolved" column="Is_Solved" />
+	</resultMap>
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		o.Order_Except_ID, o.Order_Id, o.Order_Problem_ID, o.Content,
+		o.Create_Time, o.Src_Store_ID, o.Src_Shoppper_ID,o.Is_Solved
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderExceptionInfo" useGeneratedKeys="true"
+		keyProperty="id">
+		INSERT INTO order_exception_info (
+		Order_Id, Order_Problem_ID, Content, Create_Time, Src_Store_ID,
+		Src_Shoppper_ID,Is_Solved
+		) VALUES (
+		#{orderId}, #{orderProblemId}, #{content}, #{createTime}, #{srcStoreId},
+		#{srcShoppperId},#{isSolved}
+		)
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderExceptionInfo">
+		UPDATE order_exception_info SET
+		Order_Id = #{orderId},
+		Order_Problem_ID = #{orderProblemId},
+		Content = #{content},
+		Src_Store_ID = #{srcStoreId},
+		Src_Shoppper_ID = #{srcShoppperId},
+		Is_Solved = #{isSolved}
+		WHERE
+		Order_Except_ID = #{orderExceptId}
+	</update>
+
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_exception_info where
+		Order_Except_ID = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+	<select id="get" resultType="OrderExceptionInfo" parameterType="Integer">
+		SELECT
+		<include refid="allColumns" />
+		FROM order_exception_info o
+		WHERE
+		o.Order_Except_ID=#{id}
+	</select>
+
+    <select id="findStoreException" resultType="OrderExceptionInfo" parameterType="Integer">
+		SELECT
+		<include refid="allColumns" />
+		FROM order_exception_info o
+		WHERE
+		o.Order_Id=#{orderId} and o.Src_Store_ID is not null and o.Is_Solved = 0;
+	</select>
+	
+	
+	<select id="getShopperException" resultType="OrderExceptionInfo" parameterType="Integer">
+		SELECT
+		<include refid="allColumns" />
+		FROM order_exception_info o
+		WHERE
+		o.Order_Id=#{orderId} and o.Src_Shoppper_ID is not null and o.Is_Solved = 0;
+	</select>
+
+   <select id="getException" resultType="Integer" parameterType="java.util.Map">
+		SELECT
+		Order_Except_ID
+		FROM order_exception_info 
+		where 1 = 1  and Is_Solved = 0 
+		<if test="orderId !='' and orderId !=null">
+			and Order_Id = #{orderId}
+	    </if>
+		<if test="storeId !='' and storeId !=null">
+			and Src_Store_ID = #{storeId}
+	    </if>
+	    <if test="shopperId !='' and shopperId !=null">
+			and Src_Shoppper_ID = #{shopperId}
+	    </if>
+		   
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findListByMap" resultType="OrderExceptionInfo" parameterType="java.util.Map">
+		select
+		<include refid="allColumns" />,
+		Order_Problem_Desc
+		from order_exception_info o
+		left join order_problem op on o.Order_Problem_ID = op.id
+		where 1=1
+		<if test="orderId != null"> and o.Order_Id = #{orderId}</if>
+		<if test="isSolved != null"> and o.Is_Solved = #{isSolved}</if>
+		<if test="srcStoreId != null"> and o.Src_Store_ID = #{srcStoreId}</if>
+		<if test="srcShopperId != null"> and o.Src_Shoppper_ID = #{srcShopperId}</if>
+	</select>
+
+</mapper>

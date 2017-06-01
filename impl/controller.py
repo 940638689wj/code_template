@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def controller(param):
 
   text = ''
@@ -6,7 +7,7 @@ def controller(param):
   text += 'import org.springframework.stereotype.Controller;\n'
   text += 'import org.springframework.web.bind.annotation.RequestMapping;\n'
   text += 'import javax.servlet.http.HttpServletRequest;\n'
-  text += 'import javax.servlet.http.HttpServletResponse\n'
+  text += 'import javax.servlet.http.HttpServletResponse;\n'
   text += '\n'
   text += '@Controller\n'
   text += '@RequestMapping("' + param['controller_url'] + '")\n'
@@ -155,5 +156,5 @@ def controller(param):
     text += '    \n'
   text += '}\n'
 
-  with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\' + param['table_name_convert_type'] + 'Controller.java', 'wb') as f:
+  with open(param['path'] + param['table_name_convert_type'] + 'Controller.java', 'wb') as f:
     f.write(text.encode('utf-8'))

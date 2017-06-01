@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.DefinedModuleDao">
+	<sql id="definedModuleColumns">
+		a.ID as id,
+		a.NAME as name,
+		a.STATUS as status,
+		a.boolean_value as boolean_value
+	</sql>
+	<!-- 根据Id查询 -->
+	<resultMap id="DefinedModuleMapping" type="DefinedModule">
+		<id property="id" column="id" />
+		<result property="name" column="name"/>
+		<result property="status" column="status"/>
+		<result property="booleanValue" column="boolean_value"/>
+		<collection property="definedModuleItems" column="definedModuleId" ofType="DefinedModuleItem">
+			<id property="id" column="itemId" />
+			<result property="name" column="itemName"/>
+			<result property="definedModuleId" column="definedModuleId"/>
+			<result property="seq" column="seq"/>
+		</collection>
+	</resultMap>
+	<select id="findById" parameterType="java.lang.String" resultMap="DefinedModuleMapping">
+		SELECT 
+			<include refid="definedModuleColumns" />,
+			b.id as itemId,
+			b.defined_module_id as definedModuleId,
+			b.name as itemName,
+			b.seq
+		FROM defined_module a
+		LEFT JOIN defined_module_item b ON b.defined_module_id = a.id
+		WHERE a.id=#{id} 
+	</select>
+	
+	<!-- 根据Id删除 -->
+	<delete id="delete" parameterType="string">
+		DELETE FROM defined_module where a.id=#{id}
+	</delete>
+	
+	<!--新增-->
+	<insert id="insertDefinedModule" parameterType="DefinedModule" keyProperty="id">
+		INSERT INTO defined_module (
+	        id, 
+	        name, 
+	        status, 
+	        boolean_value
+	    ) VALUES (
+	        #{id},
+	        #{name}, 
+	        #{status}, 
+	        #{booleanValue}       
+	    )
+	</insert>
+	
+	<!--更新-->
+	<update id="updateDefinedModule" parameterType="DefinedModule" >
+		UPDATE defined_module SET
+		   name = #{name}, 
+		   status = #{status}, 
+		   boolean_value = #{booleanValue}
+	   WHERE 
+		   id = #{id}
+	</update>
+
+</mapper>

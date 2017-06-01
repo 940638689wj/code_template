@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.PerSaleProductDao">
+
+    <!-- 查询搜索范围内的每款商品信息 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.PerSaleProduct" parameterType="java.util.Map">
+    	SELECT
+    		t3.Category_Name AS categoryName,
+    		t4.Pic_Url AS picUrl,
+    		t2.Product_Id AS productId,
+    		t2.Product_Name AS productName,
+    		t2.SKU_KEY_Json_Str AS skuKeyJsonStr,
+    		t7.Order_Number AS orderNumber,
+    		t2.Outside_Id AS outsideId,
+    		t1.Quantity AS quantity,
+    		t1.Sale_Price AS salePrice,
+    		t1.Tag_Price AS tagPrice,
+    		t1.Product_Commission_Amt AS productCommissionAmt,
+    		t5.Brand_Name AS brandName,
+    		t6.Receive_Name AS receiveName,
+    		t6.Receive_Tel AS receiveTel,
+    		t6.Receive_Addr_Combo AS receiveAddrCombo
+		FROM
+			order_item t1
+		LEFT JOIN product t2 ON t2.Product_Id = t1.Product_Id
+		LEFT JOIN product_category t3 ON t3.Category_Id = t2.Category_Id
+		LEFT JOIN product_pic_info t4 ON t4.Product_Id = t1.Product_Id AND t4.Is_Default_Pic = 1
+		LEFT JOIN product_brand t5 ON t5.Brand_Id = t2.Brand_Id
+		LEFT JOIN order_receive_info t6 ON t6.Order_Id = t1.Order_Id
+		LEFT JOIN order_header t7 ON t7.Order_Id = t1.Order_Id
+		WHERE 1=1
+		<if test="beginTime != '' and beginTime != null">
+			and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t7.Create_Time,'%Y%m%d')
+		</if>
+		<if test="endTime != '' and endTime != null">
+			and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t7.Create_Time,'%Y%m%d')
+		</if>
+		<if test="searchType == 1 and searchType !=null and keyWords!='' and keyWords!=null">
+			and t2.Product_Id = #{keyWords}
+		</if>
+		<if test="searchType == 2 and searchType !=null and keyWords!='' and keyWords!=null">
+			and t2.Bar_Code = #{keyWords}
+		</if>
+		<if test="searchType == 3 and searchType !=null and keyWords!='' and keyWords!=null">
+			and t2.Product_Name = #{keyWords}
+		</if>
+		<if test="orderStatusCd!=null and orderStatusCd!='' and orderStatusCd!=66">
+			and t7.Order_Status_Cd = #{orderStatusCd}
+		</if>
+		<if test="orderStatusCd!=null and orderStatusCd!='' and orderStatusCd==66">
+			and t7.Order_Status_Cd = 5 and t7.Order_Review_Status_CD = 1
+		</if>
+	</select>
+
+	<!-- 查询搜索范围内商品销售总量 -->
+	<select id="getTotal" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT
+		sum(t1.Quantity) AS quantity
+		FROM
+		order_item t1
+		LEFT JOIN product t2 ON t2.Product_Id = t1.Product_Id
+		LEFT JOIN product_category t3 ON t3.Category_Id = t2.Category_Id
+		LEFT JOIN product_pic_info t4 ON t4.Product_Id = t1.Product_Id AND t4.Is_Default_Pic = 1
+		LEFT JOIN product_brand t5 ON t5.Brand_Id = t2.Brand_Id
+		LEFT JOIN order_receive_info t6 ON t6.Order_Id = t1.Order_Id
+		LEFT JOIN order_header t7 ON t7.Order_Id = t1.Order_Id
+		WHERE 1=1
+		<if test="beginTime != '' and beginTime != null">
+			and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t7.Create_Time,'%Y%m%d')
+		</if>
+		<if test="endTime != '' and endTime != null">
+			and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t7.Create_Time,'%Y%m%d')
+		</if>
+		<if test="searchType == 1 and searchType !=null and keyWords!='' and keyWords!=null">
+			and t2.Product_Id = #{keyWords}
+		</if>
+		<if test="searchType == 2 and searchType !=null and keyWords!='' and keyWords!=null">
+			and t2.Bar_Code = #{keyWords}
+		</if>
+		<if test="searchType == 3 and searchType !=null and keyWords!='' and keyWords!=null">
+			and t2.Product_Name = #{keyWords}
+		</if>
+		<if test="orderStatusCd!=null and orderStatusCd!='' and orderStatusCd!=66 and orderStatusCd!=55">
+			and t7.Order_Status_Cd = #{orderStatusCd}
+		</if>
+		<if test="orderStatusCd!=null and orderStatusCd!='' and orderStatusCd==55">
+			and t7.Order_Status_Cd = 5 and t7.Order_Review_Status_CD = 2
+		</if>
+		<if test="orderStatusCd!=null and orderStatusCd!='' and orderStatusCd==66">
+			and t7.Order_Status_Cd = 5 and t7.Order_Review_Status_CD = 1
+		</if>
+	</select>
+</mapper>

@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.User_Id, 
+        a.Login_Name,
+        a.Nick_Name,
+        a.User_Name,
+        a.Phone, 
+        a.Sex_Cd, 
+        a.Head_Portrait_Url, 
+        a.Birthday, 
+        a.Identity_Id, 
+        a.Email_Address, 
+        a.Province_Id, 
+        a.City_Id, 
+        a.County_Id, 
+        a.Town_Id,
+        a.Village_Id,
+        a.Street,
+        a.Status_Cd, 
+        a.Register_Platform_Cd, 
+        a.M_Store_Status_Cd, 
+        a.M_Store_Apply_Time, 
+        a.Source_Store_Id, 
+        a.Parent_User_Id, 
+        a.Pay_Password, 
+        a.Password,
+        a.Register_Time,
+        a.User_Level_Id, 
+        a.User_Type_Id, 
+        a.Qr_Code_Param, 
+        a.Last_Login_Time, 
+        a.Last_Login_IP, 
+        a.Last_Update_Time, 
+        a.openid, 
+        a.Create_Time,
+        a.Set_Src_Store_Time,
+        a.Set_Src_Parent_ID_Time,
+        a.Discount_Percent
+	</sql>
+	<!-- findUserByUserId -->
+	<select id="findUserByUserId" resultType="User" parameterType="int">
+		select 
+			<include refid="allColumns" />
+		from 
+			user a
+		where 
+			a.User_Id=#{userId}
+	</select>
+	
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="userId">
+	    INSERT INTO user (
+	    	login_Name,
+	        User_Name, 
+	        Phone, 
+	        Sex_Cd, 
+	        Head_Portrait_Url, 
+	        Birthday, 
+	        Identity_Id, 
+	        Email_Address, 
+	        Province_Id, 
+	        City_Id, 
+	        County_Id, 
+	        Town_Id,
+	        Village_Id,
+	        Street,
+	        Status_Cd, 
+	        Register_Platform_Cd, 
+	        Source_Store_Id, 
+	        Parent_User_Id, 
+	        Pay_Password, 
+	        Password,
+	        Register_Time,
+	        User_Level_Id, 
+	        User_Type_Id, 
+	        Qr_Code_Param, 
+	        Last_Login_Time, 
+	        Last_Login_IP, 
+	        Last_Update_Time, 
+	        openid, 
+	        Create_Time,
+	        Set_Src_Store_Time,
+	        Set_Src_Parent_ID_Time
+	    ) VALUES (
+	    	#{loginName},
+	        #{userName}, 
+	        #{phone}, 
+	        #{sexCd}, 
+	        #{headPortraitUrl}, 
+	        #{birthday}, 
+	        #{identityId}, 
+	        #{emailAddress}, 
+	        #{provinceId}, 
+	        #{cityId}, 
+	        #{countyId}, 
+	        #{townId},
+	        #{villageId},
+	        #{street},
+	        #{statusCd}, 
+	        #{registerPlatformCd}, 
+	        #{sourceStoreId}, 
+	        #{parentUserId}, 
+	        #{payPassword}, 
+	        #{password},
+	        #{registerTime},
+	        #{userLevelId}, 
+	        #{userTypeId}, 
+	        #{qrCodeParam},
+	        #{lastLoginTime}, 
+	        #{lastLoginIp}, 
+	        #{lastUpdateTime}, 
+	        #{openid} , 
+	        #{createTime},
+	        #{setSrcStoreTime},
+	        #{setSrcParentIdTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="User">
+	   UPDATE user 
+	   <set>
+		   <if test="userName != null and userName != ''">
+			   User_Name = #{userName},
+		   </if>
+		   <if test="nickName != null and nickName != ''">
+			   Nick_Name = #{nickName},
+		   </if>
+	   	<if test="phone != null and phone != ''">
+		   Phone = #{phone}, 
+	   	</if>
+	   	<if test="sexCd != null">
+		   Sex_Cd = #{sexCd}, 
+	   	</if>
+	   	<if test="headPortraitUrl != null and headPortraitUrl != ''">
+		   Head_Portrait_Url = #{headPortraitUrl}, 
+	   	</if>
+	   	<if test="birthday != null">
+		   Birthday = #{birthday}, 
+	   	</if>
+	   	<if test="identityId != null">
+		   Identity_Id = #{identityId}, 
+	   	</if>
+	   	<if test="emailAddress != null">
+		   Email_Address = #{emailAddress}, 
+	   	</if>
+	   	<if test="provinceId != null and provinceId != ''">
+		   Province_Id = #{provinceId}, 
+	   	</if>
+	   	<if test="cityId != null">
+		   City_Id = #{cityId}, 
+	   	</if>
+	   	<if test="countyId != null">
+		   County_Id = #{countyId}, 
+	   	</if>
+	   <if test="townId != null">
+		   Town_Id = #{townId},
+	   </if>
+	   <if test="villageId != null">
+		   Village_Id = #{villageId},
+	   </if>
+	   	<if test="street != null">
+		   Street = #{street}, 
+	   	</if>
+	   	<if test="statusCd != null and statusCd != ''">
+		   Status_Cd = #{statusCd}, 
+	   	</if>
+	   	<if test="registerPlatformCd != null and registerPlatformCd != ''">
+		   Register_Platform_Cd = #{registerPlatformCd}, 
+	   	</if>
+	   	<if test="sourceStoreId != null and sourceStoreId != ''">
+		   Source_Store_Id = #{sourceStoreId}, 
+	   	</if>
+	   	<if test="parentUserId != null and parentUserId != ''">
+		   Parent_User_Id = #{parentUserId}, 
+	   	</if>
+	   	<if test="payPassword != null and payPassword != ''">
+		   Pay_Password = #{payPassword}, 
+	   	</if>
+	   	<if test="password != null and password != ''">
+			Password = #{password},
+	   	</if>
+	   	<if test="registerTime != null and registerTime != ''">
+		   Register_Time = #{registerTime}, 
+	   	</if>
+	   	<if test="userLevelId != null and userLevelId != ''">
+		   User_Level_Id = #{userLevelId}, 
+	   	</if>
+	   	<if test="userTypeId != null and userTypeId != ''">
+		   User_Type_Id = #{userTypeId}, 
+	   	</if>
+	   	<if test="qrCodeParam != null and qrCodeParam != ''">
+		   Qr_Code_Param = #{qrCodeParam}, 
+	   	</if>
+	   	<if test="lastLoginTime != null and lastLoginTime != ''">
+		   Last_Login_Time = #{lastLoginTime}, 
+	   	</if>
+	   	<if test="mStoreStatusCd != null">
+			M_Store_Status_Cd = #{mStoreStatusCd},
+	   	</if>
+	   	<if test="lastLoginIp != null and lastLoginIp != ''">
+		   Last_Login_IP = #{lastLoginIp},
+	   	</if>
+	   	<if test="lastUpdateTime != null and lastUpdateTime != ''">
+		   Last_Update_Time = #{lastUpdateTime}, 
+	   	</if>
+		Discount_Percent = #{discountPercent},
+	   	<if test="openid != null and openid != ''">
+		   openid = #{openid}
+	   	</if>
+	   </set>
+	   WHERE 
+		   User_Id = #{userId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM user where User_Id = #{userId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="User" parameterType="java.lang.Integer">  
+		SELECT 
+		<include refid="allColumns" />,
+		p2.User_level_Name
+		FROM user a
+		LEFT JOIN user_level p2 on p2.User_level_Id = a.User_Level_Id
+	    WHERE a.User_Id=#{userId}
+	</select>
+
+	<select id="getByPhone" resultType="User" parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+		FROM user a
+		WHERE
+		a.Phone=#{0}
+	</select>
+
+	<select id="updateLoginInfo" parameterType="java.util.Map">
+		UPDATE user SET
+        Last_Login_Time = #{loginDate},
+        Last_Login_IP = #{loginIp}
+        WHERE User_Id = #{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="User" parameterType="User">  
+	    select 
+		<include refid="allColumns" />
+	    from user a 
+		<where>
+			<if test="null != phone and '' != phone"> a.phone = #{phone} </if>
+			<if test="null != userName and '' != userName"> and a.User_Name = #{userName} </if>
+			<if test="null != sourceStoreId and '' != sourceStoreId"> and a.Source_Store_Id = #{sourceStoreId} </if>
+			<if test="null != parentUserId and '' != parentUserId"> and a.Parent_User_Id = #{parentUserId} </if>
+			<if test="1 == isMstore"> and a.M_Store_Status_Cd = 3 </if>
+			<if test="0 == isMstore"> and (a.M_Store_Status_Cd = 1 or a.M_Store_Status_Cd = 2 or a.M_Store_Status_Cd = 4) </if>
+			<!--<if test="null != userTypeId and '' != userTypeId"> and a.User_Type_Id = #{userTypeId} </if>-->
+			<if test="null != userLevelId and '' != userLevelId"> and a.User_Level_Id = #{userLevelId} </if>
+			<if test="null != startDate and '' != startDate"> and DATE_FORMAT(a.Register_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+			<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(a.Register_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+			<if test="null != userLevelId and '' != userLevelId"> and a.User_Level_Id = #{userLevelId} </if>
+			<if test="null != statusCd"> and a.Status_Cd = #{statusCd} </if>
+			<if test="null == statusCd"> and a.Status_Cd != 2 </if>
+			<if test="null != registerPlatformCd"> and a.Register_Platform_Cd = #{registerPlatformCd} </if>
+			<if test="null != provinceId and '' != provinceId"> and a.Province_Id = #{provinceId} </if>
+			<if test="null != cityId and '' != cityId"> and a.City_Id = #{cityId} </if>
+			<if test="null != countyId and '' != countyId"> and a.County_Id = #{countyId} </if>
+			<if test="null != applyStartDate and '' != applyStartDate"> and DATE_FORMAT(a.M_Store_Apply_Time,'%Y-%m-%d') >= DATE_FORMAT(#{applyStartDate},'%Y-%m-%d') </if>
+			<if test="null != applyEndDate and '' != applyEndDate"><![CDATA[ and DATE_FORMAT(a.M_Store_Apply_Time,'%Y-%m-%d') <= DATE_FORMAT(#{applyEndDate},'%Y-%m-%d') ]]></if>
+			<if test="null != mstoreStatusCd and '' != mstoreStatusCd"> and a.M_Store_Status_Cd = #{mstoreStatusCd} </if>
+		</where>
+	</select>
+	
+	<!-- 根据条件查询会员信息 -->
+	<select id="findUserListByCondition" parameterType="cn.yr.chile.user.dto.UserInfoDTO" resultType="cn.yr.chile.user.dto.UserInfoDTO">
+		select 
+		a.User_Id,
+		a.Login_Name,
+		a.Nick_Name,
+		a.Phone,
+		a.User_Name,
+		a.Head_Portrait_Url,
+		a.Qr_Code_Param,
+		a.M_Store_Status_Cd,
+		a.M_Store_Apply_Time,
+		c.User_level_Id,
+		c.User_level_Name,
+		a.Register_Platform_Cd,
+		(select Code_Cn_Name from system_code where Code_Type_Cd='REGISTER_PLATFORM_CD' and Code_Id=a.Register_Platform_Cd) Register_Platform_Text,
+		a.Register_Time,
+		a.Status_Cd,
+		a.Status_Cd,
+		(case a.Status_Cd when 1 then '启用' when 0 then '禁用' else '' end) Status_Text,
+		a.Parent_User_Id,
+		(select Phone from `user` where User_Id=a.Parent_User_Id) Parent_Phone,
+		d.Total_Consume_Amt,
+		d.Consume_Cnt,
+		d.Current_Year_Consume_Cnt,
+		d.Current_Year_Total_Consume_Amt,
+		a.Sex_Cd,
+		(case a.Sex_Cd 
+		when 0 then '男' 
+		when 1 then '女' 
+		else '不详' end) Sex_Text,
+		a.Birthday,
+		a.Identity_Id,
+		a.Email_Address,
+		a.Province_Id,
+		(select Area_Name from area where Id=a.Province_Id) Province_Name,
+		a.City_Id,
+		(select Area_Name from area where Id=a.City_Id) City_Name,
+		a.County_Id,
+		(select Area_Name from area where Id=a.County_Id) County_Name,
+		a.Town_Id,
+		(select Area_Name from area where Id=a.Town_Id) Town_Name,
+		a.Village_Id,
+		(select Area_Name from area where Id=a.Village_Id) Village_Name,
+		a.Street,
+		d.User_Balance,
+		d.Red_Packet_Balance,
+		d.Total_Score,
+		d.Develop_User_Cnt,
+		d.Develop_User_Rebate_Amt,
+		d.Develop_User_Score,
+		d.Develop_User_Sale_Amt,
+		d.Url_Rebate_Amt,
+		a.Last_Login_Time,
+		a.Last_Login_IP,
+		a.Last_Update_Time,
+		a.Openid,
+		a.Discount_Percent,
+		(select Group_CONCAT(Name) from user_label where Id in (select User_Label_Id from user_user_label_xref where User_Id in(select User_Id from user where User_Id=a.User_Id))) User_Labels
+		from (select * from user t 
+		<where>
+		1=1 
+		<if test="null != nickName and '' != nickName"> and t.Nick_Name LIKE CONCAT('%',#{nickName},'%') </if>
+		<if test="null != loginName and '' != loginName"> and t.Login_Name LIKE CONCAT('%',#{loginName},'%') </if>
+		<if test="null != userId and '' != userId"> and t.User_Id=#{userId} </if>
+		<if test="null != phone and '' != phone"> and t.phone LIKE CONCAT('%',#{phone},'%')</if>
+		<if test="null != userName and '' != userName"> and t.User_Name LIKE CONCAT('%',#{userName},'%') </if>
+		<if test="null != parentUserId and '' != parentUserId"> and t.Parent_User_Id = #{parentUserId} </if>
+		<if test="null != userLevelId and '' != userLevelId"> and t.User_Level_Id = #{userLevelId} </if>
+		<if test="null != mstoreStatusCd"> and t.M_Store_Status_Cd = #{mstoreStatusCd} </if>
+		<if test="null != startDate and '' != startDate"> and DATE_FORMAT(t.Register_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+		<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(t.Register_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+		<if test="1 == statusCd"> and t.Status_Cd = #{statusCd} </if>
+		<if test="0 == statusCd"> and (t.Status_Cd = #{statusCd} or t.Status_Cd is null) </if>
+		<if test="statusCd == null">and t.Status_Cd != 2 </if>
+		<if test="null != registerPlatformCd"> and t.Register_Platform_Cd = #{registerPlatformCd} </if>
+		<if test="null != provinceId and '' != provinceId"> and t.Province_Id = #{provinceId} </if>
+		<if test="null != cityId and '' != cityId"> and t.City_Id = #{cityId} </if>
+		<if test="null != countyId and '' != countyId"> and t.County_Id = #{countyId} </if>
+		<if test="null != applyStartDate and '' != applyStartDate"> and DATE_FORMAT(t.M_Store_Apply_Time,'%Y-%m-%d') >= DATE_FORMAT(#{applyStartDate},'%Y-%m-%d') </if>
+		<if test="null != applyEndDate and '' != applyEndDate"><![CDATA[ and DATE_FORMAT(t.M_Store_Apply_Time,'%Y-%m-%d') <= DATE_FORMAT(#{applyEndDate},'%Y-%m-%d') ]]></if>
+		</where>
+		order by t.Register_Time DESC limit #{startIndex},#{limit}) a 
+		left join user_level c on a.User_Level_Id=c.User_level_Id
+		left join user_consume_calc d on a.User_Id=d.User_Id
+		LEFT JOIN user_user_label_xref uulx ON uulx.User_Id = a.User_Id
+		WHERE 1=1
+		<if test="null != userLabelId and '' != userLabelId"> and uulx.User_Label_Id = #{userLabelId} </if>
+		GROUP BY 1
+		order by a.Register_Time DESC
+	</select>
+	
+	
+	<select id="findUserCountByCondition" parameterType="cn.yr.chile.user.dto.UserInfoDTO" resultType="java.lang.Integer">
+		select count(*) from user a 
+		<where>
+		1=1
+		<if test="null != nickName and '' != nickName"> and a.Nick_Name LIKE CONCAT('%',#{nickName},'%') </if>
+		<if test="null != loginName and '' != loginName"> and a.Login_Name LIKE CONCAT('%',#{loginName},'%') </if>
+		<if test="null != userId and '' != userId"> and a.User_Id=#{userId} </if>
+		<if test="null != phone and '' != phone"> and a.phone LIKE CONCAT('%',#{phone},'%')</if>
+		<if test="null != userName and '' != userName"> and a.User_Name LIKE CONCAT('%',#{userName},'%') </if>
+		<if test="null != sourceStoreId and '' != sourceStoreId"> and a.Source_Store_Id = #{sourceStoreId} </if>
+		<if test="null != parentUserId and '' != parentUserId"> and a.Parent_User_Id = #{parentUserId} </if>
+		<if test="null != userTypeId and '' != userTypeId"> and a.User_Type_Id = #{userTypeId} </if>
+		<if test="null != userLevelId and '' != userLevelId"> and a.User_Level_Id = #{userLevelId} </if>
+		<if test="null != mstoreStatusCd"> and a.M_Store_Status_Cd = #{mstoreStatusCd} </if>
+		<if test="null != startDate and '' != startDate"> and DATE_FORMAT(a.Register_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+		<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(a.Register_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+		<if test="1 == statusCd"> and a.Status_Cd = #{statusCd} </if>
+		<if test="0 == statusCd"> and (a.Status_Cd = #{statusCd} or a.Status_Cd is null) </if>
+		<if test="statusCd == null"> and a.Status_Cd != 2 </if>
+		<if test="null != registerPlatformCd"> and a.Register_Platform_Cd = #{registerPlatformCd} </if>
+		<if test="null != provinceId and '' != provinceId"> and a.Province_Id = #{provinceId} </if>
+		<if test="null != cityId and '' != cityId"> and a.City_Id = #{cityId} </if>
+		<if test="null != countyId and '' != countyId"> and a.County_Id = #{countyId} </if>
+		<if test="null != applyStartDate and '' != applyStartDate"> and DATE_FORMAT(a.M_Store_Apply_Time,'%Y-%m-%d') >= DATE_FORMAT(#{applyStartDate},'%Y-%m-%d') </if>
+		<if test="null != applyEndDate and '' != applyEndDate"><![CDATA[ and DATE_FORMAT(a.M_Store_Apply_Time,'%Y-%m-%d') <= DATE_FORMAT(#{applyEndDate},'%Y-%m-%d') ]]></if>
+		<if test="1 == isMstore"> and a.M_Store_Status_Cd = 3 </if>
+		<if test="0 == isMstore"> and (a.M_Store_Status_Cd = 1 or a.M_Store_Status_Cd = 2 or a.M_Store_Status_Cd = 4) </if>
+		</where> 
+		order by a.Register_Time DESC
+	</select>
+
+	<select id="findPageSumInfo" parameterType="cn.yr.chile.user.dto.UserInfoDTO" resultType="java.util.Map">
+		select
+		sum(p10.User_Balance) as totalBalance,
+		sum(p10.Total_Score) as totalPoint
+		from user a
+		LEFT JOIN user_consume_calc p10 on p10.User_Id=a.User_Id
+		<where>
+		1=1
+		<if test="null != nickName and '' != nickName"> and a.Nick_Name LIKE CONCAT('%',#{nickName},'%') </if>
+		<if test="null != loginName and '' != loginName"> and a.Login_Name LIKE CONCAT('%',#{loginName},'%') </if>
+		<if test="null != userId and '' != userId"> and a.User_Id=#{userId} </if>
+		<if test="null != phone and '' != phone"> and a.phone LIKE CONCAT('%',#{phone},'%')</if>
+		<if test="null != userName and '' != userName"> and a.User_Name LIKE CONCAT('%',#{userName},'%') </if>
+		<if test="null != sourceStoreId and '' != sourceStoreId"> and a.Source_Store_Id = #{sourceStoreId} </if>
+		<if test="null != parentUserId and '' != parentUserId"> and a.Parent_User_Id = #{parentUserId} </if>
+		<if test="null != userTypeId and '' != userTypeId"> and a.User_Type_Id = #{userTypeId} </if>
+		<if test="null != userLevelId and '' != userLevelId"> and a.User_Level_Id = #{userLevelId} </if>
+		<if test="null != mstoreStatusCd"> and a.M_Store_Status_Cd = #{mstoreStatusCd} </if>
+		<if test="null != startDate and '' != startDate"> and DATE_FORMAT(a.Register_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+		<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(a.Register_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+		<if test="1 == statusCd"> and a.Status_Cd = #{statusCd} </if>
+		<if test="0 == statusCd"> and (a.Status_Cd = #{statusCd} or a.Status_Cd is null) </if>
+		<if test="statusCd == null"> and a.Status_Cd != 2 </if>
+		<if test="null != registerPlatformCd"> and a.Register_Platform_Cd = #{registerPlatformCd} </if>
+		<if test="null != provinceId and '' != provinceId"> and a.Province_Id = #{provinceId} </if>
+		<if test="null != cityId and '' != cityId"> and a.City_Id = #{cityId} </if>
+		<if test="null != countyId and '' != countyId"> and a.County_Id = #{countyId} </if>
+		<if test="null != applyStartDate and '' != applyStartDate"> and DATE_FORMAT(a.M_Store_Apply_Time,'%Y-%m-%d') >= DATE_FORMAT(#{applyStartDate},'%Y-%m-%d') </if>
+		<if test="null != applyEndDate and '' != applyEndDate"><![CDATA[ and DATE_FORMAT(a.M_Store_Apply_Time,'%Y-%m-%d') <= DATE_FORMAT(#{applyEndDate},'%Y-%m-%d') ]]></if>
+		<if test="1 == isMstore"> and a.M_Store_Status_Cd = 3 </if>
+		<if test="0 == isMstore"> and (a.M_Store_Status_Cd = 1 or a.M_Store_Status_Cd = 2 or a.M_Store_Status_Cd = 4) </if>
+		</where>
+		order by a.Register_Time DESC
+	</select>
+
+	<!-- 查询下级审核通过的微店主 -->
+	<select id="findChildrenMstorePage" resultType="User" parameterType="User">
+		select 
+		<include refid="allColumns" />,
+		b.Ranking,
+		c.Commission_Total_Amt from user a 
+		left join user_m_store_ranking b on a.User_Id=b.User_Id 
+		left join user_m_store_sales_calc c on a.User_id=c.User_Id 
+		where a.Parent_User_Id=#{parentUserId} and a.M_Store_Status_Cd=3 
+	</select>
+	
+   <!-- 根据日期查询会员数 -->	
+	<select id="getUserNum" resultType="String" parameterType="User">  
+	    select 
+		count(*)
+	    from user a 
+		where 1=1
+			and status_cd=1
+		<if test="null != createTime and ''!=endCreateTime"> 
+			and DATE_FORMAT(#{createTime},'%Y%m%d') =  DATE_FORMAT(a.Create_Time,'%Y%m%d')
+	  	</if>
+	</select>
+
+	<select id="findPaymentsDetail" resultType="cn.yr.chile.user.dto.UserPaymentsDetailDTO" parameterType="java.util.Map">
+		SELECT
+			p3.User_Id,
+			p3.In_Come,
+			p3.Expenditure,
+			p3.remark,
+			p3.Create_Time,
+			p3.Type,
+			p4.User_Name AS User_Name,
+			p4.Login_Name AS Login_Name
+		FROM
+			(
+				SELECT
+					p1.User_Id AS User_Id,
+					p1.Balance_Income AS In_Come,
+					p1.Balance_Expend AS Expenditure,
+					p1.Remark AS remark,
+					p1.Create_Time AS Create_Time,
+					"balance" AS Type
+				FROM
+					user_balance_detail p1
+				WHERE
+					p1.User_Id = #{userId}
+				UNION
+					SELECT
+						p2.User_Id AS User_Id,
+						p2.Score_Income AS In_Come,
+						p2.Score_Expend AS Expenditure,
+						p2.Remark AS remark,
+						p2.Create_Time AS Create_Time,
+						"score" AS Type
+					FROM
+						user_score_detail p2
+					WHERE
+						p2.User_Id = #{userId}
+			) p3
+		LEFT JOIN USER p4 ON p4.User_Id = p3.User_Id
+		ORDER BY
+			p3.Create_Time DESC
+	</select>
+
+	<select id="findLoginUser" resultType="User" parameterType="User">
+		SELECT 
+		<include refid="allColumns"/>
+		FROM user a
+		WHERE (a.Login_Name=#{loginName} OR a.phone=#{loginName}) AND a.password=#{password}
+	</select>
+	
+	<select id="getByLoginName" resultType="User" parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+		FROM user a
+		WHERE
+		a.login_Name=#{loginName}
+	</select>
+
+	<update id="updateOpenIdByUserId" parameterType="java.util.Map">
+		UPDATE user SET
+        Openid = #{openId}
+        WHERE User_Id = #{userId}
+	</update>
+
+	<!-- 根据openId查找会员 -->
+	<select id="getByOpenId" resultType="User" parameterType="String">
+		select
+		<include refid="allColumns" />
+		from
+		user a
+		where
+		a.Openid = #{openId}
+	</select>
+	
+	<!-- 根据userId查找业绩点 -->
+	<select id="getrebateProductPointParams" parameterType="map" resultType="int">
+		SELECT
+			sum(c.Product_Point_Value) as productPoint
+		FROM
+			(
+				SELECT
+					b.Order_Id
+				FROM
+					(
+						SELECT
+							a.user_id
+						FROM
+							USER a
+						WHERE
+							User_Id = #{userId}
+					) t
+				LEFT JOIN order_header b ON t.User_Id = b.user_id
+				WHERE
+					b.Order_Status_Cd = 5
+				<if test="null != startDate"> and DATE_FORMAT(Order_Complete_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+				<if test="null != endDate"><![CDATA[ and DATE_FORMAT(Order_Complete_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+			) tt
+				LEFT JOIN order_item c ON tt.Order_Id = c.Order_Id
+	</select>
+	
+	<!-- 根据条件查找成交总金额 -->
+	<select id="getTotalPriceByParams" parameterType="map" resultType="java.math.BigDecimal">
+		SELECT sum(a.Quantity*a.Sale_Price) as totalPrice  FROM (select
+				order_id
+			from
+				order_header
+			where 
+				order_status_cd=5
+			and
+				user_id=#{userId}
+			<if test="null != startDate"> and DATE_FORMAT(Order_Complete_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+			<if test="null != endDate"><![CDATA[ and DATE_FORMAT(Order_Complete_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+				)t
+			LEFT JOIN order_item a
+			ON a.Order_Id=t.order_id
+			
+	</select>
+	
+	<!-- 查找2级 -->
+	<select id="findLower2UserList" resultType="cn.yr.chile.user.dto.LowerUserInfoDTO" parameterType="java.util.Map">
+		select
+		p1.User_Id,
+		p1.Phone,
+		p1.Parent_User_Id,
+		p1.User_Level_Id AS level_id,
+		p1.Head_Portrait_Url,
+		p10.User_level_Name AS level_name
+		from user p1
+		LEFT JOIN user_level p10 on p10.User_level_Id = p1.User_Level_Id
+		WHERE p1.Parent_User_Id = #{userId}
+		
+	</select>
+
+	<!-- 查找3级 -->
+	<select id="findLower3UserList" resultType="cn.yr.chile.user.dto.LowerUserInfoDTO" parameterType="java.util.Map">
+		select
+		p1.User_Id,
+		p1.Phone,
+		p1.Parent_User_Id,
+		p1.User_Level_Id AS level_id,
+		p1.Head_Portrait_Url,
+		p10.User_level_Name AS level_name
+		from user p1
+		LEFT JOIN user p2 on p2.User_Id = p1.Parent_User_Id
+		LEFT JOIN user_level p10 on p10.User_level_Id = p1.User_Level_Id
+		WHERE p2.Parent_User_Id = #{userId}
+		
+	</select>
+
+	<!-- 查找4级 -->
+	<select id="findLower4UserList" resultType="cn.yr.chile.user.dto.LowerUserInfoDTO" parameterType="java.util.Map">
+		<!--select
+		p3.User_Id,
+		p3.Phone,
+		p3.Parent_User_Id,
+		p3.User_Level_Id AS level_id,
+		p10.User_level_Name AS level_name
+		from user p1
+		LEFT JOIN user p2 on p2.Parent_User_Id = p1.User_Id
+		LEFT JOIN user p3 on p3.Parent_User_Id = p2.User_Id
+		LEFT JOIN user_level p10 on p10.User_level_Id = p3.User_Level_Id
+		WHERE p1.Parent_User_Id = #{userId}
+		<if test="null != startDate"> and DATE_FORMAT(p3.Register_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+		<if test="null != endDate"><![CDATA[ and DATE_FORMAT(p3.Register_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>-->
+		select
+		p1.User_Id,
+		p1.Phone,
+		p1.Parent_User_Id,
+		p1.User_Level_Id AS level_id,
+		p10.User_level_Name AS level_name
+		from user p1
+		LEFT JOIN user p2 on p2.User_Id = p1.Parent_User_Id
+		LEFT JOIN user p3 on p3.User_Id = p2.Parent_User_Id
+		LEFT JOIN user_level p10 on p10.User_level_Id = p1.User_Level_Id
+		WHERE p3.Parent_User_Id = #{userId}
+		
+	</select>
+
+
+	<!-- 根据条件查询会员信息 -->
+	<select id="findUserList" parameterType="java.util.Map" resultType="cn.yr.chile.user.dto.UserInfoDTO">
+		select
+		a.User_Id,
+		a.Login_Name,
+		a.Nick_Name,
+		a.Phone,
+		a.User_Name,
+		a.Head_Portrait_Url,
+		a.Qr_Code_Param,
+		c.User_level_Id,
+		c.User_level_Name,
+		a.Register_Platform_Cd,
+		(select Code_Cn_Name from system_code where Code_Type_Cd='REGISTER_PLATFORM_CD' and Code_Id=a.Register_Platform_Cd) Register_Platform_Text,
+		a.Register_Time,
+		a.Status_Cd,
+		(case a.Status_Cd when 1 then '启用' when 0 then '禁用' else '' end) Status_Text,
+		a.Parent_User_Id,
+		(select Phone from `user` where User_Id=a.Parent_User_Id) Parent_Phone,
+		d.Total_Consume_Amt,
+		d.Consume_Cnt,
+		d.Current_Year_Consume_Cnt,
+		d.Current_Year_Total_Consume_Amt,
+		a.Sex_Cd,
+		(case a.Sex_Cd
+		when 0 then '男'
+		when 1 then '女'
+		else '不详' end) Sex_Text,
+		a.Birthday,
+		a.Identity_Id,
+		a.Email_Address,
+		d.User_Balance,
+		d.Red_Packet_Balance,
+		d.Total_Score,
+		d.Develop_User_Cnt,
+		d.Develop_User_Rebate_Amt,
+		d.Develop_User_Score,
+		d.Develop_User_Sale_Amt,
+		d.Url_Rebate_Amt,
+		a.Last_Login_Time,
+		a.Last_Login_IP,
+		a.Last_Update_Time,
+		a.Openid,
+		a.Discount_Percent,
+		(select Group_CONCAT(Name) from user_label where Id in (select User_Label_Id from user_user_label_xref where User_Id in(select User_Id from user where User_Id=a.User_Id))) User_Labels
+		from (select tt.* from(select * from user t
+		where
+			t.Status_Cd = 1
+			<if test="null != loginName and '' != loginName"> and t.Login_Name LIKE CONCAT('%',#{loginName},'%') </if>
+			<if test="null != userLevelId and '' != userLevelId"> and t.User_Level_Id = #{userLevelId} </if>
+			<if test="null != userIds and '' != userIds"> and t.User_Id in (${userIds}) </if>)tt
+			LEFT JOIN user_user_label_xref e on tt.user_id=e.User_Id where 1=1 <if test="brandId != null and '' != brandId">and e.User_Label_Id=#{brandId}</if>
+			 ) a
+		left join user_level c on a.User_Level_Id=c.User_level_Id
+		left join user_consume_calc d on a.User_Id=d.User_Id
+		GROUP BY 1
+		order by a.Register_Time DESC
+	</select>
+	<!-- 查找 每个等级对应的发展会员列表-->
+	<select id="findLowerList" resultType="User" parameterType="java.util.Map">
+		SELECT 
+		<include refid="allColumns"/>
+		FROM user a
+		LEFT JOIN user s on a.Parent_User_Id = s.User_Id
+		WHERE
+		u.Parent_User_Id = #{userId} AND u.User_Level_Id = #{levelId}
+	</select>
+
+	<!-- 获取会员下面的 下级会员数量 -->
+	<select id="getUserChildrenUserCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT
+		count(a.User_Id)
+		FROM user a
+		WHERE
+		a.Parent_User_Id = #{0}
+	</select>
+
+	<!-- 更新 会员的 User_Level_Id -->
+	<update id="updateUserLevelByUserId" parameterType="java.util.Map">
+		update user set User_Level_Id=#{userLevelId} where User_Id=#{userId}
+	</update>
+</mapper>

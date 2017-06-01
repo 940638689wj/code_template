@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionCrowdFundCodeDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+			p1.promotion_crowd_fund_Code_ID,
+			p1.promotion_Id,
+			p1.Order_ID,
+			p1.User_ID,
+			p1.fund_Code_Num,
+			p1.Create_Time,
+			p1.Is_Wined,
+			p1.Order_Pay_Time,
+			p1.Order_Pay_Time_millsec
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="PromotionCrowdFundCode">
+	    INSERT INTO promotion_crowd_fund_code (
+			promotion_Id,
+			Order_ID, 
+			User_ID, 
+			fund_Code_Num, 
+			Create_Time, 
+			Is_Wined,
+			Order_Pay_Time,
+			Order_Pay_Time_millsec
+	    ) VALUES (
+			#{promotionId},
+			#{orderId},
+			#{userId}, 
+			#{fundCodeNum}, 
+			#{createTime}, 
+			#{isWined},
+			#{orderPayTime},
+			#{orderPayTimeMillsec}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="PromotionCrowdFundCode">
+	   UPDATE promotion_crowd_fund_code SET
+	   		promotion_Id = #{promotionId}, 
+	   		Order_ID = #{orderId}, 
+	   		User_ID = #{userId}, 
+	   		fund_Code_Num = #{fundCodeNum}, 
+	   		Create_Time = #{createTime}, 
+	   		Is_Wined = #{isWined},
+	   		Order_Pay_Time = #{orderPayTime},
+	   		Order_Pay_Time_millsec = #{orderPayTimeMillsec}
+	   WHERE 
+			promotion_crowd_fund_Code_ID = #{promotionCrowdfundCodeId}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM promotion_crowd_fund_code where Promotion_Id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionCrowdFundCode" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM promotion_crowd_fund_code p1
+        WHERE
+        p1.Promotion_Id=#{0}
+    </select>
+
+    <select id="findAllCrowdFundCode" resultType="PromotionCrowdFundCode" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM promotion_crowd_fund_code p1
+        WHERE
+        p1.Promotion_Id=#{0}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="PromotionCrowdFundCode">
+        select
+        <include refid="allColumns"/>
+        from promotion_crowd_fund_code p1
+        <if test="order_col != null">order by p1.${order_col}</if>
+    </select>
+
+    <!-- 分页返回列表 -->
+    <select id="findList" resultType="PromotionCrowdFundCode" parameterType="java.util.Map">
+        select
+        <include refid="allColumns"/>
+        from promotion_crowd_fund_code p1
+        where 1=1
+        <if test="promotionId != null">and p1.Promotion_Id = #{promotionId}</if>
+        <if test="orderId != null">and p1.Order_ID = #{orderId}</if>
+        <if test="userId != null">and p1.User_ID = #{userId}</if>
+        <if test="fundCodeNum != null">and p1.fund_Code_Num = #{fundCodeNum}</if>
+        <if test="createTime != null">and p1.Create_Time = #{createTime}</if>
+        <if test="isWined != null">and p1.Is_Wined = #{isWined}</if>
+        <if test="orderPayTime != null">and p1.Order_Pay_Time = #{orderPayTime}</if>
+        <if test="orderPayTimeMillsec != null">and p1.Order_Pay_Time_millsec = #{orderPayTimeMillsec}</if>
+        <if test="promotionCrowdfundCodeId != null">and p1.promotion_crowd_fund_Code_ID = #{promotionCrowdfundCodeId}
+        </if>
+        <if test="order_col != null">order by p1.${order_col}</if>
+    </select>
+
+    <select id="countByCrowdFundStatusCd" parameterType="Integer" resultType="Integer">
+        select count(a.order_id)
+        from promotion_crowd_fund_code a
+        left join promotion_crowd_fund b on a.promotion_id = b.promotion_id
+        <if test="_parameter != null">
+            <choose>
+                <when test="_parameter == -1">
+                    and 1 = 1
+                </when>
+                <otherwise>
+                    and b.Crowd_Fund_Status_Cd = #{0}
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+    <!--根据promotionId 查询 -->
+    <select id="findCrowdInfoByPromotionId" parameterType="Map"
+            resultType="cn.yr.chile.promotion.dto.PromotionCrowdFundCodeDTO">
+		SELECT
+		COUNT(1) as singleAlreadyBuy,
+		pc.Create_Time,
+		us.phone,
+		us.user_id
+		FROM promotion_crowd_fund_code pc
+		LEFT  JOIN  user us on pc.user_id = us.user_id
+		WHERE pc.promotion_id = #{promotionId}
+		GROUP BY pc.Create_Time
+		ORDER BY pc.Create_Time DESC
+	</select>
+    <!--根据promotionId 查询用户参于订单的众筹信息-->
+    <select id="findUserOrders" parameterType="java.util.Map"
+            resultType="cn.yr.chile.promotion.dto.PromotionCrowdFundCodeDTO">
+		SELECT
+		a.Order_Pay_Time, COUNT(a.order_id) as singleAlreadyBuy,
+		b.user_name
+		FROM promotion_crowd_fund_code a
+		LEFT JOIN user b on a.user_id = b.user_id
+		where a.promotion_id = #{promotionId}
+        GROUP BY a.order_id
+	</select>
+
+    <!-- 众筹 已参与次数 -->
+    <select id="countHasJoinTimes" parameterType="java.lang.Integer" resultType="java.util.Map">
+		SELECT 
+			COUNT(promotion_crowd_fund_Code_ID) AS hasJoinTimes,
+			(pcf.`Crowd_Fund_Product_Amt` / pcf.`Crowd_Fund_per_Amt`) AS requireNum
+		FROM `promotion_crowd_fund` pcf 
+		LEFT JOIN promotion_crowd_fund_code a ON pcf.`promotion_id` = a.`Promotion_Id`
+		WHERE pcf.promotion_Id = #{0}
+	</select>
+
+    <!-- 获取众筹详情数据 -->
+    <select id="getDetail" parameterType="Long" resultType="Map">
+		SELECT 
+			p.promotion_id AS promotionId,
+			p.Promotion_Name AS promotionName,
+			p.`Promotion_Desc` AS promotionDesc,
+			p.Enable_End_Time AS endTime,
+			pcf.`Crowd_Fund_per_Amt` AS perAmt,
+			pcf.`Personal_Join_Limit` AS personalJoinLimit,
+			pcf.`Crowd_Fund_Product_Amt` / pcf.`Crowd_Fund_per_Amt` AS requireNum,
+			pro.Product_Id AS productId,
+			pcf.`Crowd_Fund_Product_Amt` AS productAmt,
+			pro.Master_Product_ID AS masterProductID,
+			pro.Product_Type_Cd AS productTypeCd,
+			pe.Product_M_Detail_Desc AS productDetailDesc,
+			COUNT(pcfc.promotion_crowd_fund_Code_ID) AS currentPeopleNum
+		FROM `promotion` p
+		LEFT JOIN `promotion_crowd_fund` pcf ON p.`promotion_id` = pcf.`Promotion_Id`
+		LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.`promotion_Id` = p.`promotion_id`
+		LEFT JOIN promotion_product_xref ppx ON (ppx.`Promotion_Id` = p.`promotion_id`)
+		LEFT JOIN product pro ON (pro.Product_Id = ppx.Product_Id)
+		LEFT JOIN product_extend pe ON (pe.Product_Id = pro.Master_Product_ID)
+		WHERE p.promotion_id = #{promotionId}
+	</select>
+
+    <update id="lotteryCrowdFundCode" parameterType="Map">
+		UPDATE promotion_crowd_fund pcf , promotion_crowd_fund_code pcfc
+		SET 
+			pcf.Last_Update_Time = NOW(),
+			pcf.Win_Code = #{fundCodeNum},
+			pcf.Calc_Time = NOW(),
+			pcf.Calc_Time_millsec = #{timeMills},
+			pcf.Crowd_Fund_Status_Cd = 1,
+			pcfc.Is_Wined = 1
+		WHERE pcf.Promotion_Id = #{promotionId} AND pcfc.promotion_Id = #{promotionId} AND pcfc.fund_Code_Num = #{fundCodeNum}
+	</update>
+
+    <select id="getRecordByPromotionId" parameterType="Integer" resultType="Map">
+        SELECT
+			o.Order_Ip_Addr AS ip,
+			u.Login_Name AS userName,
+			i.Quantity AS quantity
+		FROM `order_header` o
+		LEFT JOIN `user` u ON o.User_Id = u.User_Id
+		LEFT JOIN `order_item` i ON i.Order_Id = o.Order_Id
+		LEFT JOIN `order_promotion_info` opi ON opi.Order_Id = o.Order_Id
+		WHERE
+			opi.Promotion_Id = #{0}
+			AND o.Order_Status_Cd = 2
+		ORDER BY o.Create_Time DESC
+		LIMIT 0,5
+    </select>
+
+	<!-- 获取众筹已购买的数量 -->
+	<select id="getCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT
+			COUNT(*)
+		FROM promotion_crowd_fund_code p1
+		WHERE
+		p1.Promotion_Id=#{0}
+	</select>
+
+</mapper>

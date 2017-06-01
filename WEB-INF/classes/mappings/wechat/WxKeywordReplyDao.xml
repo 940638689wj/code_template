@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.wechat.dao.WxKeywordReplyDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Id,
+			p1.Keyword,
+			p1.Name,
+			p1.Match_Type,
+			p1.Create_Time,
+			p1.Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="WxKeywordReply" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO wx_keyword_reply (
+			Keyword, 
+			Name, 
+			Match_Type, 
+			Create_Time, 
+			Last_Update_Time
+	    ) VALUES (
+			#{keyword}, 
+			#{name}, 
+			#{matchType}, 
+			#{createTime}, 
+			#{lastUpdateTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="WxKeywordReply">
+	   UPDATE wx_keyword_reply SET
+	   		Keyword = #{keyword}, 
+	   		Name = #{name}, 
+	   		Match_Type = #{matchType}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM wx_keyword_reply where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="WxKeywordReply" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_keyword_reply p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="WxKeywordReply">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_keyword_reply p1
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="WxKeywordReply" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_keyword_reply p1
+	    
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="keyword != null"> and p1.Keyword = #{keyword}</if>
+		<if test="name != null"> and p1.Name = #{name}</if>
+		<if test="matchType != null"> and p1.Match_Type = #{matchType}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+	</select>
+
+</mapper>

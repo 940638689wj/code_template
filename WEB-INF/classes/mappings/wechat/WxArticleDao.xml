@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.wechat.dao.WxArticleDao">
+    <sql id="allColumns">
+        a.Article_Id,
+        a.Article_Title,
+        a.DESCRIPTION,
+        a.Pic_Url,
+        a.Url,
+        a.Init_Message_Id,
+        a.Is_First,
+        a.Author,
+        a.Summary,
+        a.Create_Time,
+        a.Last_Update_Time
+    </sql>
+
+    <delete id="delete">
+        DELETE FROM wx_article WHERE Article_Id = #{articleId}
+    </delete>
+
+    <delete id="deleteByInitMessageId" parameterType="java.lang.Integer">
+        DELETE FROM wx_article WHERE Init_Message_Id = #{0}
+    </delete>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="articleId">
+        INSERT INTO wx_article(
+            Article_Title,
+            DESCRIPTION,
+            Pic_Url,
+            Url,
+            Init_Message_Id,
+            Is_First,
+            Author,
+            Summary,
+            Create_Time
+        ) VALUES (
+            #{articleTitle},
+            #{description},
+            #{picUrl},
+            #{url},
+            #{initMessageId},
+            #{isFirst},
+            #{author},
+            #{summary},
+            #{createTime}
+        )
+    </insert>
+    
+    <update id="update" parameterType="WxArticle">
+        UPDATE wx_article SET
+        Article_Title = #{articleTitle},
+        DESCRIPTION = #{description},
+        Pic_Url = #{picUrl},
+        Url = #{url},
+        Author = #{author},
+        Summary = #{summary},
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE Article_Id = #{articleId}
+    </update>
+
+    <!-- 查询 -->
+    <select id="get" resultType="WxArticle" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM wx_article a
+        WHERE a.Article_Id = #{0}
+    </select>
+
+    <!-- 获取 initMessage 的文章 -->
+    <select id="findByInitMessageId" resultType="WxArticle" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM wx_article a
+        WHERE a.Init_Message_Id = #{0}
+    </select>
+
+</mapper>

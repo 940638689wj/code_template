@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderReturnInfoDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+	Id,
+	Order_Id,
+	Apply_Type_Cd,
+	Apply_Time,
+	Apply_Reason_Cd,
+	Is_Receive_Good,
+	Apply_Status_Cd,
+	Last_Update_User_ID,
+	Last_Update_Time,
+	Order_Item_Id,
+	Reason_Detail_Desc,
+	Return_Amt,
+	Is_Return_Amt,
+	Return_Amt_Exception,
+	Reject_Reason,
+	Return_Order_Number,
+	Return_Express_Name,
+	Return_Express_Num,
+	Return_Express_Remark
+	</sql>
+    <sql id="systemcode">
+		s.Code_Cn_Name as Apply_Type_Desc
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="cn.yr.chile.order.domain.OrderReturnInfo" useGeneratedKeys="true"
+            keyProperty="id">
+	    INSERT INTO order_return_info (
+	       Order_Id, 
+	       Apply_Type_Cd, 
+	       Apply_Time, 
+	       Apply_Reason_Cd, 
+	       Reason_Detail_Desc,
+	       Is_Receive_Good, 
+	       Apply_Status_Cd, 
+	       Last_Update_User_ID, 
+	       Last_Update_Time,
+	       Order_Item_ID,
+	       Is_Return_Amt,
+	       Return_Amt_Exception,
+	       Reject_Reason,
+	       Return_Order_Number,
+	       Return_Amt
+	    ) VALUES (
+	        #{orderId},
+	        #{applyTypeCd}, 
+	        #{applyTime}, 
+	        #{applyReasonCd}, 
+	        #{reasonDetailDesc}, 
+	        #{isReceiveGood}, 
+	        #{applyStatusCd}, 
+	        #{lastUpdateUserId}, 
+	        #{lastUpdateTime}, 
+	        #{orderItemId},
+	        #{isReturnAmt},
+	        #{returnAmtException},
+	        #{rejectReason},
+	        #{returnOrderNumber},
+	        #{returnAmt}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="OrderReturnInfo">
+        UPDATE order_return_info SET
+        <if test="orderId != null">
+            Order_Id = #{orderId},
+        </if>
+        <if test="applyTypeCd != null">
+            Apply_Type_Cd = #{applyTypeCd},
+        </if>
+        <if test="applyTime != null">
+            Apply_Time = #{applyTime},
+        </if>
+        <if test="applyReasonCd != null">
+            Apply_Reason_Cd = #{applyReasonCd},
+        </if>
+        <if test="reasonDetailDesc != null and reasonDetailDesc != ''">
+            Reason_Detail_Desc = #{reasonDetailDesc},
+        </if>
+        <if test="isReceiveGood != null">
+            Is_Receive_Good = #{isReceiveGood},
+        </if>
+        <if test="applyStatusCd != null">
+            Apply_Status_Cd = #{applyStatusCd},
+        </if>
+        <if test="lastUpdateUserId != null">
+            Last_Update_User_ID = #{lastUpdateUserId},
+        </if>
+        <if test="orderItemId != null">
+            Order_Item_ID = #{orderItemId},
+        </if>
+        <if test="returnAmt != null">
+            Return_Amt = #{returnAmt},
+        </if>
+        <if test="returnExpressName != null">
+            Return_Express_Name = #{returnExpressName},
+        </if>
+        <if test="returnExpressNum != null and returnExpressNum != ''">
+            Return_Express_Num = #{returnExpressNum},
+        </if>
+        <if test="returnOrderNumber != null and returnOrderNumber != ''">
+            Return_Order_Number = #{returnOrderNumber},
+        </if>
+        <if test="isReturnAmt != null">
+            Is_Return_Amt = #{isReturnAmt},
+        </if>
+        <if test="returnAmtException != null and returnAmtException != ''">
+            Return_Amt_Exception = #{returnAmtException},
+        </if>
+        <if test="rejectReason != null and rejectReason != ''">
+            Reject_Reason = #{rejectReason},
+        </if>
+        <if test="returnExpressRemark != null and returnExpressRemark != ''">
+            Return_Express_Remark = #{returnExpressRemark},
+        </if>
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE
+        Id = #{id}
+    </update>
+
+    <!-- 更新 退款申请的 退款金额状态 -->
+    <update id="updateIsReturnAmtByReturnOrderNumber" parameterType="java.util.Map">
+		UPDATE order_return_info SET
+		   Is_Return_Amt = #{isReturnAmt},
+		   Return_Amt_Exception = #{returnAmtException}
+	   WHERE
+		   Return_Order_Number = #{returnOrderNumber}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM order_return_info where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="OrderReturnInfo" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_return_info
+        WHERE
+        id=#{id}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="OrderReturnInfo">
+        select
+        <include refid="allColumns"/>
+        from order_return_info
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findList" resultType="OrderReturnInfo" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from order_return_info a
+        where 1=1
+        <if test="orderId != null">and a.Order_Id = #{orderId}</if>
+        <if test="applyType != null">and a.Apply_Type_Cd = #{applyTypeCd}</if>
+        <if test="applyTime != null">and a.Apply_Time = #{applyTime}</if>
+        <if test="applyReason != null">and a.Apply_Reason = #{applyReason}</if>
+        <if test="isReceiveGood != null">and a.Is_Receive_Good = #{isReceiveGood}</if>
+        <if test="trialUserId != null">and a.Trial_User_Id = #{trialUserId}</if>
+        <if test="trialUserName != null">and a.Trial_User_Name = #{trialUserName}</if>
+        <if test="trialTime != null">and a.Trial_Time = #{trialTime}</if>
+        <if test="trialOpinion != null">and a.Trial_Opinion = #{trialOpinion}</if>
+        <if test="leaderId != null">and a.Leader_Id = #{leaderId}</if>
+        <if test="leaderName != null">and a.Leader_Name = #{leaderName}</if>
+        <if test="leaderOpinion != null">and a.Leader_Opinion = #{leaderOpinion}</if>
+        <if test="leaderHandleTime != null">and a.Leader_Handle_Time = #{leaderHandleTime}</if>
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <select id="findOrderReturnInfosByOrderId" resultType="cn.yr.chile.order.domain.OrderReturnInfo"
+            parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_return_info
+        WHERE
+        order_id =#{orderId}
+        AND Apply_Status_Cd IN (2,4)
+
+
+    </select>
+
+    <select id="findReturnInfosByOrderId" resultType="cn.yr.chile.order.domain.OrderReturnInfo" parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_return_info
+        WHERE
+        order_id =#{orderId}
+
+    </select>
+
+    <!-- 查询退换货订单记录数 -->
+    <select id="getCount" resultType="String">
+		SELECT
+			count(*)
+		FROM
+			order_return_info
+	</select>
+
+    <!-- 查询是否已经退换 -->
+    <select id="isRefundGoods" resultType="String" parameterType="java.lang.Integer">
+		SELECT
+			count(*)
+		FROM
+			order_return_info a
+		where a.Order_Item_Id = #{orderItemId}
+	</select>
+
+    <!-- 查询退换货订单列表 -->
+    <select id="findOrderReturnInfoList" resultType="cn.yr.chile.order.dto.OrderReturnInfoDTO"
+            parameterType="java.util.Map">
+        select
+        a.Id,
+        a.Order_Id,
+        a.Apply_Status_Cd,
+        a.Apply_Time,
+        a.Order_Item_ID,
+        a.Return_Order_Number,
+        b.Origin_Platform_Cd,
+        c.Receive_Name,
+        c.Receive_Tel,
+        c.Order_Distrbute_Type_Cd,
+        d.Order_Status_Cd,
+        d.Create_Time,
+        d.Order_Remark,
+        d.Order_Number,
+        e.Product_Name,
+        e.Sale_Price,
+        s1.Code_Cn_Name AS originPlatformName,
+        s2.Code_Cn_Name AS applyStatusName,
+        s3.Code_Cn_Name AS orderStatusName
+        from order_return_info a
+        left join order_extend b on a.order_id = b.order_id
+        left join order_receive_info c on a.order_id = c.order_id
+        left join order_header d on a.order_id = d.order_id
+        left join order_item e on a.Order_Item_ID = e.Order_Item_Id
+        LEFT JOIN system_code s1 on b.Origin_Platform_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Origin_Platform_Cd'
+        LEFT JOIN system_code s2 on a.Apply_Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Apply_Status_Cd'
+        LEFT JOIN system_code s3 on d.Order_Status_Cd = s3.Code_Id AND s3.Code_Type_Cd = 'Order_Status_Cd'
+        where 1 = 1
+        <if test="applyTypeCd != null and applyTypeCd !=''">
+            and a.Apply_Type_Cd = #{applyTypeCd}
+        </if>
+        <if test="orderNumber != null and orderNumber !=''">
+            and d.Order_Number LIKE CONCAT('%',#{orderNumber},'%')
+        </if>
+        order by a.id desc
+    </select>
+
+
+    <!-- 根据退换货类型，查询退换货订单记录数 -->
+    <select id="getCountByOrderApplyType" resultType="int">
+        SELECT
+        count(*)
+        FROM
+        order_return_info
+        where
+        1=1
+        <if test="applyStatusCd != null">and Apply_Status_Cd = #{applyStatusCd}</if>
+    </select>
+
+
+    <select id="countOrderReturns" parameterType="java.util.Map" resultType="Integer">
+        select count(1) from order_return_info a
+        where 1 = 1
+        <if test="applyTypeCd != null and applyTypeCd !=''">
+            and a.Apply_Type_Cd = #{applyTypeCd}
+        </if>
+    </select>
+
+    <!-- 根据orderId和orderItemId以及状态值来查询 -->
+    <select id="getByAllField" resultType="OrderReturnInfo" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        ,
+        s1.Code_Cn_Name AS applyTypeName,
+        s2.Code_Cn_Name AS applyReasonName,
+        s3.Code_Cn_Name AS applyStatusName
+        FROM order_return_info a
+        LEFT JOIN system_code s1 ON a.Apply_Type_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Apply_Type_Cd'
+        LEFT JOIN system_code s2 ON a.Apply_Reason_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Order_Return_Reason_Cd'
+        LEFT JOIN system_code s3 ON a.Apply_Status_Cd = s3.Code_Id AND s3.Code_Type_Cd = 'Apply_Status_Cd'
+        where 1=1
+        <if test="id != null">AND a.Id = #{id}</if>
+        <if test="orderId != null">AND a.Order_Id = #{orderId}</if>
+        <if test="applyTypeCd != null">AND a.Apply_Type_Cd = #{applyTypeCd}</if>
+        <if test="applyReasonCd != null">AND a.Apply_Reason_Cd = #{applyReasonCd}</if>
+        <if test="reasonDetailDesc != null and reasonDetailDesc != ''">AND a.Reason_Detail_Desc = #{reasonDetailDesc}</if>
+        <if test="isReceiveGood != null">AND a.Is_Receive_Good = #{isReceiveGood}</if>
+        <if test="applyStatusCd != null">AND a.Apply_Status_Cd = #{applyStatusCd}</if>
+        <if test="lastUpdateUserId != null">AND a.Last_Update_User_ID = #{lastUpdateUserId}</if>
+        <if test="orderItemId != null">AND a.Order_Item_ID = #{orderItemId}</if>
+        <if test="returnExpressName != null">AND a.Return_Express_Name = #{returnExpressName}</if>
+        <if test="returnExpressNum != null and returnExpressNum != ''">AND a.Return_Express_Num = #{returnExpressNum}</if>
+        <if test="returnOrderNumber != null and returnOrderNumber != ''">AND a.Return_Order_Number = #{returnOrderNumber}</if>
+        <if test="isReturnAmt != null">AND a.Is_Return_Amt = #{isReturnAmt}</if>
+        <if test="rejectReason != null and rejectReason != ''">AND a.Reject_Reason = #{rejectReason}</if>
+    </select>
+
+    <select id="getOperatorByOrderId" parameterType="Integer" resultType="String">
+         select OPERATOR from audit_list where order_id = #{orderId} and Order_Item_ID = #{orderItemId} and AUDIT_TYPE_CD = 2
+     </select>
+
+    <select id="getOrderReturnInfoByOrderItemId" parameterType="Integer" resultType="OrderReturnInfo">
+        select
+        <include refid="allColumns"/>
+        from order_return_info
+        where 1=1
+        and Order_Item_ID = #{orderItemId}
+    </select>
+
+    <!-- 根据订单Id查询退款成功的商品列表 -->
+    <select id="findSuccessReturnByOrderId" resultType="OrderReturnInfo" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_return_info
+        WHERE order_Id = #{orderId}
+        AND Apply_Status_Cd = 2
+    </select>
+
+
+</mapper>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderPayamtDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        id, Order_Id, Amount, Payamt_Type_Cd, Serial_No, Payamt_Time, Exception, Is_Exception
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderPayamt" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_payamt (
+	        Order_Id, Amount, Payamt_Type_Cd, Serial_No, Payamt_Time, Exception, Is_Exception
+	    ) VALUES (
+	        #{orderId}, #{amount}, #{payamtTypeCd}, #{serialNo}, #{payamtTime}, #{exception}, #{isException}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderPayamt">
+	   UPDATE order_payamt SET
+		   Order_Id = #{orderId}, 
+		   Amount = #{amount}, 
+		   Payamt_Type_Cd = #{payamtTypeCd}, 
+		   Serial_No = #{serialNo}, 
+		   Payamt_Time = #{payamtTime}, 
+		   Exception = #{exception}, 
+		   Is_Exception = #{isException}
+	   WHERE 
+		   id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_payamt where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderPayamt" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_payamt 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderPayamt">  
+	    select 
+		<include refid="allColumns" />
+	    from order_payamt
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderPayamt" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from order_payamt a
+	    where 1=1
+		<if test="id != null"> and a.id = #{id}</if>
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="amount != null"> and a.Amount = #{amount}</if>
+		<if test="payamtTypeCd != null"> and a.Payamt_Type_Cd = #{payamtTypeCd}</if>
+		<if test="serialNo != null"> and a.Serial_No = #{serialNo}</if>
+		<if test="payamtTime != null"> and a.Payamt_Time = #{payamtTime}</if>
+		<if test="exception != null"> and a.Exception = #{exception}</if>
+		<if test="isException != null"> and a.Is_Exception = #{isException}</if>
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<select id="getOrderPayamtByOrderId" parameterType="int" resultType="OrderPayamt">
+		select 
+		<include refid="allColumns" />
+	    from order_payamt 
+	    where order_Id = #{orderId} and Payamt_Type_Cd = #{payamtTypeCd}
+	</select>
+
+</mapper>

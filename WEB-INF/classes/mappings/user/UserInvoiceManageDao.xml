@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserInvoiceManageDao">
+	<!--<resultMap id="userInvoiceManageMap" type="UserInvoiceManage">
+		<result property="invoiceId" column="Invoice_Id" />
+		<result property="userId" column="User_Id" />
+		<result property="invoiceTypeCd" column="Invoice_Type_Cd" />
+		<result property="invoiceForCd" column="Invoice_For_Cd" />
+		<result property="companyName" column="Company_Name" />
+		<result property="companyTaxpayerIdentifyCode" column="Company_Taxpayer_identify_code" />
+		<result property="companyRegisterAddr" column="Company_Register_Addr" />
+		<result property="companyRegisterTel" column="Company_Register_Tel" />
+		<result property="companyBankAccount" column="Company_Bank_Account" />
+		<result property="companyOpeningBankName" column="Company_Opening_Bank_Name" />
+		<result property="invoiceTitle" column="Invoice_Title" />
+		<result property="receiverName" column="Receiver_Name" />
+		<result property="receiverTel" column="Receiver_Tel" />
+		<result property="receiverProvinceId" column="Receiver_Province_Id" />
+		<result property="receiverCityId" column="Receiver_City_Id" />
+		<result property="receiverCountyId" column="Receiver_County_Id" />
+		<result property="receiverAddr" column="Receiver_Addr" />
+		<result property="createTime" column="Create_Time" />
+		<result property="lastUpdateTime" column="Last_Update_Time" />
+		<result property="isDefaultInvoice" column="Is_Default_Invoice" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Invoice_Id, 
+        User_Id, 
+        Invoice_Type_Cd, 
+        Invoice_For_Cd, 
+        Company_Name, 
+        Company_Taxpayer_identify_code, 
+        Company_Register_Addr, 
+        Company_Register_Tel, 
+        Company_Bank_Account, 
+        Company_Opening_Bank_Name, 
+        Invoice_Title, 
+        Create_Time,
+        Last_Update_Time,
+        Is_Default_Invoice,
+        Invoice_Province_Id,
+        Invoice_City_Id,
+        Invoice_County_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserInvoiceManage" useGeneratedKeys="true" keyProperty="Invoice_Id">
+	    INSERT INTO user_invoice_manage (
+	        User_Id, 
+	        Invoice_Type_Cd, 
+	        Invoice_For_Cd,
+	        Company_Name, 
+	        Company_Taxpayer_identify_code, 
+	        Company_Register_Addr, 
+	        Company_Register_Tel, 
+	        Company_Bank_Account, 
+	        Company_Opening_Bank_Name, 
+	        Invoice_Title, 
+	        Create_Time,
+	        Invoice_Province_Id,
+	        Invoice_City_Id,
+	        Invoice_County_Id
+	    ) VALUES (
+	        #{userId},
+	        #{invoiceTypeCd},
+	        #{invoiceForCd},
+	        #{companyName},
+	        #{companyTaxpayerIdentifyCode},
+	        #{companyRegisterAddr},
+	        #{companyRegisterTel},
+	        #{companyBankAccount},
+	        #{companyOpeningBankName},
+	        #{invoiceTitle}, 
+	        #{createTime},
+	        #{invoiceProvinceId},
+	        #{invoiceCityId},
+	        #{invoiceCountyId}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserInvoiceManage">
+	   UPDATE user_invoice_manage SET
+		   <if test="invoiceForCd != null">
+		   Invoice_For_Cd =#{invoiceForCd},
+		   </if>
+		   <if test="companyName != null and companyName !=''">
+		   Company_Name =#{companyName},
+		   </if>
+		   <if test="companyTaxpayerIdentifyCode != null">
+		   Company_Taxpayer_identify_code =#{companyTaxpayerIdentifyCode}, 
+		   </if>
+		   <if test="companyRegisterAddr != null and companyRegisterAddr !=''">
+		   Company_Register_Addr =#{companyRegisterAddr},
+		   </if>
+		   <if test="companyRegisterTel != null and companyRegisterTel !=''">
+		   Company_Register_Tel =#{companyRegisterTel},
+		   </if>
+		   <if test="companyBankAccount != null and companyBankAccount !=''">
+		   Company_Bank_Account =#{companyBankAccount},
+		   </if>
+		   <if test="companyOpeningBankName != null and companyOpeningBankName !=''">
+		   Company_Opening_Bank_Name =#{companyOpeningBankName},
+		   </if>
+		   <if test="invoiceTitle != null and invoiceTitle !=''">
+		   Invoice_Title =#{invoiceTitle},
+		   </if>
+		   <if test="isDefaultInvoice !=null">
+		   Is_Default_Invoice =#{isDefaultInvoice},
+		   </if>
+		    <if test="invoiceTypeCd != null and invoiceTypeCd !=''">
+		   Invoice_Type_Cd =#{invoiceTypeCd},
+		   </if>
+		   <if test="invoiceProvinceId != null">
+		   	Invoice_Province_Id =#{invoiceProvinceId},
+		   </if>
+		   <if test="invoiceCityId != null">
+		   	Invoice_City_Id =#{invoiceCityId},
+		   </if>
+		   <if test="invoiceCountyId != null">
+		   	Invoice_County_Id =#{invoiceCountyId},
+		   </if>
+		    <if test="lastUpdateTime != null and lastUpdateTime !=''">
+		   Last_Update_Time =#{lastUpdateTime}
+		   </if>
+	    <if test=" userId!= null">
+	    WHERE 
+		  User_Id =#{userId}
+           <if test=" invoiceId !=null">
+               and Invoice_Id =#{invoiceId} 
+             </if>  
+		   </if>
+	</update>
+
+	<!-- 修改全部 -->
+	<update id="updateAll" parameterType="UserInvoiceManage">
+		UPDATE user_invoice_manage SET
+			Invoice_For_Cd =#{invoiceForCd},
+			Company_Name =#{companyName},
+			Company_Taxpayer_identify_code =#{companyTaxpayerIdentifyCode},
+			Company_Register_Addr =#{companyRegisterAddr},
+			Company_Register_Tel =#{companyRegisterTel},
+			Company_Bank_Account =#{companyBankAccount},
+			Company_Opening_Bank_Name =#{companyOpeningBankName},
+			Invoice_Title =#{invoiceTitle},
+			Is_Default_Invoice =#{isDefaultInvoice},
+			Invoice_Type_Cd =#{invoiceTypeCd},
+			Invoice_Province_Id =#{invoiceProvinceId},
+			Invoice_City_Id =#{invoiceCityId},
+			Invoice_County_Id =#{invoiceCountyId},
+			Last_Update_Time =#{lastUpdateTime}
+			WHERE
+			User_Id =#{userId}
+			and Invoice_Id =#{invoiceId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_invoice_manage where Invoice_Id =#{invoiceId}
+	</delete>
+	
+	<!-- 根据用户删除 -->
+	<delete id="del" parameterType="map">
+		DELETE FROM user_invoice_manage where Invoice_Id =#{invoiceId} and User_Id = #{userId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserInvoiceManage" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_invoice_manage 
+	     WHERE 
+		Invoice_Id=#{invoiceId}
+	</select>
+	<!-- 根据主键获取 -->
+    <select id="getById" resultType="UserInvoiceManage" parameterType="map">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_invoice_manage 
+	     WHERE 
+		Invoice_Id=#{invoiceId}
+		and User_Id = #{userId}
+	</select>
+	
+	
+		<!-- 根据默认获取 -->
+    <select id="findDefault" resultType="UserInvoiceManage" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_invoice_manage 
+	     WHERE 
+		Is_Default_Invoice = #{isDefaultInvoice}
+	</select>
+	
+		<!-- 根据默认和用户获取 -->
+    <select id="findByDefaultUserId" resultType="UserInvoiceManage" parameterType="int">  
+		SELECT
+		Invoice_Id
+	     FROM user_invoice_manage 
+	     WHERE 
+	      User_Id =#{userId} and Is_Default_Invoice = #{isDefaultInvoice}
+	</select>
+	
+	<!-- 根据用户获取 -->
+    <select id="findByUserId" resultType="UserInvoiceManage" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_invoice_manage 
+	     WHERE 
+			  User_Id=#{userId}
+		order by Is_Default_Invoice desc,Last_Update_Time desc
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserInvoiceManage">  
+	    select 
+		<include refid="allColumns" />
+	    from user_invoice_manage
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserInvoiceManage" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_invoice_manage a
+	    where 1=1
+		<if test="invoiceId != null"> and a.Invoice_Id = #{invoiceId}</if>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="invoiceTypeCd != null"> and a.Invoice_Type_Cd = #{invoiceTypeCd}</if>
+		<if test="invoiceForCd != null"> and a.Invoice_For_Cd = #{invoiceForCd}</if>
+		<if test="companyName != null"> and a.Company_Name = #{companyName}</if>
+		<if test="companyTaxpayerIdentifyCode != null"> and a.Company_Taxpayer_identify_code = #{companyTaxpayerIdentifyCode}</if>
+		<if test="companyRegisterAddr != null"> and a.Company_Register_Addr = #{companyRegisterAddr}</if>
+		<if test="companyRegisterTel != null"> and a.Company_Register_Tel = #{companyRegisterTel}</if>
+		<if test="companyBankAccount != null"> and a.Company_Bank_Account = #{companyBankAccount}</if>
+		<if test="companyOpeningBankName != null"> and a.Company_Opening_Bank_Name = #{companyOpeningBankName}</if>
+		<if test="invoiceTitle != null"> and a.Invoice_Title = #{invoiceTitle}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and a.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="isDefaultInvoice != null"> and a.Is_Default_Invoice = #{isDefaultInvoice}</if>
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+
+</mapper>

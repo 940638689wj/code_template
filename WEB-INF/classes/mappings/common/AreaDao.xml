@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cn.yr.chile.common.dao.AreaDao">
+	<sql id="allColumns">
+		a.Id,
+		a.Area_Name,
+		a.Parent_Area_Id,
+		a.Level,
+		a.Post_code,
+		a.Sort,
+		a.Status_Cd,
+		a.Area_Route,
+		a.Last_Update_Time,
+		a.Create_Time,
+		a.Is_Common_Addr,
+		a.Is_Displayed,
+		a.Map_Lng,
+		a.Map_Lat,
+		a.Extend
+		
+	</sql>
+ 	<!-- 新增 -->
+	<insert id="insert" parameterType="cn.yr.chile.common.domain.Area" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO area (
+	        Area_Name,
+	        Parent_Area_Id, 
+	        Level,
+	        Create_Time,
+	        Post_code,
+	        Status_Cd,
+	        Sort,
+	        Extend,
+	        Area_Route,
+	        Last_Update_Time,
+	        Is_Common_Addr,
+	        Is_Displayed,
+	        Map_Lng,
+	        Map_Lat
+	    ) VALUES (
+	        #{areaName},
+	        #{parentAreaId},
+	        #{level},
+	        #{createTime},
+	        #{postCode},  
+	        #{statusCd},
+	        #{sort},    
+	        #{extend},  
+	        #{areaRoute},
+	        #{lastUpdateTime},
+	        #{isCommomAddr},
+	        #{isDisplayed},
+	        #{mapLng},  
+	        #{mapLat}    
+	    )
+	</insert>
+	<!-- 修改 -->
+	<update id="update" parameterType="Area">
+	   UPDATE area SET
+		   Area_Name=#{areaName},
+		   Parent_Area_Id=#{parentAreaId},
+		   Level = #{level},
+		   Post_code=#{postCode},
+		   Status_Cd=#{statusCd},
+		   Sort=#{sort},
+		   Extend=#{extend},
+		   Area_Route=#{areaRoute},
+		   Last_Update_Time=#{lastUpdateTime}
+		   <if test="isCommomAddr != null">
+		 	,Is_Common_Addr=#{isCommomAddr}
+		   </if>
+		   <if test="isDisplayed != null">
+		   ,Is_Displayed=#{isDisplayed}
+		   </if>
+		   <if test="mapLng != null">
+		   ,Map_Lng=#{mapLng} 
+		   </if>
+		   <if test="mapLat != null">
+		   ,Map_Lat=#{mapLat}
+		   </if>
+		   
+	   WHERE 
+		   Id = #{id}
+	</update>
+    <!-- 根据id获得Area -->
+
+    <select id="getById"  parameterType="java.lang.Long" resultType="Area">
+
+    
+       SELECT
+		<include refid="allColumns" />
+	  	FROM `area` as a WHERE a.id = #{0}
+    </select>
+    
+        <!-- 根据postcode获得Area -->
+    <select id="getByPostCode"  parameterType="cn.yr.chile.common.domain.Area" resultType="cn.yr.chile.common.domain.Area">
+       SELECT
+		<include refid="allColumns" />
+	  	FROM `area` as a WHERE a.Post_code = #{posdCode} and a.Status_Cd = 1
+    </select>
+   
+    <!-- 根据Name获得Area -->
+    <select id="getByName"  parameterType="java.lang.String" resultType="cn.yr.chile.common.domain.Area">
+       SELECT
+		<include refid="allColumns" />
+	  	FROM `area` as a WHERE a.area_name = #{name} and a.Status_Cd = 1
+    </select>
+   <!-- 分页查询物流 -->
+    <select id="findList" parameterType="cn.yr.chile.common.domain.Area"  resultType="cn.yr.chile.common.domain.Area">
+         SELECT
+		<include refid="allColumns" />
+		FROM `area` as a 
+		where a.Status_Cd = 1
+			<if test="level != null">
+				and a.level = #{level}
+			</if>
+			<if test="parentAreaId != null and parentAreaId != ''">
+				and a.parent_area_id = #{parentAreaId}
+			</if>
+			<if test="areaName != null and areaName != ''">
+				and a.area_name = #{areaName}
+			</if>
+    </select>
+
+	<!-- 根据 parentId 查询 -->
+	<select id="findByParentAreaIdOrderBySort" parameterType="java.lang.Long" resultType="cn.yr.chile.common.domain.Area">
+		SELECT
+		<include refid="allColumns" />
+		FROM `area` as a
+		WHERE
+	  	 a.parent_area_id = #{0}
+	  	 and a.Status_Cd=1
+		 and a.Is_Displayed =1
+		order by a.Sort ASC
+	</select>
+
+     <!-- 分页查询物流 -->
+    <select id="findByParentAreaIdOrderBySortDescAreaNameAsc" parameterType="java.util.HashMap" resultType="cn.yr.chile.common.domain.Area">
+         SELECT
+		<include refid="allColumns" />
+		FROM `area` as a
+		<where>
+			<if test="countyId != null and countyId != ''">
+				or a.parent_area_id = #{countyId}
+			</if>
+			<if test="town != null and town != ''">
+				or a.parent_area_id = #{town}
+			</if>
+			<if test="street != null and street != ''">
+				or a.Id = #{street}
+			</if>
+				  	 and a.Id > 3503
+				  	 and a.Status_Cd=1
+		</where>
+
+		order by a.sort asc
+    </select>
+
+	<!--根据 level 获取 area-->
+    <select id="findByLevel" parameterType="java.lang.Integer"  resultType="cn.yr.chile.common.domain.Area">
+         SELECT
+		<include refid="allColumns" />
+		FROM `area` as a WHERE a.level = #{0} and a.Status_Cd = 1
+    </select>
+
+	<!-- 分页获取 县/区 -->
+    <select id="findCountryList" resultType="cn.yr.chile.common.dto.CountryDTO">
+		SELECT
+		p1.Id AS countryId,
+		p1.Parent_Area_Id AS countryParentId,
+		p1.Area_Name AS countryName,
+		p2.Id AS cityId,
+		p2.Parent_Area_Id AS cityParentId,
+		p2.Area_Name AS cityName,
+		p3.Id AS provinceId,
+		p3.Parent_Area_Id AS provinceParentId,
+		p3.Area_Name AS provinceName,
+		p5.Org_Full_Name AS orgFullName,
+		p5.Org_Num AS orgNum,
+		p5.Org_Id AS orgId,
+		p6.Org_Id AS branchCompanyId,
+		p7.Org_Id AS largeAreaId
+		FROM area p1
+		LEFT JOIN area p2 ON p2.Id = p1.Parent_Area_Id
+		LEFT JOIN area p3 ON p3.Id = p2.Parent_Area_Id
+		LEFT JOIN org_area_xref p4 ON p4.Area_Id = p1.Id
+		LEFT JOIN organization p5 ON p5.Org_Id = p4.Org_Id
+		LEFT JOIN organization p6 ON p6.Org_Id = p5.Parent_Node
+		LEFT JOIN organization p7 ON p7.Org_Id = p6.Parent_Node
+		WHERE p1.Level = '3'
+		and p1.Status_Cd = 1
+		<if test="orgFullName != null and orgFullName != ''">
+			AND p7.Org_Full_Name LIKE CONCAT('%',#{orgFullName},'%')
+		</if>
+		<if test="branchCompanyOrgFullName != null and branchCompanyOrgFullName != ''">
+			AND p6.Org_Full_Name LIKE CONCAT('%',#{branchCompanyOrgFullName},'%')
+		</if>
+		<if test="officeOrgFullName != null and officeOrgFullName != ''">
+			AND p5.Org_Full_Name LIKE CONCAT('%',#{officeOrgFullName},'%')
+		</if>
+		<if test="provinceId != null ">
+			AND p3.Id = #{provinceId}
+		</if>
+		<if test="cityId != null ">
+			AND p2.Id = #{cityId}
+		</if>
+		<if test="countryId != null ">
+			AND p1.Id = #{countryId}
+		</if>
+		
+	</select>
+
+	<select id="findByLikeAreaNameAndLevel" resultType="cn.yr.chile.common.domain.Area" parameterType="java.util.Map">
+		select
+		<include refid="allColumns" />
+		from area a
+		where a.Area_Name LIKE CONCAT('%',#{areaName},'%')
+		and a.Status_Cd = 1
+		<if test="level != null ">
+		AND a.Level = #{level}
+		</if>
+	</select>
+	
+
+
+
+
+ </mapper>

@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="../css/dpl.css" rel="stylesheet" type="text/css"/>
+    <link href="../css/bui.css" rel="stylesheet" type="text/css"/>
+    <link href="../css/main.css" rel="stylesheet" type="text/css"/>
+    <link href="../css/page.css" rel="stylesheet" type="text/css"/>
+    <link href="../css/theme-01.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div class="container">
+    <div class="title-bar">
+        <div class="title-text">商城销售报表</div>
+        <form class="form-horizontal search-form mb0" method="get">
+            <div class="row">
+                <div class="control-group control-row-auto">
+                    <div class="controls ml0">
+                        <div class="pull-left">
+                            <input type="text" class="calendar control-text">
+                            <span class="mr5">至</span>
+                            <input type="text" class="calendar control-text">
+                            <button class="button button-primary ml">搜索</button>
+                        </div>
+                        <div class="steps steps-small pull-left">
+                            <ul>
+                                <li class="step-first step-active">
+                                    <b class="stepline"></b>
+                                    <div class="stepind">本周</div>
+                                </li>
+                                <li>
+                                    <b class="stepline"></b>
+                                    <div class="stepind">上周</div>
+                                </li>
+                                <li>
+                                    <b class="stepline"></b>
+                                    <div class="stepind">本月</div>
+                                </li>
+                                <li class="step-last">
+                                    <b class="stepline"></b>
+                                    <div class="stepind">上月</div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="pull-left offset1">
+                            <button class="button button-primary">导出明细报表</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="content-top">
+        <div id="grid"></div>
+    </div>
+
+    <div class="content-body">
+        <div id="tab">
+        </div>
+        <div style="height:300px">树状图</div>
+    </div>
+</div>
+<script type="text/javascript" src="../js/jquery-1.8.1.min.js"></script>
+<script type="text/javascript" src="../js/bui.js"></script>
+<script type="text/javascript" src="../js/config.js"></script>
+<script type="text/javascript" src="../js/admin.js"></script>
+<script type="text/javascript">
+    var Tab = BUI.Tab;
+    var tab = new Tab.Tab({
+        render : '#tab',
+        elCls : 'nav-tabs',
+        autoRender: true,
+        children:[
+            {text:'订单成交量',value:'1'},
+            {text:'订单总额',value:'2'},
+            {text:'商品退换量',value:'3'},
+            {text:'商品退换率',value:'4'}
+        ]
+    });
+    tab.on('selectedchange',function (ev) {
+        var item = ev.item;
+        $('#log').text(item.get('text') + ' ' + item.get('value'));
+    });
+    tab.setSelected(tab.getItemAt(0));
+
+    var Grid = BUI.Grid,
+        Toolbar = BUI.Toolbar,
+        Data = BUI.Data;
+    var Grid = Grid,
+        Store = Data.Store,
+        columns = [{
+            title : '订单成交量',
+            dataIndex :'a',
+            width:100
+        },{
+            title : '订单总额',
+            dataIndex :'b',
+            width:100
+        },{
+            title : '订单应支付总额',
+            dataIndex : 'c',
+            width:100
+        },{
+            title : '优惠券抵扣',
+            dataIndex : 'd',
+            width:150
+        },{
+            title : '积分抵扣金额',
+            dataIndex : 'e',
+            width:120
+        },{
+            title : '红包抵扣金额',
+            dataIndex : 'f',
+            width:120
+        },{
+            title : '购酒券抵扣金额',
+            dataIndex : 'g',
+            width:150
+        },{
+            title : '优惠总额',
+            dataIndex : 'h',
+            width:120
+        },{
+            title : '商品总销量',
+            dataIndex : 'i',
+            width:100
+        },{
+            title : '商品退换量',
+            dataIndex : 'j',
+            width:100
+        },{
+            title : '商品退换率',
+            dataIndex : 'k',
+            width:100
+        }],
+        data = [{a:'200'},{a:'cdd',b:'edd'},{a:'1333',c:'eee',d:2},{a:'1333',c:'eee',d:2},{a:'1333',c:'eee',d:2}];
+
+    var store = new Store({
+            data : data,
+            autoLoad:true,
+            pageSize:'20'
+        }),
+        grid = new Grid.Grid({
+            width: '100%',
+            render:'#grid',
+            columns : columns,
+            // 底部工具栏
+            bbar:{
+                // pagingBar:表明包含分页栏
+                pagingBar:true
+            },
+            store : store
+        });
+    grid.render();
+
+    BUI.use('bui/calendar',function(Calendar){
+        var datepicker = new Calendar.DatePicker({
+            trigger:'.calendar',
+            //delegateTrigger : true, //如果设置此参数，那么新增加的.calendar元素也会支持日历选择
+            autoRender : true,
+            align :{
+                node: 'trigger',     // 参考元素, falsy 或 window 为可视区域, 'trigger' 为触发元素, 其他为指定元素
+                points: ['tl','tl'], // ['tr', 'tl'] 表示 overlay 的 tl 与参考节点的 tr 对齐
+                offset: [0, 30]    // 有效值为 [n, m]
+            }
+        });
+    });
+</script>
+</body>
+</html>  

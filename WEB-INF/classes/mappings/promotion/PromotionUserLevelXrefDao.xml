@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionUserLevelXrefDao">
+	<!--<resultMap id="promotionUserLevelXrefMap" type="PromotionUserLevelXref">
+		<result property="promotionId" column="Promotion_Id" />
+		<result property="userLevelId" column="User_Level_Id" />
+		<result property="createTime" column="Create_Time" />
+		<result property="displayId" column="Display_Id" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Id,
+			p1.User_Level_Id,
+			p1.Create_Time,
+			p1.Display_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionUserLevelXref">
+	    INSERT INTO promotion_user_level_xref (
+			Promotion_Id,
+			User_Level_Id,
+			Create_Time, 
+			Display_Id
+	    ) VALUES (
+			#{promotionId},
+			#{userLevelId},
+			#{createTime},
+			#{displayId}
+	    )
+	</insert>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionUserLevelXref">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_user_level_xref p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionUserLevelXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_user_level_xref p1
+	    where a.deleted=0
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="userLevelId != null"> and p1.User_Level_Id = #{userLevelId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="displayId != null"> and p1.Display_Id = #{displayId}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<select id="findPromotionUserLevelXrefListByPromotionId" resultType="PromotionUserLevelXref" parameterType="java.lang.Integer">
+		select
+		<include refid="allColumns" />
+		from promotion_user_level_xref p1
+		where p1.Promotion_Id = #{0}
+	</select>
+	
+	<!-- 按活动Id删除数据 -->
+	<delete id="del" parameterType="int">
+		DELETE FROM promotion_user_level_xref where Promotion_Id = #{promotionId}
+	</delete>
+</mapper>

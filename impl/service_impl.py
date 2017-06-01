@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def service_impl(param):
 
   text = 'import org.springframework.beans.factory.annotation.Autowired;\n'
@@ -20,6 +21,7 @@ def service_impl(param):
       text += '     * @param page\n'
       text += '     * @param ' + param['table_name_convert'] + 'DTO\n'
       text += '     */\n'
+      text += '    @Override\n'
       text += '    public Page<' + param['table_name_convert_type'] + 'DTO> findPageList(Page<' + param['table_name_convert_type'] + 'DTO> page,' + param[
           'table_name_convert_type'] + 'DTO ' + param['table_name_convert'] + 'DTO){\n'
       text += '        Map<String,Object> map = Maps.newHashMap();\n'
@@ -36,6 +38,7 @@ def service_impl(param):
       text += '     * @param page\n'
       text += '     * @param ' + param['table_name_convert'] + '\n'
       text += '     */\n'
+      text += '    @Override\n'
       text += '    public Page<' + param['table_name_convert_type'] + '> findPageList(Page<' + param[
           'table_name_convert_type'] + '> page,' + param['table_name_convert_type'] + ' ' + param['table_name_convert'] + '){\n'
       text += '        ' + param['table_name_convert'] + '.setPage(page);\n'
@@ -52,6 +55,7 @@ def service_impl(param):
     text += '     * @param ' + \
         param['table_name_convert'] + ' id不存在则新增，存在则修改\n'
     text += '     */\n'
+    text += '    @Override\n'
     text += '    public void save(' + param['table_name_convert_type'] + ' ' + param[
         'table_name_convert'] + '){\n'
     text += '        if (' + param['table_name_convert'] + '.get' + \
@@ -65,19 +69,23 @@ def service_impl(param):
     text += '    }\n'
     text += '\n'
 
-  text += '    public void insert(Integer id){\n'
-  text += '        dao.insert(id);\n'
+  text += '    @Override\n'
+  text += '    public void insert(' + param['table_name_convert_type'] + ' ' + param['table_name_convert'] + '){\n'
+  text += '        dao.insert(' + param['table_name_convert'] + ');\n'
   text += '    }\n'
   text += '\n'
+  text += '    @Override\n'
   text += '    public void delete(Integer id){\n'
   text += '        dao.delete(id);\n'
   text += '    }\n'
   text += '\n'
+  text += '    @Override\n'
   text += '    public void update(' + param['table_name_convert_type'] + ' ' + param[
       'table_name_convert'] + '){\n'
   text += '        dao.update(' + param['table_name_convert'] + ');\n'
   text += '    }\n'
   text += '\n'
+  text += '    @Override\n'
   text += '    public ' + \
       param['table_name_convert_type'] + ' get(Integer id){\n'
   text += '        return dao.get(id);\n'
@@ -85,5 +93,5 @@ def service_impl(param):
   text += '\n'
   text += '}\n'
 
-  with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\' + param['table_name_convert_type'] + 'ServiceImpl.java', 'wb') as f:
+  with open(param['path'] + param['table_name_convert_type'] + 'ServiceImpl.java', 'wb') as f:
     f.write(text.encode('utf-8'))

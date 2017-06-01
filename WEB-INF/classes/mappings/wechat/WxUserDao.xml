@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.wechat.dao.WxUserDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Id,
+			p1.Open_Id,
+			p1.User_Id,
+			p1.Create_Time,
+			p1.Last_Update_Time,
+			p1.Nick_Name,
+			p1.Sex_Cd,
+			p1.City,
+			p1.Country,
+			p1.Province,
+			p1.Language,
+			p1.Head_Img_Url,
+			p1.Subscribe_Time,
+			p1.Group_Id,
+			p1.Qrcode_Store_Id,
+			p1.Qrcode_Store_Time,
+			p1.Qrcode_User_Id,
+			p1.Qrcode_User_Time,
+			p1.Subscribe_Status_Cd,
+			p1.Source_Type_Cd,
+			p1.Subscribe_DT
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="WxUser" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO wx_user (
+			Open_Id, 
+			User_Id, 
+			Create_Time, 
+			Last_Update_Time, 
+			Nick_Name, 
+			Sex_Cd, 
+			City, 
+			Country, 
+			Province, 
+			Language, 
+			Head_Img_Url, 
+			Subscribe_Time, 
+			Group_Id, 
+			Qrcode_Store_Id, 
+			Qrcode_Store_Time, 
+			Qrcode_User_Id, 
+			Qrcode_User_Time, 
+			Subscribe_Status_Cd, 
+			Source_Type_Cd, 
+			Subscribe_DT
+	    ) VALUES (
+			#{openId}, 
+			#{userId}, 
+			#{createTime}, 
+			#{lastUpdateTime}, 
+			#{nickName}, 
+			#{sexCd}, 
+			#{city}, 
+			#{country}, 
+			#{province}, 
+			#{language}, 
+			#{headImgUrl}, 
+			#{subscribeTime}, 
+			#{groupId}, 
+			#{qrcodeStoreId}, 
+			#{qrcodeStoreTime}, 
+			#{qrcodeUserId}, 
+			#{qrcodeUserTime}, 
+			#{subscribeStatusCd}, 
+			#{sourceTypeCd}, 
+			#{subscribeDt}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="WxUser">
+	   UPDATE wx_user SET
+	   		Open_Id = #{openId}, 
+	   		User_Id = #{userId}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}, 
+	   		Nick_Name = #{nickName}, 
+	   		Sex_Cd = #{sexCd}, 
+	   		City = #{city}, 
+	   		Country = #{country}, 
+	   		Province = #{province}, 
+	   		Language = #{language}, 
+	   		Head_Img_Url = #{headImgUrl}, 
+	   		Subscribe_Time = #{subscribeTime}, 
+	   		Group_Id = #{groupId}, 
+	   		Qrcode_Store_Id = #{qrcodeStoreId}, 
+	   		Qrcode_Store_Time = #{qrcodeStoreTime}, 
+	   		Qrcode_User_Id = #{qrcodeUserId}, 
+	   		Qrcode_User_Time = #{qrcodeUserTime}, 
+	   		Subscribe_Status_Cd = #{subscribeStatusCd}, 
+	   		Source_Type_Cd = #{sourceTypeCd}, 
+	   		Subscribe_DT = #{subscribeDt}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM wx_user where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="WxUser" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_user p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+
+	<!-- 根据 openId 获取 -->
+    <select id="getByOpenId" resultType="WxUser" parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_user p1
+	     WHERE
+			p1.Open_Id=#{0}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="WxUser" parameterType="java.util.HashMap">  
+	   SELECT y.Store_Name,x.* FROM 
+		(SELECT p2.Group_Name,p1.* FROM wx_user p1 LEFT JOIN wx_user_group p2 ON p1.Group_Id=p2.Group_Id
+			where 
+			1=1
+			<if test="groupId != null and groupId != ''"> and p1.Group_Id = #{groupId}</if>
+			<if test="id != null and id != ''"> and p1.id = #{id}</if>
+			
+		) x
+		LEFT JOIN
+		store y
+			ON
+		x.qrcode_store_id=y.Store_Id
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="WxUser" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_user p1
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="openId != null"> and p1.Open_Id = #{openId}</if>
+		<if test="userId != null"> and p1.User_Id = #{userId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="nickName != null"> and p1.Nick_Name = #{nickName}</if>
+		<if test="sexCd != null"> and p1.Sex_Cd = #{sexCd}</if>
+		<if test="city != null"> and p1.City = #{city}</if>
+		<if test="country != null"> and p1.Country = #{country}</if>
+		<if test="province != null"> and p1.Province = #{province}</if>
+		<if test="language != null"> and p1.Language = #{language}</if>
+		<if test="headImgUrl != null"> and p1.Head_Img_Url = #{headImgUrl}</if>
+		<if test="subscribeTime != null"> and p1.Subscribe_Time = #{subscribeTime}</if>
+		<if test="groupId != null"> and p1.Group_Id = #{groupId}</if>
+		<if test="qrcodeStoreId != null"> and p1.Qrcode_Store_Id = #{qrcodeStoreId}</if>
+		<if test="qrcodeStoreTime != null"> and p1.Qrcode_Store_Time = #{qrcodeStoreTime}</if>
+		<if test="qrcodeUserId != null"> and p1.Qrcode_User_Id = #{qrcodeUserId}</if>
+		<if test="qrcodeUserTime != null"> and p1.Qrcode_User_Time = #{qrcodeUserTime}</if>
+		<if test="subscribeStatusCd != null"> and p1.Subscribe_Status_Cd = #{subscribeStatusCd}</if>
+		<if test="sourceTypeCd != null"> and p1.Source_Type_Cd = #{sourceTypeCd}</if>
+		<if test="subscribeDt != null"> and p1.Subscribe_DT = #{subscribeDt}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<update id="updateSubscribeStatus" parameterType="java.util.Map">
+		update wx_user set Subscribe_Status_Cd = #{subscribeStatus}
+		<if test="subscribeStatus == 0"> , Subscribe_DT = #{subscribeDate}</if>
+		<if test="subscribeStatus == 1"> , Cancel_DT = #{cancelDate}</if>
+		where Open_Id = #{openId}
+	</update>
+
+	<!--设置第一次扫门店二维码id-->
+	<update id="setQrCodeStore" parameterType="java.util.Map">
+		update wx_user set Qrcode_Store_Id = #{qrcodeStoreId}, Qrcode_Store_Time = #{qrcodeStoreTime},
+		Source_Type_Cd = '1'
+		where Open_Id = #{openId}
+	</update>
+
+	<!--设置第一次扫微店主二维码id-->
+	<update id="setQrCodeUser" parameterType="java.util.Map">
+		update wx_user set Qrcode_User_Id = #{qrcodeUserId}, Qrcode_User_Time = #{qrcodeUserTime},
+		Source_Type_Cd = '2'
+		where Open_Id = #{openId}
+	</update>
+	
+	<!-- 新增用户数量 -->
+	<select id="findUserCountByDate" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT COUNT(1) FROM 
+			wx_user u 
+		WHERE 
+			<![CDATA[u.Create_Time >= #{startDate}]]>
+		AND 
+			<![CDATA[u.Create_Time <= #{endDate}]]>
+	</select>
+	
+	<!-- 总用户数量 -->
+	<select id="getAllUserCount" resultType="java.lang.Integer">
+		SELECT COUNT(1) FROM wx_user
+	</select>
+	<!-- 总用户数量 -->
+	<select id="getUserCountByGroupId" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(p.Id) FROM wx_user p
+		   where 1=1
+		 and p.Group_Id = #{groupId}
+	</select>
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductGroupDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Group_ID, Group_Name, Status_Cd, Create_Time, Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductGroup" useGeneratedKeys="true" keyProperty="productGroupId">
+	    INSERT INTO product_group (
+	        Product_Group_ID, Group_Name, Status_Cd, Create_Time, Last_Update_Time
+	    ) VALUES (
+	        #{productGroupId}, #{groupName}, #{statusCd}, #{createTime}, #{lastUpdateTime}  
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductGroup">
+	   UPDATE product_group SET
+		   Group_Name = #{groupName}, 
+		   Status_Cd = #{statusCd}, 
+		   Create_Time = #{createTime},
+		   Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+		   Product_Group_ID = #{productGroupId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM product_group where Product_Group_ID = #{productGroupId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductGroup" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_group 
+	     WHERE 
+			  Product_Group_ID=#{productGroupId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductGroup">  
+	    select 
+		<include refid="allColumns" />
+	    from product_group
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductGroup" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_group
+	    where 1=1
+		<if test="statusCd != null"> and Status_Cd = #{statusCd}</if>
+		and Status_Cd != 2 
+	</select>
+
+
+	<select id="getByName" resultType="ProductGroup" parameterType="java.lang.String">
+		select a.* from product_group a
+		where a.Group_Name = #{0}
+	</select>
+
+</mapper>

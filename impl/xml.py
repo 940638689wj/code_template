@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def xml(param):
   fields = param['fields']
   text = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -84,13 +85,13 @@ def xml(param):
   text += '        SELECT\n'
   text += '        <include refid="allColumns"/>\n'
   text += '        FROM ' + param['table_name'] + ' a\n'
-  text += '        WHERE ' + fields[0]['field_name'] + '=#{id}\n'
+  text += '        WHERE a.' + fields[0]['field_name'] + '=#{id}\n'
   text += '    </select>\n'
   text += '\n'
 
   text += '</mapper>\n'
 
-  with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\' + param['table_name_convert_type'] + 'Dao.xml', 'wb') as f:
+  with open(param['path'] + param['table_name_convert_type'] + 'Dao.xml', 'wb') as f:
     f.write(text.encode('utf-8'))
 
 
@@ -126,15 +127,14 @@ def connect_fields_update_for_if(fields):
   '''
   拼接更新方法的字段列表（使用if判断更新）
   '''
-  text = ''
-  for field in fields[:-1]:
-    text += '        <if test="' + field['field_convert'] + ' != null'
+  text = '        <trim prefix="set" suffixOverrides=",">\n'
+  for field in fields:
+    text += '            <if test="' + field['field_convert'] + ' != null'
     if field['field_type'] == 'String':
       text += ' and ' + field['field_convert'] + ' != \'\''
     text += '">\n'
-    text += '            ' + field['field_name'] + \
+    text += '                ' + field['field_name'] + \
         ' = #{' + field['field_convert'] + '},\n'
-    text += '        </if>\n'
-  text += '            ' + fields[-1]['field_name'] + \
-      ' = #{' + fields[-1]['field_convert'] + '}\n'
+    text += '            </if>\n'
+  text += '        </trim>\n'
   return text

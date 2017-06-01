@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.wechat.dao.WxEventActionDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Id,
+			p1.Event_Type,
+			p1.Is_Reply_All,
+			p1.Keyword_Reply_Id,
+			p1.Create_Time,
+			p1.Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="WxEventAction" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO wx_event_action (
+			Event_Type, 
+			Is_Reply_All, 
+			Keyword_Reply_Id, 
+			Create_Time, 
+			Last_Update_Time
+	    ) VALUES (
+			#{eventType}, 
+			#{isReplyAll}, 
+			#{keywordReplyId}, 
+			#{createTime}, 
+			#{lastUpdateTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="WxEventAction">
+	   UPDATE wx_event_action SET
+	   		Event_Type = #{eventType}, 
+	   		Is_Reply_All = #{isReplyAll}, 
+	   		Keyword_Reply_Id = #{keywordReplyId}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM wx_event_action where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="WxEventAction" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_event_action p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+
+	<!-- 根据 event_type 获取 -->
+    <select id="getByEventType" resultType="WxEventAction" parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_event_action p1
+	     WHERE
+			p1.Event_Type=#{0}
+	</select>
+
+	<!-- 根据 keywordReplyId 获取 -->
+    <select id="findByKeywordReplyId" resultType="WxEventAction" parameterType="java.lang.Integer">
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_event_action p1
+	     WHERE
+			p1.Keyword_Reply_Id=#{0}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="WxEventAction">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_event_action p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	<!-- 根据 initMessageId 查询 -->
+    <select id="findByInitMessageId" resultType="WxEventAction" parameterType="java.lang.Long">
+        SELECT
+        <include refid="allColumns"/>
+        FROM wx_event_action p1
+        LEFT JOIN wx_event_action_init_msg_xref b ON b.Event_Action_Id = p1.ID
+        WHERE b.Init_Message_Id = #{0}
+    </select>
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="WxEventAction" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_event_action p1
+	    where a.deleted=0
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="eventType != null"> and p1.Event_Type = #{eventType}</if>
+		<if test="isReplyAll != null"> and p1.Is_Reply_All = #{isReplyAll}</if>
+		<if test="keywordReplyId != null"> and p1.Keyword_Reply_Id = #{keywordReplyId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+</mapper>

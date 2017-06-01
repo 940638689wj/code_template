@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.CustomAreaDao">
+	<sql id="allColumns">
+		Defined_Page_Id AS id,
+		Defined_Page_Ttile AS title,
+		Defined_Page_Content AS content,
+		Defined_Page_Header_Footer AS headerFooter,
+		Defined_Page_View_Access_Url AS accessUrl,
+		Defined_Page_View_Times AS viewTimes,
+		Defined_Page_Create_Time AS createTime,
+		Is_Display AS isDisplay
+	</sql>
+	
+	<!-- 查询 -->
+	<select id="queryCustomArea" resultType="CustomAreaDTO" parameterType="java.util.HashMap">
+		SELECT
+			<include refid="allColumns"/>
+		FROM system_defined_page
+		ORDER BY Defined_Page_Create_Time DESC
+	</select>
+	
+	<!-- 删除 -->
+	<delete id="deleteCustomArea" parameterType="long">
+		DELETE FROM system_defined_page 
+		WHERE Defined_Page_Id = #{id}
+	</delete>
+	
+	<!-- 添加 -->
+	<insert id="addCustomArea" parameterType="cn.yr.chile.decorate.dto.CustomAreaDTO" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO system_defined_page( 
+			Defined_Page_Ttile, 
+			Defined_Page_Content, 
+			Defined_Page_Header_Footer,
+			Defined_Page_View_Times, 
+			Defined_Page_Create_Time, 
+			Is_Display
+		) VALUES (
+			#{title}, 
+			#{content}, 
+			#{headerFooter}, 
+			#{viewTimes},
+			#{createTime}, 
+			#{isDisplay} 
+		)
+	</insert>
+
+	<!-- 修改 -->
+	<update id="saveCustomArea" parameterType="cn.yr.chile.decorate.dto.CustomAreaDTO">
+		UPDATE system_defined_page 
+		SET Defined_Page_Content=#{content},
+			Defined_Page_Ttile=#{title},
+			Defined_Page_Header_Footer=#{headerFooter} 
+		WHERE Defined_Page_Id=#{id}
+	</update>
+	
+	<!-- 更新阅读次数 -->
+	<update id="addViewTimes" parameterType="cn.yr.chile.decorate.dto.CustomAreaDTO">
+		UPDATE system_defined_page 
+		SET Defined_Page_View_Times=#{viewTimes}
+		WHERE Defined_Page_Id=#{id}
+	</update>
+	
+	<!-- 根据id查询通知 -->
+	<select id="findCustomArea" resultType="cn.yr.chile.decorate.dto.CustomAreaDTO" parameterType="Integer">
+		SELECT
+			<include refid="allColumns"/>
+		FROM system_defined_page 
+		WHERE Defined_Page_Id = #{id}
+	</select>
+	
+</mapper>

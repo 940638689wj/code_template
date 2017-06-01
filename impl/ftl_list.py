@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def ftl_list(param):
 
 	url_convert = param['controller_url']
@@ -132,7 +133,7 @@ def ftl_list(param):
 			text+= '\n'
 	text+= '</script>\n'
 
-	with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\'+param['table_name_convert']+'.ftl','wb') as f:
+	with open(param['path'] + param['table_name_convert']+'.ftl','wb') as f:
 		f.write(text.encode('utf-8'))
 
 def tab(tab_num):

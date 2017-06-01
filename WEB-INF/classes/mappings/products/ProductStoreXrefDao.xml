@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductStoreXrefDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Store_Id, Product_Id,Create_Time
+	</sql>
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductStoreXref" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_store_xref (
+	        Store_Id, Product_Id, Create_Time
+	    ) VALUES (
+	        #{storeId}, #{productId}, #{createTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductStoreXref">
+	   UPDATE product_store_xref SET
+		   Product_Status_Cd = #{productStatusCd}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}, 
+		   Shelve_Time = #{shelveTime}, 
+		   Del_Time = #{delTime}
+	   WHERE 
+		   Store_Id = #{storeId}, 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_store_xref where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductStoreXref" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_store_xref 
+	     WHERE 
+			  Product_Id=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductStoreXref">  
+	    select 
+		<include refid="allColumns" />
+	    from product_store_xref
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductStoreXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_store_xref a
+	    where 1=1
+		<if test="storeId != null"> and a.Store_Id = #{storeId}</if>
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+
+	</select>
+	
+	<!-- 根据商品Id获取，自提门店 -->
+    <select id="getStoreId" resultType="ProductStoreXrefDTO" parameterType="int">  
+		SELECT
+			s1.Store_Id,
+			s2.Store_Name,
+			s2.Delivery_Time_Am_Start,
+			s2.Delivery_Time_Am_End,
+			s2.Delivery_Time_Pm_Start,
+			s2.Delivery_Time_Pm_End,
+			CONCAT(
+				IFNULL(a1.Area_Name,''),
+				IFNULL(a2.Area_Name,''),
+				IFNULL(a3.Area_Name,''),
+				s2.Detail_Address
+			) as storeAddress
+	    FROM product_store_xref s1
+	    LEFT JOIN store s2 ON s1.Store_Id = s2.Store_Id and s2.Status_Cd = 1
+	    LEFT JOIN area a1 on s2.Province_Id = a1.id
+		LEFT JOIN area a2 on s2.City_Id = a2.id
+		LEFT JOIN area a3 on s2.County_Id = a3.id
+	    WHERE 
+			 s1.Product_Id=#{productId}
+	</select>
+
+</mapper>

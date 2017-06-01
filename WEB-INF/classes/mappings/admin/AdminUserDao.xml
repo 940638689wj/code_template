@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.admin.dao.AdminUserDao">
+    <sql id="userColumns">
+        a.Admin_User_Id,
+        a.User_Name,
+        a.Password,
+        a.Admin_User_Status_Cd,
+        a.Real_Name,
+        a.User_Image_Url,
+        a.Create_Time,
+        a.Last_Login_Time,
+        a.Last_Login_IP
+    </sql>
+
+    <!-- 插入用户 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="adminUserId">
+        INSERT INTO admin_user(
+            User_Name,
+            Password,
+            Admin_User_Status_Cd,
+            Real_Name,
+            User_Image_Url,
+            Create_Time,
+            Last_Login_Time
+        ) VALUES (
+            #{userName},
+            #{password},
+            #{adminUserStatusCd},
+            #{realName},
+            #{userImageUrl},
+            #{createTime},
+            #{lastLoginTime}
+        )
+    </insert>
+
+    <!-- 更新adminUser -->
+    <update id="update">
+        UPDATE admin_user SET
+        <if test="password != null and password != ''">
+            Password = #{password},
+        </if>
+        Admin_User_Status_Cd = #{adminUserStatusCd},
+        Real_Name = #{realName}
+        WHERE Admin_User_Id = #{adminUserId}
+    </update>
+
+    <!-- 根据id获得adminUser -->
+    <select id="get" resultType="AdminUser" parameterType="AdminUser">
+        SELECT
+        <include refid="userColumns"/>
+        FROM admin_user a
+        WHERE a.Admin_User_Id = #{adminUserId}
+    </select>
+
+    <!-- 根据登录名查询用户 -->
+    <select id="getByLoginName" resultType="AdminUser" parameterType="AdminUser">
+        SELECT
+        <include refid="userColumns"/>
+        FROM admin_user a
+        WHERE a.User_Name = #{userName}/* AND a.Admin_User_Status_Cd > 0*/
+    </select>
+
+    <!-- 分页查询adminUser -->
+    <select id="findList" resultType="AdminUser">
+        SELECT
+        <include refid="userColumns"/>
+        FROM admin_user a
+        WHERE a.Admin_User_Status_Cd >= 100
+        ORDER BY a.Create_Time DESC
+    </select>
+
+    <!-- 更新用户密码 -->
+    <update id="updatePasswordById">
+        UPDATE admin_user SET
+        Password = #{password}
+        WHERE Admin_User_Id = #{adminUserId}
+    </update>
+
+    <!-- 逻辑删除 adminUser -->
+    <update id="deleteAdminUser">
+        UPDATE admin_user SET
+        Admin_User_Status_Cd = -1
+        WHERE Admin_User_Id = #{adminUserId}
+    </update>
+
+    <!-- 更新登录信息，如登录IP、登录时间 -->
+    <update id="updateLoginInfo">
+        UPDATE admin_user SET
+        Last_Login_Time = #{loginDate},
+        Last_Login_IP = #{loginIp}
+        WHERE Admin_User_Id = #{adminUserId}
+    </update>
+
+    <!-- 获取 roleId -->
+    <select id="findRoleIdListByAdminUserId" resultType="java.lang.Long" parameterType="java.lang.Long">
+        SELECT
+        a.Role_ID
+        FROM admin_user_role_xref a
+        WHERE a.Admin_User_ID = #{0}
+    </select>
+
+    <!-- 删除adminUser和 role关联表数据 -->
+    <delete id="deleteAdminUserRoleXref" parameterType="java.lang.Long">
+        DELETE FROM admin_user_role_xref WHERE Admin_User_ID = #{0}
+    </delete>
+    <delete id="deleteAdminUserRoleXrefByRoleId" parameterType="java.lang.Long">
+        DELETE FROM admin_user_role_xref WHERE Role_ID = #{0}
+    </delete>
+
+    <!-- 插入adminUser和 role关联表数据 -->
+    <insert id="insertAdminUserRoleXref">
+        INSERT INTO admin_user_role_xref(Admin_User_ID, Role_ID, Create_Time)
+        <foreach collection="roleIdList" item="roleId" separator=" union all ">
+            SELECT #{adminUserId}, #{roleId}, #{createTime} FROM dual
+        </foreach>
+    </insert>
+
+</mapper>

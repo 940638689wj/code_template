@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PayDiscountRuleDao">
+	<sql id="allColumns">
+		a.Rule_ID,
+		a.Pay_Times,
+		a.Discount_Value,
+		a.Status_Cd,
+		a.Create_Time
+	</sql>
+
+	<select id="getById" resultType="PayDiscountRule" parameterType="java.lang.Long">
+		SELECT 
+			<include refid="allColumns"/>
+		FROM pay_discount_rule a
+		WHERE a.Rule_ID = #{0}
+	</select>
+
+	<select id="findAll" resultType="PayDiscountRule">
+		SELECT
+			<include refid="allColumns" />
+		FROM pay_discount_rule a
+	</select>
+
+	<select id="getDiscountValueByPaymentTimes" resultType="java.math.BigDecimal" parameterType="java.lang.Integer">
+		SELECT
+		a.Discount_Value
+		FROM pay_discount_rule a
+		WHERE a.Pay_Times = #{0}
+			and a.Status_Cd = 1
+	</select>
+
+	<update id="update" parameterType="PayDiscountRule">
+		UPDATE pay_discount_rule
+		SET Discount_Value = #{discountValue}, Status_Cd = #{statusCd}
+		WHERE Rule_ID = #{ruleId}
+	</update>
+
+</mapper>

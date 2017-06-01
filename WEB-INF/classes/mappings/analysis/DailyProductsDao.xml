@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.DailyProductsDao">
+
+    <!-- 查询搜索范围内的订单日期、成交量、成交额，商品成交量 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.DailyProducts"
+            parameterType="cn.yr.chile.analysis.dto.ParameterDTO">
+        SELECT tt.* FROM (
+        SELECT
+        t.*, @rn :=@rn + 1 AS rankId
+        FROM
+        (
+        SELECT
+        p1.Master_Product_ID AS masterProductId,
+        max(p1.Product_Name) AS productName,
+        ifnull(sum(p2.total_quantity), 0) AS totalQuantity,
+        p3.Pic_Url AS picUrl,
+        p4.Brand_Name AS brandName,
+        p1.Real_Stock AS realStock,
+        p1.Bar_Code AS barCode,
+        p1.Tag_Price AS tagPrice,
+        p1.Default_Price AS defaultPrice,
+        ifnull(p5.Quantity, 0) AS waitQuantity,
+        ifnull(p6.Quantity, 0) AS returnQuantity,
+        ifnull(p7.Quantity, 0) AS preSale,
+        ifnull((p6.Quantity / SUM(p2.total_quantity)),0) AS returnRate
+        FROM
+        product p1
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        sum(t1.Quantity) AS total_quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t1.order_id = t2.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE 1=1
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_id
+        ) p2 ON p1.product_id = p2.product_id
+        LEFT JOIN product_pic_info p3 ON p3.Product_Id = p1.Product_Id
+        AND p3.Is_Default_Pic = 1
+        LEFT JOIN product_brand p4 ON p4.Brand_Id = p1.Brand_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE
+        t2.Order_Status_Cd = 20
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_Id
+        ) p5 ON p5.Product_Id = p1.Product_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_return_info t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        AND t2.Order_Item_ID = t1.Order_Item_Id
+        WHERE
+        t2.Apply_Status_Cd IN (3, 4)
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_Id
+        ) p6 ON p6.Product_Id = p1.Product_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE
+        t2.Order_Type_Cd = 2
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_Id
+        ) p7 ON p7.Product_Id = p1.Product_Id
+        WHERE
+        p1.Product_Status_Cd > 0
+        GROUP BY
+        p1.Master_Product_ID
+        ORDER BY
+        total_quantity DESC
+        ) t INNER JOIN (SELECT @rn := 0) t1 ON 1 = 1) tt
+        WHERE 1=1
+        <if test="productId !='' and productId !=null">
+            and masterProductId = #{productId}
+        </if>
+        <if test="searchType == 1 and searchType !=null and keyWords!='' and keyWords!=null">
+            and masterProductId = #{keyWords}
+        </if>
+        <if test="searchType == 2 and searchType !=null and keyWords!='' and keyWords!=null">
+            and barCode = #{keyWords}
+        </if>
+        <if test="searchType == 3 and searchType !=null and keyWords!='' and keyWords!=null">
+            and productName LIKE ('%${keyWords}%')
+        </if>
+        <if test="start!=null and limit!=null">
+            limit #{start},#{limit}
+        </if>
+    </select>
+
+    <!-- 获取记录总数-->
+    <select id="getCount" resultType="java.lang.Integer" parameterType="cn.yr.chile.analysis.dto.ParameterDTO">
+        SELECT
+        count(*)
+        FROM
+        (
+        SELECT
+        p1.Master_Product_ID AS masterProductId,
+        max(p1.Product_Name) AS productName,
+        ifnull(sum(p2.total_quantity), 0) AS totalQuantity,
+        p3.Pic_Url AS picUrl,
+        p4.Brand_Name AS brandName,
+        p1.Real_Stock AS realStock,
+        p1.Bar_Code AS barCode,
+        p1.Tag_Price AS tagPrice,
+        p1.Default_Price AS defaultPrice,
+        ifnull(p5.Quantity, 0) AS waitQuantity,
+        ifnull(p6.Quantity, 0) AS returnQuantity,
+        ifnull(p7.Quantity, 0) AS preSale,
+        ifnull((p6.Quantity / SUM(p2.total_quantity)),0) AS returnRate
+        FROM
+        product p1
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        sum(t1.Quantity) AS total_quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t1.order_id = t2.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE 1=1
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_id
+        ) p2 ON p1.product_id = p2.product_id
+        LEFT JOIN product_pic_info p3 ON p3.Product_Id = p1.Product_Id
+        AND p3.Is_Default_Pic = 1
+        LEFT JOIN product_brand p4 ON p4.Brand_Id = p1.Brand_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE
+        t2.Order_Status_Cd = 20
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_Id
+        ) p5 ON p5.Product_Id = p1.Product_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_return_info t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        AND t2.Order_Item_ID = t1.Order_Item_Id
+        WHERE
+        t2.Apply_Status_Cd IN (3, 4)
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_Id
+        ) p6 ON p6.Product_Id = p1.Product_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE
+        t2.Order_Type_Cd = 2
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        t1.Product_Id
+        ) p7 ON p7.Product_Id = p1.Product_Id
+        WHERE
+        p1.Product_Status_Cd > 0
+        GROUP BY
+        p1.Master_Product_ID
+        ORDER BY
+        total_quantity DESC
+        ) t INNER JOIN (SELECT @rn := 0) t1 ON 1 = 1
+        WHERE 1=1
+        <if test="productId !='' and productId !=null">
+            and masterProductId = #{productId}
+        </if>
+        <if test="searchType == 1 and searchType !=null and keyWords!='' and keyWords!=null">
+            and masterProductId = #{keyWords}
+        </if>
+        <if test="searchType == 2 and searchType !=null and keyWords!='' and keyWords!=null">
+            and barCode = #{keyWords}
+        </if>
+        <if test="searchType == 3 and searchType !=null and keyWords!='' and keyWords!=null">
+            and productName = #{keyWords}
+        </if>
+    </select>
+
+    <!-- 根据搜索条件查询 -->
+    <select id="findQuantity" resultType="cn.yr.chile.analysis.domain.DailyProducts"
+            parameterType="cn.yr.chile.analysis.dto.ParameterDTO">
+        SELECT
+        p1.Master_Product_ID AS masterProductId,
+        p1.Default_Price AS defaultPrice,
+        p2.reportDate,
+        ifnull(p2.total_quantity, 0) AS totalQuantity,
+        ifnull(p5.Quantity, 0) AS waitQuantity,
+        ifnull(p7.Quantity, 0) AS preSale
+        FROM
+        product p1
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        DATE_FORMAT(t1.Create_Time,'%Y-%m-%d') AS reportDate,
+        sum(t1.Quantity) AS total_quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t1.order_id = t2.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE 1=1
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        DATE_FORMAT(t1.Create_Time,'%Y%m%d'),t1.Product_Id
+        ) p2 ON p1.product_id = p2.product_id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE
+        t2.Order_Status_Cd = 20
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        DATE_FORMAT(t1.Create_Time,'%Y%m%d'),t1.Product_Id
+        ) p5 ON p5.Product_Id = p1.Product_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_return_info t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        AND t2.Order_Item_ID = t1.Order_Item_Id
+        WHERE
+        t2.Apply_Status_Cd IN (3, 4)
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        DATE_FORMAT(t1.Create_Time,'%Y%m%d'),t1.Product_Id
+        ) p6 ON p6.Product_Id = p1.Product_Id
+        LEFT JOIN (
+        SELECT
+        t1.Product_Id,
+        SUM(t1.Quantity) AS Quantity
+        FROM
+        order_item t1
+        INNER JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        INNER JOIN order_extend t3 ON t1.order_id = t3.order_id
+        WHERE
+        t2.Order_Type_Cd = 2
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Create_Time,'%Y%m%d')
+        </if>
+        GROUP BY
+        DATE_FORMAT(t1.Create_Time,'%Y%m%d'),t1.Product_Id
+        ) p7 ON p7.Product_Id = p1.Product_Id
+        WHERE
+        p1.Product_Status_Cd > 0
+        <if test="productId !='' and productId !=null">
+            and p1.Master_Product_ID = #{productId}
+        </if>
+        <if test="searchType == 1 and searchType !=null and keyWords!='' and keyWords!=null">
+            and masterProductId = #{keyWords}
+        </if>
+        <if test="searchType == 2 and searchType !=null and keyWords!='' and keyWords!=null">
+            and barCode = #{keyWords}
+        </if>
+        <if test="searchType == 3 and searchType !=null and keyWords!='' and keyWords!=null">
+            and productName = #{keyWords}
+        </if>
+    </select>
+
+</mapper>

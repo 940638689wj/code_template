@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.UserOrdersDao">
+
+    <!-- 查询搜索范围内的会员id、姓名、订单量，订单额，实付额，退款金额 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.UserOrders" parameterType="java.util.Map">
+        SELECT
+        u1.User_Id AS userId,
+        u1.Login_Name AS loginName,
+        u1.User_Name AS userName,
+        COUNT(*) AS orderQuantity,
+        SUM(o.Order_Total_Amt) AS orderTotalAmt,
+        SUM(o.Order_Pay_Amt) AS orderPayAmt,
+        SUM(ori.Return_Amt) AS orderReturnAmt
+        FROM
+        order_header o
+        LEFT JOIN user u1 ON u1.User_Id = o.User_Id
+        LEFT JOIN order_return_info ori ON ori.Order_Id = o.Order_Id AND ori.Apply_Status_Cd = 4
+        LEFT JOIN order_extend oe ON oe.Order_id = o.Order_id
+        WHERE o.Order_Pay_Status_Cd = 2
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and oe.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        GROUP BY
+        u1.User_Id,u1.Login_Name,u1.User_Name
+    </select>
+
+    <!-- 查询搜索范围内的订单量、订单额 -->
+    <select id="findOrderList" resultType="cn.yr.chile.analysis.domain.UserOrders" parameterType="java.util.Map">
+        SELECT
+        DATE_FORMAT(o.Create_Time, '%Y-%m-%d') AS reportDate,
+        COUNT(*) AS orderQuantity,
+        SUM(o.Order_Total_Amt) AS orderTotalAmt
+        FROM
+        order_header o
+        LEFT JOIN user u1 ON u1.User_Id = o.User_Id
+        LEFT JOIN order_extend oe ON oe.Order_id = o.Order_id
+        WHERE o.Order_Pay_Status_Cd = 2
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and oe.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="userId !='' and userId !=null">
+            and u1.User_Id = #{userId}
+        </if>
+        GROUP BY
+        DATE_FORMAT(o.Create_Time, '%Y-%m-%d')
+    </select>
+
+</mapper>

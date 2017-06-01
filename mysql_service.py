@@ -1,9 +1,10 @@
+#-*- coding: UTF-8 -*-
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 global engine 
-engine = create_engine('mysql+mysqlconnector://root:Aa123456@dev.xmyr.cn:9875/ico_test')
+engine = create_engine('mysql+mysqlconnector://')
 global DBSession
 global database_name
 
@@ -47,6 +48,7 @@ def find_table_list():
 
 
 def find_table_struct(table_name):
+  global database_name
   # 查询表结构
   # 创建session对象:
   session = DBSession()
@@ -60,7 +62,7 @@ def find_table_struct(table_name):
   sql += ' and t1.table_schema=t2.table_schema '
   sql += ' left join information_schema.KEY_COLUMN_USAGE T3 on t3.table_name=t2.table_name '
   sql += ' and t3.table_schema=t2.table_schema and t2.column_name=t3.column_name and referenced_column_name is not null '
-  sql += ' where upper(t2.table_schema)=upper(\'mallxiahang\') '
+  sql += ' where upper(t2.table_schema)=upper(\''+database_name+'\') '
   sql += ' and t2.table_name = \'' + table_name + \
       '\' order by table_name,ordinal_position'
   result = list(session.execute(sql).fetchall())
@@ -75,7 +77,7 @@ def find_table_struct(table_name):
 def get_java_type(type_name):
   if 'int' in type_name:
     return 'Integer'
-  if 'varchar' in type_name:
+  if 'varchar' in type_name or 'text' in type_name:
     return 'String'
   if 'date' in type_name:
     return 'Date'

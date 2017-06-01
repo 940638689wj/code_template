@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserScoreDetail2Dao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Score_Detail_Id, Score_Income, Score_Expend, Remark, Order_Number, User_Id, Admin_User_Id, Admin_User_Name, Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserScoreDetail" useGeneratedKeys="true" keyProperty="Score_Detail_Id">
+	    INSERT INTO user_score_detail (
+	        Score_Income, Score_Expend, Remark, Order_Number, User_Id, Admin_User_Id, Admin_User_Name, Create_Time,oper_event_type_cd
+	    ) VALUES (
+	        #{scoreIncome}, #{scoreExpend}, #{remark}, #{orderNumber}, #{userId}, #{adminUserId}, #{adminUserName}, #{createTime},#{operEventTypeCd}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserScoreDetail">
+	   UPDATE user_score_detail SET
+		   Score_Income = #{scoreIncome}, 
+		   Score_Expend = #{scoreExpend}, 
+		   Remark = #{remark}, 
+		   Order_Number = #{orderNumber}, 
+		   User_Id = #{userId}, 
+		   Admin_User_Id = #{adminUserId}, 
+		   Admin_User_Name = #{adminUserName}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   Score_Detail_Id = #{scoreDetailId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_score_detail where Score_Detail_Id = #{scoreDetailId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserScoreDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_score_detail 
+	     WHERE 
+			  Score_Detail_Id=#{scoreDetailId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserScoreDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_score_detail
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserScoreDetail" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_score_detail a
+	    where 1=1
+	    <if test="operEventTypeCd != null">and a.OPER_EVENT_TYPE_CD = #{operEventTypeCd}</if>
+		<if test="scoreDetailId != null"> and a.Score_Detail_Id = #{scoreDetailId}</if>
+		<if test="scoreIncome != null"> and a.Score_Income = #{scoreIncome}</if>
+		<if test="scoreExpend != null"> and a.Score_Expend = #{scoreExpend}</if>
+		<if test="remark != null"> and a.Remark = #{remark}</if>
+		<if test="orderNumber != null"> and a.Order_Number = #{orderNumber}</if>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="adminUserId != null"> and a.Admin_User_Id = #{adminUserId}</if>
+		<if test="adminUserName != null"> and a.Admin_User_Name = #{adminUserName}</if>
+		<if test="createTime != null"> and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') =DATE_FORMAT(#{createTime},'%Y-%m-%d')</if>
+		 order by a.Create_Time desc 
+	</select>
+
+		<!-- 根据UserId获取 -->
+    <select id="findListByUserId" resultType="UserScoreDetail" parameterType="Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_score_detail 
+	     WHERE 
+			  User_id=#{userId}
+		order by create_time desc
+	</select>
+	
+	<!-- 根据分页获取 -->
+    <select id="findPageByUserId" resultType="UserScoreDetail" parameterType="java.util.HashMap">  
+		SELECT
+		<include refid="allColumns" />
+	    FROM user_score_detail 
+	    WHERE 
+			 User_id=#{userId}
+		<if test="type != null and type == 1">and Score_Expend is null</if>
+		<if test="type != null and type == 2">and Score_Income is null</if>
+		ORDER BY create_time desc
+	</select>
+
+	<select id="findListByLimit" resultType="UserScoreDetail" parameterType="cn.yr.chile.user.dto.UserLimitDTO">
+		SELECT
+		d.Score_Detail_Id, 
+		d.Score_Income, 
+		d.Score_Expend,
+		d.Remark, 
+		d.Order_Number, 
+		d.User_Id, 
+		d.Admin_User_Id, 
+		d.Admin_User_Name, 
+		d.Create_Time,
+		d.Consume_Balance,
+		s.Code_Cn_Name
+		FROM user_score_detail d
+		LEFT JOIN system_code s ON s.Code_Id = d.OPER_Event_Type_Cd AND s.Code_Type_Cd = 'OPER_Event_Type_Cd'
+		WHERE User_id=#{userId}
+		<if test="startTime != null">AND Create_Time &gt; #{startTime}</if>
+		<if test="endTime != null">AND Create_Time &lt; #{endTime}</if>
+		ORDER BY Score_Detail_Id DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+
+	<!-- 查询是否已经签到 -->
+	<select id="querySign" resultType="int" parameterType="Integer">
+		SELECT
+			COUNT(a.Remark)
+		FROM
+			user_score_detail a
+		WHERE
+		a.User_Id = #{userId}
+		AND	EXTRACT(YEAR FROM a.Create_Time) = EXTRACT(YEAR FROM now())
+		AND EXTRACT(MONTH FROM a.Create_Time) = EXTRACT(MONTH FROM now())
+		AND EXTRACT(DAY FROM a.Create_Time) = EXTRACT(DAY FROM now())
+		AND a.Remark = '签到';
+	</select>
+	<!--查询积分记录总数-->
+	<select id="findListByLimitCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*) FROM (
+		SELECT
+		<include refid="allColumns"/>
+		FROM user_score_detail
+		WHERE User_id=#{userId}
+		) as a
+	</select>
+	
+	<!-- 现金卡充值记录  分页 -->
+	<select id="findRecordByLimit" resultType="UserScoreDetail"  parameterType="cn.yr.chile.user.dto.CardRechargeRecordLimitDTO">
+		SELECT
+			<include refid="allColumns"/>
+			FROM user_score_detail 
+			WHERE User_Id = #{userId}
+			AND   Remark = '积分卡充值'
+			ORDER BY Create_Time DESC
+			LIMIT #{start},#{pageSize} 
+			
+	</select>
+	
+</mapper>

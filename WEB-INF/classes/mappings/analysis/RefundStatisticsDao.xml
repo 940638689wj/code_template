@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.RefundStatisticsDao">
+
+    <!-- 查询发货统计数据 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.RefundStatistics" parameterType="java.util.Map">
+        SELECT
+            t2.Order_Number AS orderNumber,
+            t1.Last_Update_Time AS completeTime,
+            t7.User_Name AS adminUserName,
+            t1.Return_Amt AS amount,
+            t3.Pay_Score_Amt AS consume,
+            t4.Code_Cn_Name AS orderPayWay,
+            t5.Login_Name AS loginName
+        FROM
+            order_return_info t1
+        LEFT JOIN order_header t2 ON t2.Order_Id = t1.Order_Id
+        LEFT JOIN order_item t3 ON t3.Order_Item_Id = t1.Order_Item_ID
+        LEFT JOIN system_code t4 ON t4.Code_Id = t2.Order_Pay_Way_Cd AND t4.Code_Type_Cd = "ORDER_PAY_WAY_CD"
+        LEFT JOIN user t5 ON t5.User_Id = t2.User_Id
+        LEFT JOIN order_extend t6 ON t6.Order_Id = t2.Order_Id
+        LEFT JOIN admin_user t7 ON t7.Admin_User_Id = t1.Last_Update_User_ID
+        LEFT JOIN order_receive_info t8 ON t8.Order_Id = t1.Order_Id
+        WHERE t1.Apply_Type_Cd in(1,2)
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t2.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t2.Create_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t6.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="keyWords !='' and keyWords !=null and keyWordType !=null and keyWordType==1">
+            and t2.Order_Number = #{keyWords}
+        </if>
+        <if test="keyWords !='' and keyWords !=null and keyWordType !=null and keyWordType==2">
+            and t8.Receive_Name = #{keyWords}
+        </if>
+        <if test="keyWords !='' and keyWords !=null and keyWordType !=null and keyWordType==3">
+            and t8.Receive_Tel = #{keyWords}
+        </if>
+        <if test="keyWords !='' and keyWords !=null and keyWordType !=null and keyWordType==4">
+            and t5.Login_Name = #{keyWords}
+        </if>
+    </select>
+
+    <!-- 查询发货总数 -->
+    <!--<select id="getTotal" resultType="cn.yr.chile.analysis.domain.InvoiceStatistics">-->
+        <!--SELECT-->
+        <!--COUNT(*) AS orderQuantity,-->
+        <!--SUM(o.Order_Express_Amt) AS expressTotalAmt-->
+        <!--FROM-->
+        <!--order_header o-->
+        <!--LEFT JOIN order_receive_info ori ON ori.Order_Id = o.Order_Id-->
+        <!--LEFT JOIN order_operation_info ooi ON ooi.Order_Id = o.Order_Id AND ooi.Oper_Type_Cd = 5-->
+        <!--LEFT JOIN express e ON e.Express_Id = ori.Express_ID-->
+        <!--LEFT JOIN user u ON u.User_Id = o.User_Id-->
+        <!--LEFT JOIN admin_user au ON au.Admin_User_Id = ooi.Oper_User_Id-->
+        <!--WHERE o.ORDER_STATUS_CD in(3,5)-->
+        <!--ORDER BY ori.Send_Time-->
+    <!--</select>-->
+
+</mapper>

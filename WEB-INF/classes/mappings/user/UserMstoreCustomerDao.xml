@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreCustomerDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.M_Store_User_Id, a.Place_Order_User_Id, a.Consume_Cnt, a.Consume_Amt
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstoreCustomer" useGeneratedKeys="true">
+	    INSERT INTO user_m_store_customer (
+	        M_Store_User_Id,Place_Order_User_Id,Consume_Cnt, Consume_Amt
+	    ) VALUES (
+	        #{mstoreUserId},#{placeOrderUserId},#{consumeCnt}, #{consumeAmt}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstoreCustomer">
+	   UPDATE user_m_store_customer SET
+		   Consume_Cnt = #{consumeCnt}, 
+		   Consume_Amt = #{consumeAmt}
+	   WHERE M_Store_User_Id = #{mstoreUserId} and Place_Order_User_Id = #{placeOrderUserId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store_customer where M_Store_User_Id = #{mstoreUserId} and Place_Order_User_Id = #{placeOrderUserId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstoreCustomer" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_m_store_customer a 
+	     WHERE 
+			  a.M_Store_User_Id=#{mstoreUserId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstoreCustomer">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_customer a
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserMstoreCustomer" parameterType="UserMstoreCustomer">  
+	     select a.M_Store_User_Id,
+				a.Place_Order_User_Id,
+				a.Consume_Cnt,
+				a.Consume_Amt,
+				b.User_Name,
+				b.Head_Portrait_Url 
+		 from user_m_store_customer a 
+		 left join user b 
+		 on a.Place_Order_User_Id=b.User_Id
+	    <where>
+			<if test="mstoreUserId != null and mstoreUserId != '' "> and a.M_Store_User_Id = #{mstoreUserId}</if>
+			<if test="placeOrderUserId != null and placeOrderUserId != '' "> and a.Place_Order_User_Id = #{placeOrderUserId}</if>
+			<if test="consumeCnt != null and consumeCnt != '' "> and a.Consume_Cnt = #{consumeCnt}</if>
+			<if test="consumeAmt != null and consumeAmt != '' "> and a.Consume_Amt = #{consumeAmt}</if>
+		</where>
+	</select>
+
+</mapper>

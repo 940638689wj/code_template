@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.common.dao.BusinessConfigDao">
+    <sql id="allBusinessConfigColumns">
+        p1.BUSINESS_CONFIG_ID,
+        p1.BUSINESS_CONFIG_KEY,
+        p1.BUSINESS_CONFIG_VALUE,
+        p1.BUSINESS_CONFIG_TYPE_ID,
+        p1.BUSINESS_CONFIG_KEY_LABEL,
+        p1.is_required,
+        p1.data_format,
+        p1.remark
+    </sql>
+
+    <sql id="allBusinessConfigTypeColumns">
+        p2.BUSINESS_CONFIG_TYPE_ID,
+        p2.BUSINESS_CONFIG_TYPE_NAME,
+        p2.BUSINESS_CONFIG_TYPE,
+        p2.IS_Active,
+        p2.IS_SHOW
+    </sql>
+
+    <!-- 分页获取 配置类型 -->
+    <select id="findConfigTypePage" resultType="BusinessConfigType" parameterType="java.util.Map">
+        SELECT
+        <include refid="allBusinessConfigTypeColumns"/>
+        FROM business_config_type p2
+        WHERE p2.IS_SHOW = #{isShow}
+        <if test="configTypeContent != null and configTypeContent != ''">
+            AND p2.BUSINESS_CONFIG_TYPE in ${configTypeContent}
+        </if>
+        <if test="isActive != null and isActive != ''">
+            AND p2.IS_Active = #{isActive}
+        </if>
+    </select>
+
+    <!-- 获取配置类型 -->
+    <select id="getBusinessConfigTypeById" resultType="BusinessConfigType" parameterType="java.lang.Long">
+        SELECT
+        <include refid="allBusinessConfigTypeColumns"/>
+        FROM business_config_type p2
+        WHERE p2.BUSINESS_CONFIG_TYPE_ID = #{0}
+    </select>
+
+    <!-- 获取配置类型 -->
+    <select id="getBusinessConfigTypeByType" resultType="BusinessConfigType" parameterType="java.lang.String">
+        SELECT
+        <include refid="allBusinessConfigTypeColumns"/>
+        FROM business_config_type p2
+        WHERE p2.BUSINESS_CONFIG_TYPE = #{0}
+    </select>
+
+    <!-- 获取所有配置类型 -->
+    <select id="findAllBusinessConfigType" resultType="BusinessConfigType">
+        SELECT
+        <include refid="allBusinessConfigTypeColumns"/>
+        FROM business_config_type p2
+    </select>
+
+    <!-- 获取配置 -->
+    <select id="getBusinessConfigByTypeAndConfigKey" resultType="BusinessConfig" parameterType="java.util.Map">
+        SELECT
+        <include refid="allBusinessConfigColumns"/>
+        FROM business_config p1
+        LEFT JOIN business_config_type p2 ON p1.BUSINESS_CONFIG_TYPE_ID = p2.BUSINESS_CONFIG_TYPE_ID
+        WHERE p2.BUSINESS_CONFIG_TYPE = #{configType} AND p1.BUSINESS_CONFIG_KEY = #{configKey}
+    </select>
+    <!-- 获取配置 -->
+    <select id="findBusinessConfigByTypeId" resultType="BusinessConfig">
+        SELECT
+        <include refid="allBusinessConfigColumns"/>
+        FROM business_config p1
+        WHERE p1.BUSINESS_CONFIG_TYPE_ID = #{0}
+    </select>
+
+  <!-- 获取激活配置类型 -->
+    <select id="findAllBusinessConfigTypeIsActive" resultType="BusinessConfigType">
+        SELECT
+        <include refid="allBusinessConfigTypeColumns"/>
+        FROM business_config_type p2
+        where  p2.Is_Active = 1
+    </select>
+    <!-- 更新 businessConfig -->
+    <update id="update">
+        UPDATE business_config SET
+        BUSINESS_CONFIG_VALUE = #{businessConfigValue},
+        data_format = #{dataFormat}
+        WHERE BUSINESS_CONFIG_ID = #{businessConfigId}
+    </update>
+
+    <!-- 更新 businessConfigType -->
+    <update id="updateBusinessConfigType" parameterType="BusinessConfigType">
+        UPDATE business_config_type SET
+        BUSINESS_CONFIG_TYPE_NAME = #{businessConfigTypeName},
+        IS_Active = #{isActive},
+        IS_SHOW = #{isShow}
+        WHERE BUSINESS_CONFIG_TYPE_ID = #{businessConfigTypeId}
+    </update>
+    
+    <select id="getPayWay" resultType="String">
+    	SELECT GROUP_CONCAT(business_config_type) 
+    	FROM business_config_type 
+    	WHERE Business_Config_Type_ID IN(2016060705,2016060706,2016060707) AND Is_Active = 1
+    </select>
+</mapper>

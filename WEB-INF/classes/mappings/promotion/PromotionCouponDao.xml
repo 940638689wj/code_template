@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionCouponDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Id,
+			p1.Coupon_Take_Start_Time,
+			p1.Coupon_Take_End_Time,
+			p1.Coupon_Total_Num,
+			p1.Coupon_Persion_Quota_Num,
+			p1.Coupon_Push_Order_Amt_Limit,
+			p1.Coupon_Value,
+			p1.Is_Pre_Generate,
+			p1.Generate_Red_Packet_Cnt,
+			p1.Total_Coupon_Value,
+			p1.Single_Red_Packet_Limit,
+			p1.Deadline_Hours,
+			p1.Push_Type_Cd
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionCoupon" useGeneratedKeys="true" keyProperty="promotionId">
+	    INSERT INTO promotion_coupon (
+	    	Promotion_Id,
+			Coupon_Take_Start_Time,
+			Coupon_Take_End_Time, 
+			Coupon_Total_Num, 
+			Coupon_Persion_Quota_Num, 
+			Coupon_Push_Order_Amt_Limit, 
+			Coupon_Value,
+			Is_Pre_Generate,
+			Generate_Red_Packet_Cnt,
+			Total_Coupon_Value,
+			Single_Red_Packet_Limit,
+			Deadline_Hours,
+			Push_Type_Cd
+	    ) VALUES (
+	    	#{promotionId},
+			#{couponTakeStartTime},
+			#{couponTakeEndTime},
+			#{couponTotalNum}, 
+			#{couponPersionQuotaNum}, 
+			#{couponPushOrderAmtLimit}, 
+			#{couponValue},
+			#{isPreGenerate},
+			#{generateRedPacketCnt},
+			#{totalCouponValue},
+			#{singleRedPacketLimit},
+			#{deadlineHours},
+			#{pushTypeCd}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionCoupon">
+	   UPDATE promotion_coupon SET
+	   		Coupon_Take_Start_Time = #{couponTakeStartTime}, 
+	   		Coupon_Take_End_Time = #{couponTakeEndTime}, 
+	   		Coupon_Total_Num = #{couponTotalNum}, 
+	   		Coupon_Persion_Quota_Num = #{couponPersionQuotaNum}, 
+	   		Coupon_Push_Order_Amt_Limit = #{couponPushOrderAmtLimit}, 
+	   		Coupon_Value = #{couponValue},
+	   		Is_Pre_Generate = #{isPreGenerate},
+	   		Generate_Red_Packet_Cnt = #{generateRedPacketCnt},
+	   		Total_Coupon_Value = #{totalCouponValue},
+	   		Single_Red_Packet_Limit = #{singleRedPacketLimit},
+	   		Deadline_Hours = #{deadlineHours},
+	   		Push_Type_Cd = #{pushTypeCd}
+	   WHERE 
+			Promotion_Id = #{promotionId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion_coupon where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionCoupon" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_coupon p1
+	     WHERE
+			p1.Promotion_Id=#{0}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionCoupon">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionCoupon" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon p1
+	    where 1=1 
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="couponTakeStartTime != null"> and p1.Coupon_Take_Start_Time = #{couponTakeStartTime}</if>
+		<if test="couponTakeEndTime != null"> and p1.Coupon_Take_End_Time = #{couponTakeEndTime}</if>
+		<if test="couponTotalNum != null"> and p1.Coupon_Total_Num = #{couponTotalNum}</if>
+		<if test="couponPersionQuotaNum != null"> and p1.Coupon_Persion_Quota_Num = #{couponPersionQuotaNum}</if>
+		<if test="couponPushOrderAmtLimit != null"> and p1.Coupon_Push_Order_Amt_Limit = #{couponPushOrderAmtLimit}</if>
+		<if test="couponValue != null"> and p1.Coupon_Value = #{couponValue}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<select id="findOrderCoupon" resultType="CurrentOrderCouponDTO" parameterType="java.util.HashMap">
+		SELECT
+			a1.promotion_id
+		FROM
+			(
+				SELECT
+					p1.promotion_id,
+					p1.Is_All_Area_Join
+				FROM
+					promotion p1
+				WHERE
+					p1.Status_Cd = 1
+				AND p1.Enable_End_Time > NOW()
+				AND p1.Is_All_Product_Join = 0
+				AND p1.Promotion_Type_Cd in(54,55)
+			) a1
+		LEFT JOIN promotion_area_xref b1 ON b1.Promotion_Id = a1.promotion_id
+		LEFT JOIN area b2 ON (
+			b2.Id = b1.City_Id
+			OR b2.Id = b1.Province_Id
+		)
+		LEFT JOIN promotion_product_xref b3 ON b3.Promotion_Id = a1.promotion_id
+		LEFT JOIN product b4 ON b4.Product_Id = b3.Product_Id
+		WHERE
+			(
+				b2.Id = #{cityId}
+				OR a1.Is_All_Area_Join = 1
+			)
+		AND b3.Product_Id = #{productId}
+		UNION
+		SELECT
+				p1.promotion_id
+			FROM
+				promotion p1
+			WHERE
+				p1.Status_Cd = 1
+			AND p1.Enable_End_Time > NOW()
+			AND p1.Is_All_Product_Join = 1
+			AND p1.Promotion_Type_Cd in(54,55)
+	</select>
+
+	<!--根据优惠券推送的类型查询出，符合条件的优惠券-->
+	<select id="getPushPromotionCoupon" resultType="CouponDTO" parameterType="map">
+		SELECT
+			p1.promotion_id,
+			p1.Encrypt_Code,
+			p1.Reg_Start_Time,
+			p1.Reg_End_Time,
+			p1.Is_All_User_Join,
+			p2.Coupon_Total_Num,
+			p2.Coupon_Persion_Quota_Num
+		FROM
+			promotion p1
+		LEFT JOIN promotion_coupon p2 ON p1.promotion_id = p2.Promotion_Id
+		WHERE
+			p1.Promotion_Type_Cd in(54,55)
+		<!-- 已审核 -->
+		AND p1.Promotion_Audit_Status_Cd = 1
+		AND p1.Status_Cd = 1
+		AND p2.Push_Type_Cd = #{pushTypeCd}
+		<!-- 在使用时间内 -->
+		<![CDATA[
+			AND DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s') >=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d %H:%i:%s')
+			AND DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d %H:%i:%s')
+		]]>
+		<!-- 每笔订单完成送券金额判断 -->
+		<if test="pushTypeCd != null and pushTypeCd == 2">
+			<![CDATA[
+				AND p2.Coupon_Push_Order_Amt_Limit <= #{momey}
+			]]>
+		</if>
+		ORDER BY p1.promotion_id DESC
+	</select>
+</mapper>

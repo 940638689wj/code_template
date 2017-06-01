@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.ShopperBillDao">
+
+
+    <!-- 查询列表 -->
+    <select id="findAllList" resultType="ShopperBillDTO" parameterType="java.util.Map">
+        SELECT
+        T2.Distribute_Shopper_ID,
+        T6.User_Name,
+        T1.Order_Id,
+        T1.Order_Number,
+        T3.Origin_Platform_Cd,
+        T4.Code_Cn_Name AS originPlatformDesc,
+        T5.orderItems,
+        IFNULL(T1.Order_Express_Amt,0) AS Order_Express_Amt,
+        IFNULL(T1.Order_Express_Comm_Amt,0) AS Order_Express_Comm_Amt,
+        IFNULL(T1.Order_Express_Amt,0)-IFNULL(T1.Order_Express_Comm_Amt,0) AS serviceAmt,
+        T1.Create_Time,
+        T1.Order_Complete_Time,
+        T3.Is_Shopper_Checked
+        from order_header T1
+        LEFT JOIN order_receive_info T2 ON T1.Order_Id=T2.Order_Id
+        LEFT JOIN order_extend T3 ON T1.Order_Id=T3.Order_Id
+        LEFT JOIN system_code T4 ON T4.Code_Type_Cd='Origin_Platform_Cd' AND T4.Code_Id=T3.Origin_Platform_Cd
+        LEFT JOIN (SELECT b.Order_Id,GROUP_CONCAT(b.Product_Name) as orderItems from order_item b GROUP BY b.Order_Id)
+        T5 on T1.Order_Id=T5.Order_Id
+        LEFT JOIN shopper T6 ON T2.Distribute_Shopper_ID=T6.Shopper_ID
+        WHERE 1=1 AND T2.Distribute_Shopper_ID IS NOT NULL and T1.Order_Status_Cd=5
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T6.User_Name LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            and T3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T3.Is_Shopper_Checked = #{isChecked}
+        </if>
+        ORDER BY
+        T2.Distribute_Shopper_ID ASC,
+        T1.Order_Complete_Time DESC
+    </select>
+
+    <select id="getTotal" resultType="ShopperBillDTO" parameterType="java.util.Map">
+        SELECT
+        IFNULL(SUM(T1.Order_Express_Amt),0) AS Order_Express_Amt,
+        IFNULL(SUM(T1.Order_Express_Comm_Amt),0) AS Order_Express_Comm_Amt,
+        IFNULL(SUM(IFNULL(T1.Order_Express_Amt,0)-IFNULL(T1.Order_Express_Comm_Amt,0)),0) AS serviceAmt
+        from order_header T1
+        LEFT JOIN order_receive_info T2 ON T1.Order_Id=T2.Order_Id
+        LEFT JOIN order_extend T3 ON T1.Order_Id=T3.Order_Id
+        LEFT JOIN system_code T4 ON T4.Code_Type_Cd='Origin_Platform_Cd' AND T4.Code_Id=T3.Origin_Platform_Cd
+        LEFT JOIN shopper T6 ON T2.Distribute_Shopper_ID=T6.Shopper_ID
+        WHERE 1=1 AND T2.Distribute_Shopper_ID IS NOT NULL and T1.Order_Status_Cd=5
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T6.User_Name LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            and T3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T3.Is_Shopper_Checked = #{isChecked}
+        </if>
+    </select>
+
+
+</mapper>

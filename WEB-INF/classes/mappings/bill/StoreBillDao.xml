@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.StoreBillDao">
+
+
+
+    <!-- 查询商品对账单 -->
+    <select id="findStoreProductList" resultType="StoreBillDTO" parameterType="java.util.Map">
+        SELECT storeId,Store_Name,User_Name,Order_Id,Order_Number,Origin_Platform_Cd,originPlatformDesc,
+        GROUP_CONCAT(Product_Name) as Product_Name,SUM(productTotal) as productTotal,
+        SUM(commission) as commission,
+        SUM(realAmt) as realAmt,Create_Time,Order_Complete_Time,Is_Store_Checked,storeBillType
+        FROM (
+        SELECT
+        T1.Src_Store_ID AS storeId,
+        T6.Store_Name,
+        T6.User_Name,
+        T1.Order_Id,
+        T5.Order_Number,
+        T3.Origin_Platform_Cd,
+        T4.Code_Cn_Name AS originPlatformDesc,
+        T1.Product_Name,
+        IFNULL(T1.Product_Total,0) AS productTotal,
+        IFNULL(T1.Product_Commission_Amt,0) AS commission,
+        IFNULL(IFNULL(T1.Product_Total,0)-IFNULL(T1.Product_Commission_Amt,0),0) AS realAmt,
+        T1.Create_Time,
+        T5.Order_Complete_Time,
+        T7.Is_Store_Checked,
+        0 AS storeBillType,
+        T2.Receive_Name,
+        T2.Receive_Tel
+        from order_item T1
+        LEFT JOIN order_receive_info T2 ON T1.Order_Id=T2.Order_Id
+        LEFT JOIN order_extend T3 ON T1.Order_Id=T3.Order_Id
+        LEFT JOIN system_code T4 ON T4.Code_Type_Cd='Origin_Platform_Cd' AND T4.Code_Id=T3.Origin_Platform_Cd
+        LEFT JOIN order_header T5 on T1.Order_Id=T5.Order_Id
+        LEFT JOIN store T6 ON T1.Src_Store_ID=T6.Store_Id
+        LEFT JOIN order_store_operation T7 ON T1.Order_Id=T7.Order_Id AND T1.Src_Store_ID=T7.Src_Store_ID
+        WHERE 1=1 and T5.Order_Status_Cd=5
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T5.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T5.Order_Complete_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T6.Store_Name LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            and T3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T7.Is_Store_Checked = #{isChecked}
+        </if>
+        )A
+        GROUP BY storeId,Order_Id
+        ORDER BY
+        storeId ASC,
+        Order_Complete_Time DESC
+    </select>
+
+    <!-- 查询门店配送对账单 -->
+    <select id="findStoreSendList" resultType="StoreBillDTO" parameterType="java.util.Map">
+        SELECT
+        T2.Distrbute_Store_Id AS storeId,
+        T6.Store_Name,
+        T6.User_Name,
+        T1.Order_Id,
+        T1.Order_Number,
+        T3.Origin_Platform_Cd,
+        T4.Code_Cn_Name AS originPlatformDesc,
+        T5.orderItems AS productName,
+        IFNULL(T1.Order_Express_Amt,0) AS productTotal,
+        IFNULL(T1.Order_Express_Comm_Amt,0) AS commission,
+        IFNULL(T1.Order_Express_Amt,0)-IFNULL(T1.Order_Express_Comm_Amt,0) AS realAmt,
+        T1.Create_Time,
+        T1.Order_Complete_Time,
+        T7.Is_Store_Distribute_Fee_Checked AS isStoreChecked,
+        1 AS storeBillType
+        from order_header T1
+        LEFT JOIN order_receive_info T2 ON T1.Order_Id=T2.Order_Id
+        LEFT JOIN order_extend T3 ON T1.Order_Id=T3.Order_Id
+        LEFT JOIN system_code T4 ON T4.Code_Type_Cd='Origin_Platform_Cd' AND T4.Code_Id=T3.Origin_Platform_Cd
+        LEFT JOIN (SELECT b.Order_Id,GROUP_CONCAT(b.Product_Name) as orderItems from order_item b GROUP BY b.Order_Id) T5 on T1.Order_Id=T5.Order_Id
+        LEFT JOIN store T6 ON T2.Distrbute_Store_Id=T6.Store_Id
+        LEFT JOIN order_store_operation T7 ON T1.Order_Id=T7.Order_Id AND T2.Distrbute_Store_Id=T7.Src_Store_ID
+        WHERE T2.Distrbute_Store_Id IS NOT NULL and T1.Order_Status_Cd=5
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T6.Store_Name LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            and T3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T7.Is_Store_Distribute_Fee_Checked = #{isChecked}
+        </if>
+        ORDER BY
+        T2.Distrbute_Store_Id ASC,
+        T1.Order_Complete_Time DESC
+    </select>
+
+    <!-- 查询商品对账单汇总 -->
+    <select id="findStoreProductTotal" resultType="StoreBillDTO" parameterType="java.util.Map">
+        SELECT
+        IFNULL(SUM(T1.Product_Total),0) AS productTotal,
+        IFNULL(SUM(T1.Product_Commission_Amt),0) AS commission,
+        IFNULL(SUM(IFNULL(T1.Product_Total,0)-IFNULL(T1.Product_Commission_Amt,0)),0) AS realAmt
+        from order_item T1
+        LEFT JOIN order_receive_info T2 ON T1.Order_Id=T2.Order_Id
+        LEFT JOIN order_extend T3 ON T1.Order_Id=T3.Order_Id
+        LEFT JOIN order_header T5 on T1.Order_Id=T5.Order_Id
+        LEFT JOIN store T6 ON T1.Src_Store_ID=T6.Store_Id
+        LEFT JOIN order_store_operation T7 ON T1.Order_Id=T7.Order_Id AND T1.Src_Store_ID=T7.Src_Store_ID
+        WHERE 1=1 and T5.Order_Status_Cd=5
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T5.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T5.Order_Complete_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T6.Store_Name LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            and T3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T7.Is_Store_Checked = #{isChecked}
+        </if>
+    </select>
+
+    <!-- 查询门店配送对账单汇总 -->
+    <select id="findStoreSendTotal" resultType="StoreBillDTO" parameterType="java.util.Map">
+        SELECT
+        IFNULL(SUM(T1.Order_Express_Amt),0) AS productTotal,
+        IFNULL(SUM(T1.Order_Express_Comm_Amt),0) AS commission,
+        IFNULL(SUM(IFNULL(T1.Order_Express_Amt,0)-IFNULL(T1.Order_Express_Comm_Amt,0)),0) AS realAmt
+        from order_header T1
+        LEFT JOIN order_receive_info T2 ON T1.Order_Id=T2.Order_Id
+        LEFT JOIN order_extend T3 ON T1.Order_Id=T3.Order_Id
+        LEFT JOIN store T6 ON T2.Distrbute_Store_Id=T6.Store_Id
+        LEFT JOIN order_store_operation T7 ON T1.Order_Id=T7.Order_Id AND T2.Distrbute_Store_Id=T7.Src_Store_ID
+        WHERE T2.Distrbute_Store_Id IS NOT NULL and T1.Order_Status_Cd=5
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T6.Store_Name LIKE CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            and T3.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T7.Is_Store_Distribute_Fee_Checked = #{isChecked}
+        </if>
+    </select>
+    
+        
+    <!-- 查询商品对账单 -->
+    <select id="findStoreProductBillDTOList" resultType="StoreBillDTO" parameterType="java.util.Map">
+        SELECT
+         T1.Order_Id,
+         T1.Order_Number,
+         T1.Order_Complete_Time,
+         T1.Order_Express_Amt,
+         T1.Order_Express_Comm_Amt,
+         T2.Receive_Name,
+         T2.Receive_Tel,
+         T2.Distrbute_Store_Id,
+         T2.Distribute_Shopper_ID,
+         GROUP_CONCAT(T3.Product_Name) as Product_Name,
+         T5.Is_Store_Checked,
+         T2.Order_Distrbute_Type_Cd
+        from order_header T1 
+        left join order_receive_info T2 on T1.Order_id=T2.Order_id
+        left join order_item T3 on T1.Order_Id=T3.Order_Id
+        left join store T4 on T3.Src_Store_ID=T4.Store_id and T2.Distrbute_Store_Id=T4.Store_id
+        left join order_store_operation T5 ON T1.Order_Id=T5.Order_Id AND T3.Src_Store_ID=T5.Src_Store_ID
+        WHERE 1=1 and T1.Order_Status_Cd=5
+       <if test="storeId != null and storeId != ''">
+           		and T3.Src_Store_ID = #{storeId}
+        </if>
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="orderNumber !=null and orderNumber !=''">
+            and T1.Order_Number = #{orderNumber}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T5.Is_Store_Checked = #{isChecked}
+        </if>
+        	GROUP BY T1.Order_id
+        	ORDER BY
+        	T1.Create_Time DESC
+    </select>
+    
+     <!-- 查询商品对账单 -->
+    <select id="findSendBillDTOList" resultType="StoreBillDTO" parameterType="java.util.Map">
+        SELECT
+         T1.Order_Id,
+         T1.Order_Number,
+         T1.Order_Complete_Time,
+         T1.Order_Express_Amt,
+         T1.Order_Express_Comm_Amt,
+         T2.Receive_Name,
+         T2.Receive_Tel,
+         T2.Distrbute_Store_Id,
+         T2.Distribute_Shopper_ID,
+         GROUP_CONCAT(T3.Product_Name) as Product_Name,
+         T5.Is_Store_Distribute_Fee_Checked AS isStoreChecked,
+         T2.Order_Distrbute_Type_Cd
+        from order_header T1 
+        left join order_receive_info T2 on T1.Order_id=T2.Order_id
+        left join order_item T3 on T1.Order_Id=T3.Order_Id
+        left join store T4 on T3.Src_Store_ID=T4.Store_id and T2.Distrbute_Store_Id=T4.Store_id
+        left join order_store_operation T5 ON T1.Order_Id=T5.Order_Id AND T3.Src_Store_ID=T5.Src_Store_ID
+        WHERE 1=1 and T1.Order_Status_Cd=5
+        <if test="storeId != null and storeId != ''">
+          		and T2.Distrbute_Store_Id = #{storeId}
+          </if>
+           <if test="storeId != null and storeId != ''">
+           		and T3.Src_Store_ID = #{storeId}
+        </if>
+         
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Order_Complete_Time
+        </if>
+        <if test="orderNumber !=null and orderNumber !=''">
+            and T1.Order_Number = #{orderNumber}
+        </if>
+        <if test="isChecked !=null and isChecked !=''">
+            and T5.Is_Store_Distribute_Fee_Checked = #{isChecked}
+        </if>
+        	GROUP BY T1.Order_id
+        	ORDER BY
+        	T1.Create_Time DESC
+    </select>
+
+</mapper>

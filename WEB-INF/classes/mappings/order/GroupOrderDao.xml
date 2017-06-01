@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.GroupOrderDao">
+	<select id="jsonGrouponOrderDetail" parameterType="Map" resultType="cn.yr.chile.order.dto.GroupOrderDTO">
+		SELECT
+			o.`Order_Id`,
+			o.`Order_Status_Cd`,
+			o.`Order_Pay_Status_Cd`,
+			o.Order_Review_Status_CD,
+			o.`Order_Number`,
+			o.`Order_Total_Amt`,
+			o.`Order_Discount_Amt`,
+			o.`Order_Property_Cd`,
+			o.`Create_Time`,
+			oi.`Quantity`,
+			pg.`Groupon_Price`,
+			pg.`GroupCoupon_Desc`,
+			pg.`Allow_Use_End_Time`,
+			p.`Enable_End_Time`,
+			p.`promotion_id`,
+			p.`Promotion_Name`,
+			ppi.`Pic_Url`,
+			GROUP_CONCAT(pdr.`Discount_Desc`) couponDesc,
+			COUNT(pcc.Coupon_Code_Id) AS hasUsedNum
+		FROM `order_header` o
+		LEFT JOIN `order_item` oi ON oi.`Order_Id` = o.`Order_Id`
+		LEFT JOIN `order_promotion_info` opi ON opi.`Order_Id` = o.`Order_Id`
+		LEFT JOIN `promotion_groupon` pg ON pg.`Promotion_Id` = opi.`Promotion_Id`
+		LEFT JOIN `promotion` p ON p.`promotion_id` = opi.`Promotion_Id`
+		LEFT JOIN `product` pro ON pro.`Product_Id` = oi.`Product_Id`
+		LEFT JOIN `product_pic_info` ppi ON ppi.`Product_Id` = pro.`Master_Product_ID` AND ppi.`Is_Default_Pic` = 1
+		LEFT JOIN `promotion_coupon_code` pcc ON pcc.`Order_Id` = o.`Order_Id` AND pcc.`Coupon_Status_Cd` = 2 AND pcc.`Promotion_Id` = pg.`Promotion_Id`
+		LEFT JOIN `promotion` p2 ON p2.`promotion_id` = pcc.`Promotion_Id` AND p2.`Promotion_Type_Cd` LIKE '5%'
+		LEFT JOIN `promotion_discount_rule` pdr ON pdr.`Promotion_Id` = p2.`promotion_id`
+		WHERE 1=1
+		/*-- 全部订单*/
+		<if test="type == 0">
+			AND o.order_status_cd IN (1,20)
+			AND p.`Enable_End_Time` &gt;= NOW()
+
+		</if>
+		/*-- 已取消*/
+		<if test="type == 1">
+			AND o.`Order_Property_Cd` = 99
+			AND o.`User_Delete_Status_Cd` = 1
+			AND o.order_status_cd = 1
+		</if>
+		/*-- 待付款*/
+		<if test="type == 2">
+			AND o.`Order_Property_Cd` = 0
+			AND o.`Order_Pay_Status_Cd` = 1
+			AND p.`Enable_End_Time` &gt;= NOW()
+			AND o.order_status_cd = 1
+		</if>
+		/*-- 已过期 手机端暂不显示*/
+		<if test="type == 3">
+			AND o.`Order_Property_Cd` = 0
+			AND o.`Order_Pay_Status_Cd` = 2
+			AND pg.`Allow_Use_End_Time` &lt; NOW()
+			AND o.order_status_cd = 20
+			AND (SELECT COUNT(pcc.Coupon_Code_Id) FROM  `promotion_coupon_code` pcc WHERE pcc.Order_Id = o.`Order_Id` AND pcc.Coupon_Status_Cd = 1 AND pcc.`Promotion_Id` = pg.`Promotion_Id`) &gt; 0
+		</if>
+		/*-- 可使用*/
+		<if test="type == 4">
+			AND o.`Order_Property_Cd` = 0
+			AND o.`Order_Pay_Status_Cd` = 2
+			AND pg.`Allow_Use_End_Time` &gt;= now()
+			AND o.order_status_cd = 20
+			AND (SELECT COUNT(pcc.Coupon_Code_Id) FROM  `promotion_coupon_code` pcc WHERE pcc.Order_Id = o.`Order_Id` AND pcc.Coupon_Status_Cd = 1 AND pcc.`Promotion_Id` = pg.`Promotion_Id`) &gt; 0
+		</if>
+		/*-- 待评价*/
+		<if test="type == 5">
+			AND o.`Order_Property_Cd` = 0
+			AND o.`Order_Pay_Status_Cd` = 2
+			AND o.Order_Review_Status_CD = 1
+			AND o.order_status_cd = 20
+			AND (SELECT COUNT(pcc.Coupon_Code_Id) FROM  `promotion_coupon_code` pcc WHERE pcc.Order_Id = o.`Order_Id` AND pcc.Coupon_Status_Cd = 1 AND pcc.`Promotion_Id` = pg.`Promotion_Id`) = 0
+		</if>
+		/*-- 已完成 手机端暂不显示*/
+		<if test="type == 6">
+			AND o.`Order_Property_Cd` = 0
+			AND o.`Order_Pay_Status_Cd` = 2
+			AND o.Order_Review_Status_CD = 2
+			AND o.order_status_cd = 20
+			AND (SELECT COUNT(pcc.Coupon_Code_Id) FROM  `promotion_coupon_code` pcc WHERE pcc.Order_Id = o.`Order_Id` AND pcc.Coupon_Status_Cd = 1 AND pcc.`Promotion_Id` = pg.`Promotion_Id`) = 0
+		</if>
+
+		AND o.`User_Id` = #{userId}
+		AND p.`Promotion_Type_Cd` = 70
+		GROUP BY o.`Order_Id`
+		ORDER BY o.`Create_Time` DESC
+	</select>
+
+	<!--获取可以使用的团购券数量-->
+	<select id="countGroupCodeCanBeUseByOrderId" parameterType="Integer" resultType="Integer">
+		SELECT COUNT(pcc.Coupon_Code_Id) FROM  `promotion_coupon_code` pcc WHERE pcc.Order_Id = #{0} AND pcc.Coupon_Status_Cd = 1
+	</select>
+
+
+	<select id="getGroupOrderDTOForRepay" parameterType="Integer" resultType="cn.yr.chile.order.dto.GroupOrderDTO">
+		SELECT
+			pg.`Groupon_Max_Sale_Num`,
+			pg.`Groupon_Person_Quota_Num`,
+			pg.`Real_Sale_Cnt`,
+			p.`Enable_End_Time`,
+			o.`Order_Pay_Amt`,
+			o.Order_Number,
+			o.order_id,
+			COUNT(pcc.`Coupon_Code_Id`) AS currentUserNum
+		FROM `promotion_groupon` pg
+		LEFT JOIN `promotion` p ON pg.`Promotion_Id` = p.`promotion_id`
+		LEFT JOIN `order_promotion_info` opi ON opi.`Promotion_Type_Cd` = 70 AND opi.`Promotion_Id` = pg.`Promotion_Id`
+		LEFT JOIN `promotion_coupon_code` pcc ON pcc.`Order_Id` = opi.`Order_Id`
+		LEFT JOIN `order_header` o ON o.`Order_Id` = opi.`Order_Id`
+		WHERE opi.`Order_Id` = #{0}
+	</select>
+
+	<select id="getGroupOrderDTOForDetail" parameterType="Integer" resultType="cn.yr.chile.order.dto.GroupOrderDTO">
+		SELECT
+			o.`Order_Property_Cd`,
+			o.`Order_Pay_Status_Cd`,
+			o.`Order_Review_Status_CD`,
+			o.`Order_Id`,
+			o.`Order_Number`,
+			o.`Order_Total_Amt`,
+			o.`Order_Pay_Amt`,
+			o.`Order_Discount_Amt`,
+			o.`Create_Time`,
+			o.`Order_Remark`,
+			o.`Create_Time`,
+			o.`Order_Pay_Time`,
+			sc.`Code_Cn_Name` AS payWay,
+			oi.`Quantity`,
+			pg.`Groupon_Price`,
+			pg.`GroupCoupon_Desc`,
+			pg.`Allow_Use_End_Time`,
+			p.`Enable_End_Time`,
+			p.`promotion_id`,
+			p.`Promotion_Name`,
+			ppi.`Pic_Url`,
+			GROUP_CONCAT(pdr.`Discount_Desc`) couponDesc,
+			COUNT(pcc.Coupon_Code_Id) AS hasUsedNum
+		FROM `order_header` o
+		LEFT JOIN `order_item` oi ON oi.`Order_Id` = o.`Order_Id`
+		LEFT JOIN `order_promotion_info` opi ON opi.`Order_Id` = o.`Order_Id` AND opi.`Promotion_Type_Cd` = 70
+		LEFT JOIN `promotion_groupon` pg ON pg.`Promotion_Id` = opi.`Promotion_Id`
+		LEFT JOIN `promotion` p ON p.`promotion_id` = opi.`Promotion_Id`
+		LEFT JOIN `product` pro ON pro.`Product_Id` = oi.`Product_Id`
+		LEFT JOIN `product_pic_info` ppi ON ppi.`Product_Id` = pro.`Master_Product_ID` AND ppi.`Is_Default_Pic` = 1
+		LEFT JOIN `promotion_coupon_code` pcc ON pcc.`Order_Id` = o.`Order_Id` AND pcc.`Coupon_Status_Cd` = 2 AND pcc.`Promotion_Id` = pg.`Promotion_Id`
+		LEFT JOIN `promotion` p2 ON p2.`promotion_id` = pcc.`Promotion_Id` AND p2.`Promotion_Type_Cd` LIKE '5%'
+		LEFT JOIN `promotion_discount_rule` pdr ON pdr.`Promotion_Id` = p2.`promotion_id`
+		LEFT JOIN `system_code` sc ON sc.Code_Type_Cd = 'Order_Pay_Way_Cd' AND sc.Code_Id = o.`Order_Pay_Way_Cd`
+		WHERE 1=1 AND o.`Order_Id` = #{0}
+	</select>
+
+	<delete id="deleteGroupCodeByOrderId" parameterType="Integer">
+		DELETE FROM `promotion_coupon_code` WHERE order_id = #{0}
+	</delete>
+</mapper>

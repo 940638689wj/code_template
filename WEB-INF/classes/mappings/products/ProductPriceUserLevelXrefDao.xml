@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductPriceUserLevelXrefDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        p1.Product_Id,
+        p1.User_Level_Id,
+        p1.Discount_Percent,
+        p1.Create_Time,
+        p1.Last_Update_Time,
+        p1.Only_Cash_Amt,
+        p1.Only_Score_Amt,
+        p1.CWS_Cash_Amt,
+        p1.CWS_Score_Amt,
+        p1.XMAIR_Card_Score_Amt,
+        p1.CWXMAIR_Cash_Amt,
+        p1.CWXMAIR_XMAIR_Score_Amt
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductPriceUserLevelXref" useGeneratedKeys="true" keyProperty="productId">
+	    INSERT INTO product_price_user_level_xref (
+	        Product_Id, User_Level_Id, Create_Time, Last_Update_Time,
+	        Only_Cash_Amt,Only_Score_Amt,CWS_Cash_Amt,CWS_Score_Amt,XMAIR_Card_Score_Amt,
+	        CWXMAIR_Cash_Amt,CWXMAIR_XMAIR_Score_Amt
+	    ) VALUES (
+	        #{productId}, #{userLevelId}, #{createTime}, #{lastUpdateTime},
+	        #{onlyCashAmt}, #{onlyScoreAmt}, #{cwsCashAmt}, #{cwsScoreAmt}, #{xmairCardScoreAmt},        
+	    	#{cwxmairCashAmt}, #{cwxmairXmairScoreAmt}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductPriceUserLevelXref">
+	   UPDATE product_price_user_level_xref SET
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime},
+		   Only_Cash_Amt = #{onlyCashAmt},
+		   Only_Score_Amt = #{onlyScoreAmt},
+		   CWS_Cash_Amt = #{cwsCashAmt},
+		   CWS_Score_Amt = #{cwsScoreAmt},
+		   XMAIR_Card_Score_Amt = #{xmairCardScoreAmt},
+		   CWXMAIR_Cash_Amt = #{cwxmairCashAmt},
+		   CWXMAIR_XMAIR_Score_Amt = #{cwxmairXmairScoreAmt}
+	   WHERE Product_Id = #{productId}
+		   and User_Level_Id = #{userLevelId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_price_user_level_xref where Product_Id=#{productId}
+	</delete>
+
+	<!-- 根据 productId、userId 获取 -->
+    <select id="getByProductIdAndUserId" resultType="ProductPriceUserLevelXref" parameterType="java.util.Map">
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_price_user_level_xref p1
+		 LEFT JOIN user p2 on p2.User_Level_Id = p1.User_Level_Id
+		 LEFT JOIN user_level p3 on p1.User_Level_Id = p3.User_Level_Id
+	     WHERE p2.User_Id=#{userId}
+		 AND p1.Product_Id = #{productId}
+		 AND p3.Status_Cd = 1
+	</select>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductPriceUserLevelXref" parameterType="java.util.Map">
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_price_user_level_xref p1
+	     WHERE p1.User_Level_Id=#{userLevelId}
+		 and p1.Product_Id = #{productId}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductPriceUserLevelXref">  
+	    select 
+		<include refid="allColumns" />
+	    from product_price_user_level_xref p1
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductPriceUserLevelXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_price_user_level_xref p1
+	    where 1=1
+		<if test="productId != null"> and p1.Product_Id = #{productId}</if>
+		<if test="userLevelId != null"> and p1.User_Level_Id = #{userLevelId}</if>
+		<if test="discountPercent != null"> and p1.Discount_Percent = #{discountPercent}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+	</select>
+	
+	<!-- 查询商品与会员的打折关系 -->
+	<select id="findProductPriceUserLevelXrefList" resultType="ProductPriceUserLevelXrefDTO" parameterType="java.util.Map">  
+	    select 
+			a.user_Level_Id,
+			a.user_Level_Name,
+			b.discount_Percent
+	    from user_level a left join product_price_user_level_xref b
+	    on a.user_Level_Id = b.user_Level_Id
+	    where 1=1 
+		and a.Status_Cd = '1'
+		<if test="productId != null"> and b.Product_Id = #{productId}</if> 
+	</select>
+
+	<!-- 根据用户会员等级和商品Id，该商品与会员(区域会员折扣和会员折扣)的打折关系 -->
+	<select id="findProductPriceUserLevelXrefDTO" resultType="ProductPriceUserLevelXrefDTO" parameterType="java.util.Map">  
+	    select 
+			a.user_Level_Id,
+			a.user_Level_Name,
+			a.Discount,
+			b.discount_Percent
+	    from user_level a left join product_price_user_level_xref b
+	    on a.user_Level_Id = b.user_Level_Id and b.Product_Id = #{productId}
+	    where 
+			a.Status_Cd = '1'
+			and a.Rank_Cd = #{rankCd}
+			
+	</select>
+</mapper>

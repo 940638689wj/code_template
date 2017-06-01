@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductRegionPriceDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Region_Price_Id, Product_Id, Country_Id, Province_Id, City_Id, Sale_Price, Tag_Price, Shelve_Status_Cd, Create_Time, Last_Update_Time
+	</sql>
+	
+	<sql id="priceColumns">
+		s.Product_Id,s.Sale_Price,s.Tag_Price
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductRegionPrice" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_region_price (
+	        Product_Id, Country_Id, Province_Id, City_Id, Sale_Price, Tag_Price, Shelve_Status_Cd, Create_Time, Last_Update_Time
+	    ) VALUES (
+	        #{productId}, #{countryId}, #{provinceId}, #{cityId}, #{salePrice}, #{tagPrice}, #{shelveStatusCd}, #{createTime}, #{lastUpdateTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductRegionPrice">
+	   UPDATE product_region_price SET
+		   Product_Id = #{productId}, 
+		   Country_Id = #{countryId}, 
+		   Province_Id = #{provinceId}, 
+		   City_Id = #{cityId}, 
+		   Sale_Price = #{salePrice}, 
+		   Tag_Price = #{tagPrice}, 
+		   Shelve_Status_Cd = #{shelveStatusCd}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+		   Region_Price_Id = #{regionPriceId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM product_region_price where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductRegionPrice" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_region_price 
+	     WHERE 
+			  Region_Price_Id=#{regionPriceId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductRegionPrice">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductRegionPrice" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price a
+	    where 1=1
+		<if test="regionPriceId != null"> and a.Region_Price_Id = #{regionPriceId}</if>
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="countryId != null"> and a.Country_Id = #{countryId}</if>
+		<if test="provinceId != null"> and a.Province_Id = #{provinceId}</if>
+		<if test="cityId != null"> and a.City_Id = #{cityId}</if>
+		<if test="salePrice != null"> and a.Sale_Price = #{salePrice}</if>
+		<if test="tagPrice != null"> and a.Tag_Price = #{tagPrice}</if>
+		<if test="shelveStatusCd != null"> and a.Shelve_Status_Cd = #{shelveStatusCd}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and a.Last_Update_Time = #{lastUpdateTime}</if>
+	</select>
+	
+	<!-- 查询商品市区域价格 -->
+	<select id="findProductCityPrice" resultType="ProductRegionPrice" parameterType="java.lang.Integer">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where 1=1
+	    and Product_Id = #{productId}
+		and City_Id is not null
+	</select>
+	
+	<!-- 查询商品省区域价格 -->
+	<select id="findProductProvincePrice" resultType="ProductRegionPrice" parameterType="java.lang.Integer">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where 1=1
+	    and Product_Id = #{productId}
+		and Province_Id is not null
+	</select>
+	
+	<!-- 查询商品国家区域价格 -->
+	<select id="findProductCountryPrice" resultType="ProductRegionPrice" parameterType="java.lang.Integer">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where 1=1
+	    and Product_Id = #{productId}
+		and Province_Id is null
+		and City_Id is null
+	</select>
+	
+	<select id="findByIdProductRegionPriceList" parameterType="java.lang.Integer" resultType="ProductRegionPrice">
+		select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where Product_Id = #{productId}
+	</select>
+	
+	
+	<select id="findCurrentProductCityPrice" resultType="ProductRegionPrice" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where 1=1
+	    and Product_Id = #{productId}
+		and City_Id = #{cityId}
+	</select>
+	<select id="findCurrentProductProvincePrice" resultType="ProductRegionPrice" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where 1=1
+	    and Product_Id = #{productId}
+		and Province_Id = #{provinceId}
+	</select>
+	<select id="findCurrentProductCountryPrice" resultType="ProductRegionPrice" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_region_price
+	    where 1=1
+	    and Product_Id = #{productId}
+		and Province_Id is null
+		and City_Id is null
+	</select>
+	<!-- 查询市区域的商品 -->
+	<select id="findProductByCityId" resultType="ProductRegionPrice" parameterType="java.lang.String">  
+	    select 
+		<include refid="priceColumns" />
+	    from product_region_price s
+	    where 1=1
+		<if test="cityId != null"> and s.City_Id = #{cityId}</if>  
+	</select>
+	<!-- 查询省区域的商品 -->
+	<select id="findProductByProvinceId" resultType="ProductRegionPrice" parameterType="java.lang.String">  
+	    select 
+		<include refid="priceColumns" />
+	    from product_region_price s
+	    where 1=1
+		<if test="provinceId != null"> and s.Province_Id = #{provinceId}</if>  
+	</select>
+	<!-- 查询市中不存在的商品 -->
+	<select id="findProductRemoveCity" resultType="ProductRegionPrice" parameterType="java.util.Map">  
+		select 
+		<include refid="priceColumns" />
+		from product_region_price s 
+		where s.Province_Id = #{provinceId}
+		and s.Product_Id not in (select t.Product_Id from product_region_price t where t.City_Id = #{cityId})
+	</select>
+	<!-- 查询全国商品 -->
+	<select id="findProductByCountryId" resultType="ProductRegionPrice" parameterType="java.lang.Integer">  
+		select
+		<include refid="priceColumns" />
+		from product_region_price s
+		where 1 = 1 
+		<if test="countryId != null"> and s.Country_Id = #{countryId}</if>
+	</select>
+	<!-- 查询区域商品信息 -->
+	<select id="findRegionProductList" resultType="ProductRegionDTO" parameterType="java.util.Map">  
+	select  a.Region_Price_Id,a.Product_Id,b.Product_Name,a.Tag_Price,a.Sale_Price,d.Pic_Url from product_region_price a
+	left join product b 
+	on a.Product_Id = b.Product_Id
+	left join (
+			select Product_Id,Pic_Url from product_pic_info where Is_Default_Pic = '1'
+	) d
+	on a.Product_Id = d.Product_Id
+	where 1 =1 
+	<!-- 上/下架状态 -->
+	<if test="shelveStatusCd != null and shelveStatusCd != ''"> and a.Shelve_Status_Cd = #{shelveStatusCd}</if>
+	<!-- 国家 -->
+	<if test="countryId != null and countryId != ''"> and a.Country_Id = #{countryId}</if>
+	<!-- 省 -->
+	<if test="provinceId != null and provinceId != ''"> and a.Province_Id = #{provinceId}</if>
+	<!-- 市 -->
+	<if test="cityId != null and cityId != ''"> and a.City_Id = #{cityId}</if>
+	<!-- 商品名称 -->
+	<if test="productName != null and productName != ''"> and b.Product_Name like CONCAT('%',#{productName},'%')</if>
+	order by a.Last_Update_Time desc
+	</select>
+</mapper>

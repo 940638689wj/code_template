@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderCancelInfoDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+         Order_Id,
+         Cancel_Reason,
+         Cancel_User_Id,
+         Cancel_Person,
+         Cancel_Time,
+         Operater_Desc
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="cn.yr.chile.order.domain.OrderCancelInfo" useGeneratedKeys="true"
+            keyProperty="id">
+	    INSERT INTO order_cancel_info (
+	     Order_Id,Cancel_Reason,Cancel_User_Id,Cancel_Person,Cancel_Time,Operater_Desc
+	    ) VALUES (
+	    #{orderId},#{cancelReason},#{cancelUserId},#{cancelPerson},#{cancelTime},#{operaterDesc}
+	    )
+	</insert>
+
+    <select id="get" parameterType="Integer" resultType="OrderCancelInfo">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_cancel_info
+        WHERE Order_Id = #{id}
+    </select>
+
+</mapper>

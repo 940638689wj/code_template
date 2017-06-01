@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserRedPacketDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Red_Packet_Detail_Id, Packet_Income, Packet_Expend, Remark, Order_Number, User_Id, Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserRedPacketDetail" useGeneratedKeys="true" keyProperty="Red_Packet_Detail_Id">
+	    INSERT INTO user_red_packet_detail (
+	        Packet_Income, Packet_Expend, Remark, Order_Number, User_Id, Create_Time
+	    ) VALUES (
+	        #{packetIncome}, #{packetExpend}, #{remark}, #{orderNumber}, #{userId}, #{createTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserRedPacketDetail">
+	   UPDATE user_red_packet_detail SET
+		   Packet_Income = #{packetIncome}, 
+		   Packet_Expend = #{packetExpend}, 
+		   Remark = #{remark}, 
+		   Order_Number = #{orderNumber}, 
+		   User_Id = #{userId}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   Red_Packet_Detail_Id = #{redPacketDetailId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_red_packet_detail where Red_Packet_Detail_Id = #{redPacketDetailId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserRedPacketDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_red_packet_detail 
+	     WHERE 
+			  Red_Packet_Detail_Id=#{redPacketDetailId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserRedPacketDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_red_packet_detail
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserRedPacketDetail" parameterType="UserRedPacketDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_red_packet_detail a
+	    where 1=1 
+		<if test="redPacketDetailId != null"> and a.Red_Packet_Detail_Id = #{redPacketDetailId} </if>
+		<if test="packetIncome != null"> and a.Packet_Income = #{packetIncome} </if>
+		<if test="packetExpend != null"> and a.Packet_Expend = #{packetExpend} </if>
+		<if test="remark != null"> and a.Remark = #{remark} </if>
+		<if test="orderNumber != null"> and a.Order_Number = #{orderNumber} </if>
+		<if test="userId != null"> and a.User_Id = #{userId} </if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime} </if>
+		order by a.Create_Time DESC
+	</select>
+	
+	<!-- 根据主键获取 -->
+    <select id="findListByUserId" resultType="UserRedPacketDetail" parameterType="Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_red_packet_detail 
+	     WHERE 
+			  User_id=#{userId}
+		 ORDER BY create_time desc
+	</select>
+	
+	<!-- 分页获取 -->
+    <select id="findPageByUserId" resultType="UserRedPacketDetail" parameterType="java.util.HashMap">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_red_packet_detail 
+	     WHERE 
+			  User_id=#{userId}
+			  <if test="type != null and type == 1">
+			  and Packet_Expend is null
+			  </if>
+			  <if test="type != null and type == 2">
+			  and Packet_Income is null
+			  </if>
+		 ORDER BY create_time desc
+	</select>
+
+</mapper>

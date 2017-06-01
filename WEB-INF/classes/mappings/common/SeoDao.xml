@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.common.dao.SeoDao">
+	<sql id="seoColumns">
+		a.id,
+		a.seo_type_id,
+		a.extend_id,
+		a.title,
+		a.keywords,
+		a.description,
+		a.created_stamp,
+		a.last_updated_stamp,
+		a.others
+	</sql>
+	<select id="findSeoByType" resultType="cn.yr.chile.common.domain.Seo">
+		SELECT
+			<include refid="seoColumns" />
+		FROM mall_seo a WHERE a.seo_type_id = #{seoType}
+	</select>
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO mall_seo(
+			id,
+			title,
+			keywords,
+			description,
+			created_stamp,
+			last_updated_stamp,
+			others
+		)VALUES(
+			#{id},
+			#{title},
+			#{keywords},
+			#{description},
+			#{created_stamp},
+			#{last_updated_stamp},
+			#{others}
+			)
+		
+	</insert>
+	<update id="update" parameterType="cn.yr.chile.common.domain.Seo">
+		UPDATE mall_seo SET
+			title=#{title},
+			keywords=#{keywords},
+			description=#{description},
+			last_updated_stamp=#{last_updated_stamp},
+			others=#{others}
+		WHERE id=#{id}	
+	</update>
+</mapper>

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductCategoryDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Category_Id, Category_Num, Category_Name, Parent_Category_Id, Category_Status_Cd, Display_Id, Category_Img_Url, Category_Url, Create_Time, Last_Update_Time, Product_Type_Cd
+	</sql>
+	
+	<sql id="categoryColumns">
+		a.category_Id, 
+		a.category_Num, 
+		a.category_Name, 
+		a.parent_Category_Id, 
+		a.category_Status_Cd, 
+		a.display_Id, 
+		a.category_Img_Url, 
+		a.category_Url, 
+		a.create_Time, 
+		a.last_Update_Time,
+		a.product_Type_Cd
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductCategory" useGeneratedKeys="true" keyProperty="categoryId">
+	    INSERT INTO product_category (
+	        Category_Num, Category_Name, Parent_Category_Id, Category_Status_Cd, Display_Id, Category_Img_Url, Category_Url, Create_Time, Last_Update_Time, Product_Type_Cd
+	    ) VALUES (
+	        #{categoryNum}, #{categoryName}, #{parentCategoryId}, #{categoryStatusCd}, #{displayId}, #{categoryImgUrl}, #{categoryUrl}, #{createTime}, #{lastUpdateTime}, #{productTypeCd}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductCategory">
+	   UPDATE product_category SET
+		   Category_Num = #{categoryNum}, 
+		   Category_Name = #{categoryName}, 
+		   Parent_Category_Id = #{parentCategoryId}, 
+		   Category_Status_Cd = #{categoryStatusCd}, 
+		   Display_Id = #{displayId}, 
+		   Category_Img_Url = #{categoryImgUrl}, 
+		   Category_Url = #{categoryUrl}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime},
+		   Product_Type_Cd = #{productTypeCd}
+	   WHERE 
+		   Category_Id = #{categoryId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_category where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductCategory" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_category
+	     WHERE 
+			  Category_Id=#{categoryId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductCategory" >  
+	    select 
+		<include refid="allColumns" />
+	    from product_category a
+	    where a.Category_Status_Cd = '1'
+	</select>
+	<select id="findAll" resultType="ProductCategory" >  
+	    select 
+		<include refid="allColumns" />
+	    from product_category a
+	    where a.category_Status_Cd=1
+	    order by a.Display_Id asc
+	</select>
+	<select id="findSpecialList" resultType="ProductCategory" parameterType="java.util.Map">  
+	    select 
+		<include refid="allColumns" />
+	    from product_category a
+	    where a.Parent_Category_Id is NULL
+
+		<if test="productTypeCd != null"> and a.Product_Type_Cd = #{productTypeCd}</if>	  
+		and a.category_Status_Cd=1  
+
+	    order by a.Display_Id asc
+	</select>
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductCategory" parameterType="java.util.Map">  
+	    select 
+		<include refid="categoryColumns" />
+	    from product_category a
+	    where 1=1
+		<if test="categoryId != null"> and a.Category_Id = #{categoryId}</if>
+		<if test="categoryNum != null"> and a.Category_Num = #{categoryNum}</if>
+		<if test="categoryName != null"> and a.Category_Name = #{categoryName}</if>
+		<if test="parentCategoryIdIsNull != null and parentCategoryIdIsNull == 1"> and a.Parent_Category_Id IS NULL</if>
+		<if test="parentCategoryId != null"> and a.Parent_Category_Id = #{parentCategoryId}</if>
+		<if test="parentCategoryId == null"> and a.Parent_Category_Id IS NULL</if>
+		<if test="categoryStatusCd != null"> and a.Category_Status_Cd = #{categoryStatusCd}</if>
+		<if test="displayId != null"> and a.Display_Id = #{displayId}</if>
+		<if test="categoryImgUrl != null"> and a.Category_Img_Url = #{categoryImgUrl}</if>
+		<if test="categoryUrl != null"> and a.Category_Url = #{categoryUrl}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and a.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="productTypeCd != null"> and a.Product_Type_Cd = #{productTypeCd}</if>
+		order by a.Display_Id asc,a.Category_Id
+	</select>
+	
+	<!-- 查询系列分类信息 -->
+	<select id="findCategoryList" resultType="ProductCategoryDTO" parameterType="java.util.Map">
+		select 
+		<include refid="categoryColumns" />,
+		b.category_Type_Name
+	    from product_category a
+	    left join product_category_type b
+	    on a.category_Type_Id = b.category_Type_Id
+	    ORDER BY a.Display_Id DESC,a.Category_Id
+	</select>
+	
+	<!-- 查询系列分类信息 -->
+	<select id="findCategoryBycategoryId" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		select 
+		count(*)
+	    from product_category a
+		where a.category_Type_Id = #{categoryTypeId}
+		and a.category_Status_Cd = '1'
+	</select>
+	
+	<!-- 查询各分类(系列分类)下微店上架的商品 -->
+	<select id="findProductBYCategoryAndMstore" parameterType="java.util.HashMap" resultType="cn.yr.chile.products.dto.ProductMstoreXrefDTO">
+		SELECT pux.User_Id, pux.Display_Id, ppi.Pic_Url, 
+			p.Product_Id, p.Product_Name, p.Product_Status_Cd, p.Category_Id, p.Brand_Id,
+			p.Product_Type_Cd, p.Basic_Unit_Type_Cd, p.Sale_Unit_Type_Cd, p.Bar_Code,
+			p.Default_Price, p.Tag_Price
+		FROM product p LEFT JOIN product_user_xref pux ON (p.Product_Id=pux.Product_Id AND p.Product_Status_Cd=1 AND pux.Product_Status_Cd=1)
+			 LEFT JOIN product_pic_info ppi ON (p.Product_Id=ppi.Product_Id AND ppi.Is_Default_Pic=1)
+		WHERE p.Category_Id=#{categoryId} AND pux.User_Id=#{userId}
+	</select>
+
+	<select id="findChildrenCategory" resultType="ProductCategory" parameterType="java.lang.Integer">
+		select
+		<include refid="categoryColumns" />
+		from product_category a
+		where a.Parent_Category_Id = #{0}
+		and a.category_Status_Cd = '1'
+	</select>
+
+	<!--顶级商品分类-->
+	<select id="findTopCategoryList" resultType="ProductCategory" parameterType="java.util.Map">
+		select
+		<include refid="categoryColumns" />
+		from product_category a
+		where a.Category_Status_Cd = 1
+		and a.Parent_Category_Id IS NULL
+	</select>
+
+<!--a.Category_Status_Cd = 1-->
+	<select id="getByName" resultType="ProductCategory" parameterType="java.lang.String">
+		select
+		<include refid="allColumns" />
+		from product_category a
+		where
+            1=1
+		and a.Category_Name = #{0}
+	</select>
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreSalesCalcDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        User_Id, Sale_Total_Amt, Commission_Total_Amt, Rebate_Total_Amt, First_Order_Reward_Total_Amt, Commission_Rebate_Forder_Total, Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstoreSalesCalc" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_m_store_sales_calc (
+	        Sale_Total_Amt, Commission_Total_Amt, Rebate_Total_Amt, First_Order_Reward_Total_Amt, Commission_Rebate_Forder_Total, Update_Time
+	    ) VALUES (
+	        #{saleTotalAmt}, #{commissionTotalAmt}, #{rebateTotalAmt}, #{firstOrderRewardTotalAmt}, #{commissionRebateForderTotal}, #{updateTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstoreSalesCalc">
+	   UPDATE user_m_store_sales_calc SET
+		   Sale_Total_Amt = #{saleTotalAmt}, 
+		   Commission_Total_Amt = #{commissionTotalAmt}, 
+		   Rebate_Total_Amt = #{rebateTotalAmt}, 
+		   First_Order_Reward_Total_Amt = #{firstOrderRewardTotalAmt}, 
+		   Commission_Rebate_Forder_Total = #{commissionRebateForderTotal},
+		   Update_Time = #{updateTime}
+	   WHERE 
+		   User_Id = #{userId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store_sales_calc where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstoreSalesCalc" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_m_store_sales_calc 
+	     WHERE 
+			  User_Id = #{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstoreSalesCalc">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_sales_calc
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserMstoreSalesCalc" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_sales_calc a
+	    where a.deleted=0
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="saleTotalAmt != null"> and a.Sale_Total_Amt = #{saleTotalAmt}</if>
+		<if test="commissionTotalAmt != null"> and a.Commission_Total_Amt = #{commissionTotalAmt}</if>
+		<if test="rebateTotalAmt != null"> and a.Rebate_Total_Amt = #{rebateTotalAmt}</if>
+		<if test="firstOrderRewardTotalAmt != null"> and a.First_Order_Reward_Total_Amt = #{firstOrderRewardTotalAmt}</if>
+		<if test="updateTime != null"> and a.Update_Time = #{updateTime}</if>
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 2016.06.17 By caobr 查询微店收入、分销（普通会员的）可提现信息 -->
+	<select id="findWithdrawalList" parameterType="java.lang.Integer" resultType="cn.yr.chile.user.dto.UserWithdrawDTO">
+	SELECT t.User_Id, t.availableAmt, t.withdrawalType, (SELECT config_value FROM site_config WHERE config_key='withdrawal_amount_min' ) as minWithdrawAmt
+ 	FROM (SELECT User_Id, Commission_Rebate_Forder_Total as availableAmt, 1 as withdrawalType FROM user_m_store_sales_calc WHERE User_Id=#{userId}
+	UNION 
+	SELECT User_Id, User_Rebate_Develop_Sale_Amt as availableAmt, 2 as withdrawalType FROM user_consume_calc WHERE User_Id=#{userId}
+	UNION 
+	SELECT User_Id, Red_Packet_Balance  as availableAmt ,3 as withdrawalType  FROM user_consume_calc WHERE User_Id=#{userId}) as t
+	</select>
+
+	<!-- 2016.06.17 By caobr 查询微店主各销售统计信息 -->
+	<select id="getMstoreSalesCalcByUserId" parameterType="java.lang.Integer" resultType="UserMstoreSalesCalc">
+		SELECT <include refid="allColumns"/> FROM user_m_store_sales_calc WHERE User_Id=#{userId}
+	</select>
+	
+	<!-- 2016.8.15 By caobr 微店佣金降序排名 -->
+	<select id="rankingMstoreByCommissionAmt" resultType="UserMstoreSalesCalc">
+		SELECT us.User_Id, us.Commission_Total_Amt, u.Parent_User_Id
+		FROM user_m_store_sales_calc us LEFT JOIN user u ON us.User_Id=u.User_Id
+		ORDER BY us.Commission_Total_Amt DESC
+	</select>
+</mapper>

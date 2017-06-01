@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.EntityCardDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        a.Id,
+        a.Name,
+        a.Description,
+        a.Card_Type_Cd,
+        a.Card_Code_Num,
+      	a.Status_Cd,
+      	a.Start_Date,
+      	a.End_Date,
+      	a.Value,
+      	a.Card_Code_Prefix,
+      	a.Create_Time
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="EntityCard" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO entity_card (
+	        Name,
+	        Description,
+	        Card_Type_Cd,
+	        Card_Code_Num,
+	        Status_Cd,
+	        Start_Date,
+      		End_Date,
+      		Value,
+      		Card_Code_Prefix,
+      		Create_Time
+	    ) VALUES (
+	        #{name},
+	        #{description},
+	        #{cardTypeCd},
+	        #{cardCodeNum},
+	        #{statusCd},
+	        #{startDate},
+	        #{endDate},
+	        #{value},
+	        #{cardCodePrefix},
+	        #{createTime}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="EntityCard">
+	   UPDATE entity_card SET
+	  	  Name = #{name},
+	  	  Description = #{description},
+	  	  Card_Code_Num = #{cardCodeNum},
+	  	  Status_Cd = #{statusCd},
+	  	  Start_Date = #{startDate},
+	  	  End_Date = #{endDate},
+	  	  Value = #{value}
+	   WHERE
+		   id = #{id}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM entity_card where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="EntityCard" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        s.Code_Cn_Name AS cardTypeName
+        FROM entity_card a
+        LEFT JOIN system_code s ON a.CARD_TYPE_CD = s.Code_Id AND s.Code_Type_Cd = 'CARD_TYPE_CD'
+        WHERE
+        id=#{id}
+    </select>
+
+    <!--查询列表-->
+    <select id="findList" resultType="EntityCard" parameterType="EntityCard">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+		s1.Code_Cn_Name AS fieldTypeName,
+		s2.Code_Cn_Name AS statusName,
+		( SELECT COUNT(*)
+		FROM entity_card_code b
+		WHERE b.Is_Used = 1 AND b.Entity_Card_Id = a.Id
+		) AS usedNum
+        FROM entity_card a
+		LEFT JOIN system_code s1 ON a.CARD_TYPE_CD = s1.Code_Id AND s1.Code_Type_Cd = 'CARD_TYPE_CD'
+		LEFT JOIN system_code s2 ON a.Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Status_Cd'
+		WHERE a.Card_Type_Cd = #{cardTypeCd} AND a.Status_Cd in(0,1)
+        ORDER BY id DESC
+    </select>
+    
+    <!-- 查询手机端分页集合 -->
+    <select id="findEntityCardListByLimit" resultType="EntityCardListDTO" parameterType="EntityCardLimitDTO">
+    	SELECT
+    	<include refid="allColumns"/>
+    	,
+    	b.Card_Num,
+    	b.Password
+    	FROM entity_card a 
+    	LEFT JOIN entity_card_code b ON a.Id = b.Entity_Card_Id 
+    	WHERE b.User_Id = #{userId}
+    	<if test="cardTypeCd !=null and '' != cardTypeCd">AND a.Card_Type_Cd = #{cardTypeCd}</if>
+    	<if test="statusCd != null and '' != statusCd"> AND a.Status_Cd = #{statusCd}</if>
+    	ORDER BY a.Id DESC
+    	<if test="start !=null and pageSize != null">
+    	LIMIT #{start},#{pageSize}
+    	</if>
+    </select>
+
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.cart.dao.CartItemPromotionXrefDao">
+	<sql id="allColumns">
+        Cart_Item_Id,
+        Promotion_ID,
+        Promotion_Discount_Rule_Id,
+        promo_coupon_code_ID,
+        Condition_ID
+    </sql>
+    
+    <!-- 新增 -->
+	<insert id="insert" parameterType="CartItemPromotionXref" useGeneratedKeys="false" keyProperty="cartItemId">
+	    INSERT INTO cart_item_promotion_xref (
+			<include refid="allColumns"/>
+	    ) VALUES (
+			#{cartItemId}, 
+			#{promotionId}, 
+			#{promotionDiscountRuleId},
+			#{promoCouponCodeID},
+			#{conditionId}
+	    )
+	</insert>
+	<!-- 更新 -->
+    <update id="update" parameterType="CartItemPromotionXref">
+    	UPDATE cart_item_promotion_xref SET
+        	Promotion_ID  = #{promotionId},
+        	Promotion_Discount_Rule_Id = #{promotionDiscountRuleId},
+        	promo_coupon_code_ID = #{promoCouponCodeID},
+        	Condition_ID = #{conditionId}
+        WHERE 
+        	Cart_Item_Id = #{cartItemId}
+    </update>
+	
+    
+    <!-- 根据id删除 -->
+    <delete id="delete" parameterType="int">
+        DELETE FROM cart_item_promotion_xref WHERE Cart_Item_Id = #{cartItemId}
+    </delete>
+    
+    <!-- 根据id获得 -->
+    <select id="get" resultType="CartItemPromotionXref" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM cart_item_promotion_xref 
+        WHERE Cart_Item_Id = #{cartItemId}
+    </select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="CartItemPromotionXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from cart_item_promotion_xref 
+	    where 1 = 1
+		<if test="cartItemId != null"> and Cart_Item_Id = #{cartItemId}</if>
+		<if test="promotionId != null"> and Promotion_ID = #{promotionId}</if>
+		<if test="promotionDiscountRuleId != null"> and Promotion_Discount_Rule_Id = #{promotionDiscountRuleId}</if>
+		<if test="promoCouponCodeID != null"> and Promotion_Discount_Rule_Id = #{promoCouponCodeID}</if>
+	</select>
+	
+	<!-- 根据用户Id查询在购物车中有被使用的优惠券 -->
+	<select id="findListByUserId" resultType="CartItemPromotionXref" parameterType="java.util.HashMap">  
+	    select 
+		c1.Cart_Item_Id,
+        c1.Promotion_ID,
+        c1.Promotion_Discount_Rule_Id,
+        c1.promo_coupon_code_ID,
+        c1.Condition_ID
+	    from cart_item_promotion_xref c1
+	    left join cart_item c2 on c1.cart_item_id = c2.Cart_Item_Id
+	    where c2.User_Id = #{userId}
+		<if test="cartItemId != null"> and c1.Cart_Item_Id = #{cartItemId}</if>
+		<if test="promotionId != null"> and c1.Promotion_ID = #{promotionId}</if>
+		<if test="promotionDiscountRuleId != null"> and c1.Promotion_Discount_Rule_Id = #{promotionDiscountRuleId}</if>
+		<if test="promoCouponCodeID != null"> and c1.Promotion_Discount_Rule_Id = #{promoCouponCodeID}</if>
+	</select>
+	
+	<!-- 根据购物车Id、活动Id和活动类型查询数据 -->
+	<select id="getByCIPIdAndType" resultType="CartItemPromotionXref" parameterType="java.util.HashMap">  
+	    select 
+			c.Cart_Item_Id,
+        	c.Promotion_ID,
+        	c.Promotion_Discount_Rule_Id,
+        	c.promo_coupon_code_ID,
+        	c.Condition_ID
+	    from 
+	    	cart_item_promotion_xref c
+	    	inner join promotion p on p.Promotion_ID = c.Promotion_ID
+	    where 
+	    	c.Cart_Item_Id = #{cartItemId}
+	    	
+			and p.Promotion_Type_Cd in
+			<foreach item="item" index="index" collection="types" open="("
+				separator="," close=")">
+				#{item}
+			</foreach>
+			limit 1
+	</select>
+</mapper>

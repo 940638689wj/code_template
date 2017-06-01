@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderRemarkDao">
+   <sql id="allColumns">
+	  Id,
+	  order_Id,
+	  Admin_User_Id,
+	  User_Name,
+	  Remark,
+	  Remark_Time,
+	  Remark_Type_Cd
+	</sql>
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderRemark" useGeneratedKeys="true"
+		keyProperty="id">
+	INSERT INTO order_remark (
+	  order_Id,
+	  Admin_User_Id,
+	  User_Name,
+	  Remark,
+	  Remark_Time,
+	  Remark_Type_Cd
+		) VALUES (
+	  #{orderId},
+	  #{adminUserId},
+	  #{userName},
+	  #{remark},
+	  #{remarkTime},
+	  #{remarkTypeCd}
+		)
+	</insert>
+
+	<select id="get" resultType="OrderRemark" parameterType="Integer">
+		SELECT
+		<include refid="allColumns"/>
+		FROM order_remark
+		WHERE order_id = #{id}
+	</select>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="Order">
+		UPDATE order_remark SET
+		order_Id = #{orderId},
+		Admin_User_Id = #{adminUserId},
+		User_Name = #{userName},
+		Remark = #{remark},
+		Remark_Time = #{remarkTime},
+		Remark_Type_Cd = #{remarkTypeCd}
+		WHERE
+	    Id = #{id}
+	</update>
+
+    <select id="findOrderRemarksByOrderId" resultType="cn.yr.chile.order.domain.OrderRemark" parameterType="Integer">
+      select
+      <include refid="allColumns" />
+      from order_remark
+      where order_id = #{orderId}
+    
+    </select>  
+	
+	
+     
+</mapper>

@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def bean(param):
 
     text = 'import cn.yr.chile.common.persistence.BaseEntity;\n'
@@ -28,5 +29,5 @@ def bean(param):
         text += '    \n'
     text += '}\n'
 
-    with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\' + param['table_name_convert_type'] + '.java', 'wb') as f:
+    with open(param['path'] + param['table_name_convert_type'] + '.java', 'wb') as f:
         f.write(text.encode('utf-8'))

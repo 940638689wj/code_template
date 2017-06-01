@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.wechat.dao.WxEventActionInitMsgXrefDao">
+	<sql id="allColumns">
+		a.Event_Action_Id,
+		a.Init_Message_Id		
+	</sql>
+	
+<delete id="delete" parameterType="java.lang.Long">
+	delete from wx_event_action_init_msg_xref where Init_Message_Id=#{0}	
+</delete>
+<select id="get" parameterType="java.lang.Long" resultType="cn.yr.chile.wechat.domain.WxEventActionInitMsgXref">
+	select 
+		<include refid="allColumns" />
+	from  
+		wx_event_action_init_msg_xref a
+	where 
+		Init_Message_Id=#{0}
+</select>	
+	
+</mapper>

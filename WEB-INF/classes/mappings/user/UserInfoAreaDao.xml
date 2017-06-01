@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserInfoAreaDao">
+	<select id="findAreaId" parameterType="string" resultType="java.lang.Long">
+		SELECT a.Id
+		FROM area a
+		<where>
+			a.Area_Name = #{areaName}
+			<if test="null != parentAreaId and '' != parentAreaId">
+				AND a.Parent_Area_Id = #{parentAreaId}
+			</if>
+		</where>
+	</select>
+</mapper>

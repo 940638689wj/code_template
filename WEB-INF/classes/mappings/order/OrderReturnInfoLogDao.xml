@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderReturnInfoLogDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        a.Id,
+        a.Order_Return_Info_Id,
+        a.Create_Time,
+        a.Operator_Type_Cd,
+        a.Operator_Id,
+        a.Operate_Type_Cd,
+        a.Operate_Description
+    </sql>
+
+    <!-- 获取列表数据 -->
+    <select id="findList" resultType="OrderReturnInfoLog" parameterType="OrderReturnInfoLog">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        s1.Code_Cn_Name AS operateTypeName
+        FROM order_return_info_log a
+        LEFT JOIN system_code s1 ON a.Operate_Type_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Operate_Type_Cd'
+        WHERE 1=1
+        <if test="id != null">AND a.Id = #{id}</if>
+        <if test="orderReturnInfoId != null">AND a.Order_Return_Info_Id = #{orderReturnInfoId}</if>
+        <if test="operatorTypeCd != null">AND a.Operator_Type_Cd = #{operatorTypeCd}</if>
+        <if test="operatorId != null">AND a.Operator_Id = #{operatorId}</if>
+        <if test="operateTypeCd != null">AND a.Operate_Type_Cd = #{operateTypeCd}</if>
+        <if test="operateDescription != null and operateDescription != ''">AND a.Operate_Description = #{operateDescription}</if>
+        ORDER BY a.id DESC
+    </select>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="OrderReturnInfoLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_return_info_log(
+        Order_Return_Info_Id,
+        Create_Time,
+        Operator_Type_Cd,
+        Operator_Id,
+        Operate_Type_Cd,
+        Operate_Description
+        ) VALUES (
+        #{orderReturnInfoId},
+        #{createTime},
+        #{operatorTypeCd},
+        #{operatorId},
+        #{operateTypeCd},
+        #{operateDescription}
+        )
+    </insert>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+        DELETE FROM order_return_info_log
+        WHERE Id = #{id}
+    </delete>
+
+    <!-- 更新 -->
+    <update id="update" parameterType="OrderReturnInfoLog">
+        UPDATE order_return_info_log SET
+        <if test="orderReturnInfoId != null">
+            Order_Return_Info_Id = #{orderReturnInfoId},
+        </if>
+        <if test="createTime != null">
+            Create_Time = #{createTime},
+        </if>
+        <if test="operatorTypeCd != null">
+            Operator_Type_Cd = #{operatorTypeCd},
+        </if>
+        <if test="operatorId != null">
+            Operator_Id = #{operatorId},
+        </if>
+        <if test="operateTypeCd != null">
+            Operate_Type_Cd = #{operateTypeCd},
+        </if>
+            Operate_Description = #{operateDescription}
+        WHERE
+        Id = #{id}
+    </update>
+    
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="OrderReturnInfoLog" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_return_info_log a
+        WHERE Id=#{id}
+    </select>
+
+</mapper>

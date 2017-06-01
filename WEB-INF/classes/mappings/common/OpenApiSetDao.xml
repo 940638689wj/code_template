@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.common.dao.OpenApiSetDao">
+	<!--<resultMap id="openApiSetMap" type="OpenApiSet">
+		<result property="id" column="Id" />
+		<result property="appName" column="App_Name" />
+		<result property="appKey" column="AppKey" />
+		<result property="appSecret" column="AppSecret" />
+		<result property="createTime" column="Create_Time" />
+		<result property="lastUpdateTime" column="Last_Update_Time" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        p1.Id, p1.App_Name, p1.AppKey, p1.AppSecret, p1.Create_Time, p1.Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OpenApiSet" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO open_api_set (
+	        App_Name, AppKey, AppSecret, Create_Time, Last_Update_Time
+	    ) VALUES (
+	        #{appName}, #{appKey}, #{appSecret}, #{createTime}, #{lastUpdateTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OpenApiSet">
+	   UPDATE open_api_set SET
+	   		AppKey = #{appKey},
+	   		AppSecret = #{appSecret}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+			App_Name = #{appName}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM open_api_set where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OpenApiSet" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM open_api_set p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+
+	<!-- 根据appName获取 -->
+    <select id="getByAppName" resultType="OpenApiSet" parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+	     FROM open_api_set p1
+	     WHERE
+			p1.App_Name=#{appName}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OpenApiSet">  
+	    select 
+		<include refid="allColumns" />
+	    from open_api_set p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OpenApiSet" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from open_api_set p1
+	    where a.deleted=0
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="appName != null"> and p1.App_Name = #{appName}</if>
+		<if test="appKey != null"> and p1.AppKey = #{appKey}</if>
+		<if test="appSecret != null"> and p1.AppSecret = #{appSecret}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+</mapper>

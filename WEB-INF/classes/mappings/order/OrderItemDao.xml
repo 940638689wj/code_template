@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderItemDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        Order_Item_Id, 
+        Order_Id,
+        Product_Id,
+        Product_Name,
+        Product_Pic_Url,
+        Tag_Price,
+        Sale_Price,
+        Quantity,
+        Product_Weight,
+        Product_Weight_Unit_Cd,
+        Product_Discount_Amt,
+        Product_Total,
+        Is_Gift,
+        Create_Time,
+        Bar_Code,
+        Product_Type_Cd,
+        Src_Store_ID,
+        Share_User_Id,
+        Product_Commission_Amt,
+        Product_Commission_Calc_Remark,
+        Product_Return_Score,
+        Pay_Cash_Amt,
+        Pay_Score_Amt,
+        Pay_XMAIR_Card_Amt,Pay_Type_Cd,
+        Product_Point_Value
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="OrderItem" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_item (
+	        Order_Id,
+	        Product_Id,
+	        Product_Name,
+	        Product_Pic_Url,
+	        Tag_Price,
+	        Sale_Price,
+	        Quantity,
+	        Product_Weight,
+	        Product_Weight_Unit_Cd,
+	        Product_Discount_Amt,
+	        Product_Total,
+	        Is_Gift,
+	        Create_Time,
+	        Bar_Code,
+	        Product_Type_Cd,
+	        Src_Store_ID,
+	        Share_User_Id,
+	        Product_Commission_Amt,
+	        Product_Commission_Calc_Remark,
+	        Product_Return_Score,
+	        Pay_Cash_Amt,
+	        Pay_Score_Amt,
+	        Pay_XMAIR_Card_Amt,
+	        Pay_Type_Cd,
+	        Product_Point_Value
+	    ) VALUES (
+	        #{orderId}, 
+	        #{productId}, 
+	        #{productName},
+	        #{productPicUrl}, 
+	        #{tagPrice}, 
+	        #{salePrice},
+	        #{quantity},
+	        #{productWeight},
+	        #{productWeightUnitCd}, 
+	        #{productDiscountAmt},
+	        #{productTotal}, 
+	        #{isGift},
+	        #{createTime}, 
+	        #{barCode}, 
+	        #{productTypeCd},
+	        #{srcStoreId}, 
+	        #{shareUserId}, 
+	        #{productCommissionAmt}, 
+	        #{productCommissionCalcRemark},
+	        #{productReturnScore}, 
+	        #{payCashAmt}, 
+	        #{payScoreAmt}, 
+	        #{payXmairCardAmt}, 
+	        #{payTypeCd}, 
+	        #{productPointValue}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="OrderItem">
+	   UPDATE order_item SET
+		   Order_Id = #{orderId}, 
+		   Product_Id = #{productId}, 
+		   Product_Name = #{productName}, 
+		   Product_Pic_Url = #{productPicUrl}, 
+		   Tag_Price = #{tagPrice}, 
+		   Sale_Price = #{salePrice}, 
+		   Quantity = #{quantity}, 
+		   Product_Weight = #{productWeight},
+	       Product_Weight_Unit_Cd = #{productWeightUnitCd},
+	       Product_Discount_Amt = #{productDiscountAmt},
+		   Product_Total = #{productTotal}, 
+		   Is_Gift = #{isGift}, 
+		   Create_Time = #{createTime},
+		   Bar_Code = #{barCode},
+		   Product_Type_Cd = #{productTypeCd},
+	       Src_Store_ID = #{srcStoreId},
+		   Share_User_Id = #{shareUserId},
+		   Product_Commission_Amt = #{productCommissionAmt},
+		   Product_Commission_Calc_Remark =  #{productCommissionCalcRemark},
+		   Product_Return_Score = #{productReturnScore},
+	       Pay_Cash_Amt = #{payCashAmt},
+	       Pay_Score_Amt = #{payScoreAmt},
+	       Pay_XMAIR_Card_Amt = #{payXmairCardAmt},
+	       Pay_Type_Cd = #{payTypeCd},
+	       Product_Point_Value = #{productPointValue}
+	   WHERE
+		   Order_Item_Id = #{orderItemId}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM order_item where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="OrderItem" parameterType="Integer">
+        SELECT
+        a.Order_Item_Id,
+        a.Order_Id,
+        a.Product_Id,
+        a.Product_Name,
+        a.Product_Pic_Url,
+        a.Tag_Price,
+        a.Sale_Price,
+        a.Quantity,
+        a.Product_Weight,
+        a.Product_Weight_Unit_Cd,
+        a.Product_Discount_Amt,
+        a.Product_Total,
+        a.Is_Gift,
+        a.Create_Time,
+        a.Bar_Code,
+        a.Product_Type_Cd,
+        a.Src_Store_ID,
+        a.Share_User_Id,
+        a.Product_Commission_Amt,
+        a.Product_Commission_Calc_Remark,
+        a.Product_Return_Score,
+        a.Pay_Cash_Amt,
+        a.Pay_Score_Amt,
+        a.Pay_XMAIR_Card_Amt,Pay_Type_Cd,
+        a.Product_Point_Value,
+        pr.SKU_KEY_Json_Str
+		FROM order_item a
+		LEFT JOIN product pr ON a.product_id = pr.product_id
+        WHERE
+        Order_Item_Id=#{id}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="OrderItem">
+        select
+        <include refid="allColumns"/>
+        from order_item
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findList" resultType="OrderItem" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from order_item a
+        where 1=1
+        <if test="orderItemId != null">and a.Order_Item_Id = #{orderItemId}</if>
+        <if test="orderId != null">and a.Order_Id = #{orderId}</if>
+        <if test="productId != null">and a.Product_Id = #{productId}</if>
+        <if test="productName != null">and a.Product_Name = #{productName}</if>
+        <if test="productPicUrl != null">and a.Product_Pic_Url = #{productPicUrl}</if>
+        <if test="tagPrice != null">and a.Tag_Price = #{tagPrice}</if>
+        <if test="salePrice != null">and a.Sale_Price = #{salePrice}</if>
+        <if test="quantity != null">and a.Quantity = #{quantity}</if>
+        <if test="productTotal != null">and a.Product_Total = #{productTotal}</if>
+        <if test="isGift != null">and a.Is_Gift = #{isGift}</if>
+        <if test="createTime != null">and a.Create_Time = #{createTime}</if>
+        <if test="barCode != null">and a.Bar_Code = #{barCode}</if>
+        <if test="productTypeCd != null">and a.Product_Type_Cd = #{productTypeCd}</if>
+        <if test="srcStoreId != null">and a.Src_Store_ID = #{srcStoreId}</if>
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <sql id="findOrderItemsByOrderIdSql">
+		SELECT 
+		   a.Order_Item_Id, 
+	       a.Order_Id,
+	       a.Product_Id,
+	       a.Product_Name,
+	       a.Product_Pic_Url,
+	       a.Tag_Price,
+	       a.Sale_Price,
+	       a.Quantity,
+	       a.Product_Weight,
+	       a.Product_Weight_Unit_Cd,
+	       a.Product_Discount_Amt,
+	       a.Product_Total,
+	       a.Is_Gift,
+	       a.Create_Time,
+	       a.Bar_Code,
+	       a.Product_Type_Cd,
+	       a.Src_Store_ID,
+	       a.Share_User_Id,
+	       a.Product_Commission_Amt,
+	       a.Product_Commission_Calc_Remark,
+	       a.Product_Return_Score,
+	       a.Pay_Cash_Amt,
+	       a.Pay_Score_Amt,
+	       a.Pay_XMAIR_Card_Amt,Pay_Type_Cd,
+	       a.Product_Point_Value
+	</sql>
+
+    <select id="findOrderItemsByOrderId" parameterType="int" resultType="OrderItem">
+        <include refid="findOrderItemsByOrderIdSql"/>
+		,
+		pr.SKU_KEY_Json_Str
+		FROM order_item a
+		LEFT JOIN product pr ON a.product_id = pr.product_id
+        WHERE a.Order_Id = #{Order_Id}
+    </select>
+
+    <select id="findReturnOrderItemsByOrderId" resultType="OrderItem" parameterType="java.util.Map">
+        <include refid="findOrderItemsByOrderIdSql"/>
+		FROM order_item a
+        INNER JOIN order_return_info re ON a.Order_Item_Id = re.Order_Item_Id
+        WHERE a.Order_Id = #{orderId}
+        AND re.apply_status_cd IN (${applyStatusCd})
+    </select>
+
+    <!-- 成交量,订单数 ,成交金额 -->
+    <select id="getOrderItemNum" parameterType="OrderItem" resultType="OrderItem">
+        select
+        count(p1.Order_Id) AS orderNum,sum(b.Product_Total) AS productTotalNum,sum(b.Quantity) AS QuantitySum
+        from order_item b
+        left join order_header p1 on p1.Order_Id = b.Order_Id
+        <where>
+            <if test="createTime != null">
+                <![CDATA[ and b.Create_Time >= #{createTime}]]>
+            </if>
+            <if test="endCreateTime !=null">
+                <![CDATA[ and b.Create_Time <= #{endCreateTime} ]]>
+            </if>
+            <if test="orderPayStatus !=null">and p1.ORDER_PAY_STATUS_CD = #{orderPayStatus}</if>
+            <if test="orderStatusCd !=null ">and p1.Order_Status_Cd = #{orderStatusCd}</if>
+            <if test="orderPropertyCd !=null ">and p1.Order_Property_Cd = #{orderPropertyCd}</if>
+            <if test="orderItemId != null">and p1.Order_Item_Id = #{orderItemId}</if>
+            <if test="orderId != null">and p1.Order_Id = #{orderId}</if>
+            <if test="productId != null">and p1.Product_Id = #{productId}</if>
+            <if test="productName != null">and p1.Product_Name = #{productName}</if>
+            <if test="productPicUrl != null">and p1.Product_Pic_Url = #{productPicUrl}</if>
+            <if test="tagPrice != null">and p1.Tag_Price = #{tagPrice}</if>
+            <if test="salePrice != null">and p1.Sale_Price = #{salePrice}</if>
+            <if test="quantity != null">and p1.Quantity = #{quantity}</if>
+            <if test="productTotal != null">and p1.Product_Total = #{productTotal}</if>
+        </where>
+    </select>
+
+    <!-- 获取用户购买同种商品数量 -->
+    <select id="getSumQuantity" resultType="Integer" parameterType="java.util.HashMap">
+        select
+        sum(o1.Quantity)
+        from order_header o
+        left join order_item o1 on o.Order_Id = o1.Order_Id
+        where
+        o.Order_Status_Cd != 6
+        and o1.Product_Id = #{productId}
+        <if test="startTime != null">
+            <![CDATA[ and o.Create_Time >= #{startTime}]]>
+        </if>
+        <if test="endTime !=null">
+            <![CDATA[ and o.Create_Time < #{endTime} ]]>
+        </if>
+        <if test="userId !=null">and o.User_Id = #{userId}</if>
+    </select>
+
+    <!-- 根据活动id获取已付款订单商品中所使用该活动的总数量 -->
+    <select id="getSumQuantityByPromitionId" resultType="Integer" parameterType="Integer">
+   		select 
+   			sum(o3.Quantity)
+   		from 
+   			order_promotion_info o1
+   			left join order_header o2 on o1.Order_Id = o2.Order_Id
+   			left join order_item o3 on o1.Order_Item_Id = o3.Order_Item_Id
+   		where
+   			o1.Promotion_Id = #{promotionId}
+   			and o2.Order_Pay_Status_Cd = 2
+   </select>
+    <!-- 订单普通商品 -->
+    <select id="findOrderItems" resultType="cn.yr.chile.order.dto.OrderItemInfoDTO" parameterType="Integer">
+		select 
+   			a.Order_Item_Id,a.Product_Name,
+   			a.Product_Type_Cd, a.Sale_Price,
+   			a.Quantity,a.Product_Weight,a.Product_Weight_Unit_Cd,
+   			a.Product_Discount_Amt,a.Product_Total,
+   			a.Product_Type_Cd,
+   			a.Product_Id,
+   			b.Store_Name,
+   			c.Order_Property_Cd
+   			from order_item a
+   			left join store b on a.Src_Store_ID = b.Store_Id
+   			left join order_header c on a.Order_Id = c.Order_Id
+   			left join product d on d.Product_Id = a.Product_Id
+   			where   a.Order_Id = #{orderId}	
+   </select>
+
+    
+
+    <!-- 订单所有商品-->
+
+    <select id="findOrderProducts" resultType="cn.yr.chile.order.dto.OrderItemInfoDTO" parameterType="Integer">
+		select 
+   			a.Product_Name,
+   			a.Sale_Price,
+   			a.Quantity,
+   			a.Product_Total
+   			from order_item a
+   		    where a.Order_Id = #{orderId}	
+    </select>
+
+    <update id="setProductSrcStoreId" parameterType="Integer">
+        update order_item set Src_Store_ID = #{srcStoreId} where Order_Item_Id=#{orderItemId}
+    </update>
+    <select id="getItemByOrderAndProduct" resultType="OrderItem">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_item
+        WHERE order_id=#{0} AND product_id = #{1}
+    </select>
+    
+   <select id="findProductsByOrderId" resultType="String" parameterType="Integer">
+    select  group_concat(product_name)  from order_item where order_id = #{order_id} 
+   </select>
+   
+    <select id="CountProductNo" resultType="Integer" parameterType="Integer">
+    select  sum(Quantity)  from order_item where order_id = #{order_id} 
+   </select>
+
+    <!-- 统计商品销量 -->
+    <select id="statisticsProductSaleCnt" resultType="cn.yr.chile.products.dto.ProductSolrDTO">
+        SELECT
+            a.product_Id,
+            count(a.product_id) countNo
+        FROM
+            order_item a
+        LEFT JOIN order_header b ON a.order_id = b.order_id
+        LEFT JOIN product d ON d.product_Id = a.product_Id
+        LEFT JOIN order_extend c ON b.order_id = c.order_id
+        WHERE d.Product_Status_Cd = 1
+        AND b.order_status_cd NOT IN (1, 6)
+        AND a.Order_Item_Id NOT IN (
+            SELECT
+                Order_Item_ID
+            FROM
+                order_return_info
+            WHERE
+                Apply_Status_Cd = 2
+        )
+        GROUP BY a.product_id
+    </select>
+    
+	<select id="getItemByOrderId" parameterType="Integer" resultType="OrderItem">
+		SELECT <include refid="allColumns"/> FROM order_item WHERE Order_Id = #{orderId}
+	</select>
+	
+	    <!-- 积分兑换记录 -->
+	<select id="findListByLimit"  resultType="OrderItem" parameterType="cn.yr.chile.user.dto.UserLimitDTO">
+		SELECT 
+			a.Order_Item_Id,
+			a.Order_Id, 
+			a.Product_Id,
+			a.Product_Name,
+			a.Product_Pic_Url,
+			a.Tag_Price,
+			a.Sale_Price,
+			a.Product_Weight,
+			a.Product_Weight_Unit_Cd,
+			a.Quantity,
+			a.Product_Total,
+			a.Is_Gift,
+			a.Create_Time,
+			a.Bar_Code,
+			a.Share_User_Id,
+			a.Src_Store_ID,
+			a.Product_Type_Cd,
+			a.Product_Commission_Amt,
+			a.Pay_Score_Amt,
+			c.Order_Number,
+			c.ORDER_PAY_STATUS_CD
+		FROM order_item a 
+		LEFT JOIN order_header c on c.Order_Id = a.Order_Id
+		WHERE c.User_Id = #{userId}  AND  a.Pay_Score_Amt &gt; 0
+		LIMIT #{start},#{pageSize}
+	</select>	
+	<!-- 获取积分兑换记录的总条数 -->
+	<select id="getExchangeScorePageCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM order_Item a 
+		LEFT JOIN order_header c on c.Order_Id = a.Order_Id
+		WHERE c.User_Id = #{userId}  AND  a.Pay_Score_Amt &gt; 0
+	</select>
+</mapper>

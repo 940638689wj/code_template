@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionProductXrefDao">
+	<!--<resultMap id="promotionProductXrefMap" type="PromotionProductXref">
+		<result property="promotionId" column="Promotion_Id" />
+		<result property="productId" column="Product_Id" />
+		<result property="createTime" column="Create_Time" />
+		<result property="displayId" column="Display_Id" />
+		<result property="userLimitNum" column="User_Limit_Num" />
+		<result property="price" column="Price" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Id,
+			p1.Product_Id,
+			p1.Create_Time,
+			p1.Display_Id,
+			p1.User_Limit_Num,
+			p1.Price
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionProductXref">
+	    INSERT INTO promotion_product_xref (
+			Promotion_Id,
+			Product_Id,
+			Create_Time,
+			Display_Id, 
+			User_Limit_Num, 
+			Price
+	    ) VALUES (
+			#{promotionId},
+			#{productId},
+			#{createTime},
+			#{displayId},
+			#{userLimitNum}, 
+			#{price}
+	    )
+	</insert>
+	
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion_product_xref where Promotion_Id = #{promotionId}
+	</delete>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionProductXref">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_product_xref p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionProductXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_product_xref p1
+	    where 1=1
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="productId != null"> and p1.Product_Id = #{productId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="displayId != null"> and p1.Display_Id = #{displayId}</if>
+		<if test="userLimitNum != null"> and p1.User_Limit_Num = #{userLimitNum}</if>
+		<if test="price != null"> and p1.Price = #{price}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<!-- 获取 promotionIds 关联的商品 -->
+	<select id="getByPromotionIds" resultType="PromotionProductXref" parameterType="java.util.HashMap">
+	    select
+		<include refid="allColumns" />
+	    from promotion_product_xref p1
+	    where p1.Promotion_Id in ${promotionIds};
+	</select>
+
+	<select id="findPromotionProductXrefListByPromotionId" resultType="PromotionProductXref" parameterType="java.lang.Integer">
+		select
+		<include refid="allColumns" />
+		from promotion_product_xref p1
+		where p1.Promotion_Id = #{0}
+	</select>
+
+	<!-- 根据活动Id，查询活动商品id组合 -->
+	<select id="findProductIdsByPromotionId" resultType="String" parameterType="Integer">
+		SELECT
+		GROUP_CONCAT(p2.Master_Product_ID)
+		FROM promotion_product_xref p1
+		LEFT JOIN product p2 ON p1.Product_Id = p2.Product_Id
+
+		WHERE p1.Promotion_Id = #{promotionId}
+	</select>
+
+</mapper>

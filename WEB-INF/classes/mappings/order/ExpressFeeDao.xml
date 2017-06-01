@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.ExpressFeeDao">
+
+	<!-- 所有快递费支出 -->
+	<select id="findAllExpressFeeList" parameterType="map" resultType="ExpressFeeDTO">
+		select t1.* from (select 
+			a.order_id as orderId,
+			a.create_time as createTime,
+			a.order_number as orderNumber,
+			c.Express_Name as expressName,
+			b.Order_Express_Num as orderExpressNum,
+			a.order_express_amt as orderExpressAmt,
+			b.Receive_Addr_Combo as receiveAddrCombo,
+			a.order_status_cd as orderStatusCd,
+			b.express_id as expressId
+  		from 
+  			order_receive_info b
+  		LEFT JOIN 
+  			 order_header a 
+  		on 
+  			a.Order_Id=b.Order_Id 
+  		left join
+  			express c 
+  		on 
+  			b.Express_ID=c.Express_Id 
+  		left join
+  			system_code d
+  		on
+  			d.Code_Type_Cd='Order_Status_Cd'
+  		and
+  			a.Order_Status_Cd=d.Code_Id	) t1
+  		LEFT JOIN
+			(select 
+				e.order_id as orderId,
+				e.Origin_Platform_Cd as originPlatformCd 
+			from 
+				order_extend e
+			LEFT JOIN 
+				system_code f
+			on 
+				f.code_type_cd='Origin_Platform_Cd' 
+			and 
+				f.code_id=e.Origin_Platform_Cd) t2
+		ON	
+			t1.orderId= t2.orderId 
+  				 	
+  		<where>
+			<if test="expressId != null and expressId != '-1'"> and t1.expressId = #{expressId}</if>
+			<if test="originPlatformCd != null and originPlatformCd != '' "> and t2.originPlatformCd = #{originPlatformCd}</if>
+			<if test="orderId != null"> and t1.orderId = #{orderId}</if>
+			<if test="createTime != null"> and t1.createTime = #{createTime}</if>
+			<if test="orderNumber != null"> and t1.orderNumber = #{orderNumber}</if>
+			<if test="expressName != null"> and t1.expressName = #{expressName}</if>
+			<if test="orderExpressNum != null"> and t1.orderExpressNum = #{orderExpressNum}</if>
+			<if test="orderExpressAmt != null">and t1.orderExpressAmt=#{orderExpressAmt}</if>
+			<if test="receiveAddrCombo != null">and t1.receiveAddrCombo=#{receiveAddrCombo}</if>
+			<if test="beginTime != '' and beginTime != null">
+        		and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.createTime,'%Y%m%d')
+     	 	</if>
+       		 <if test="endTime != '' and endTime != null">
+        		and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.createTime,'%Y%m%d')
+       		 </if>
+       		 
+       		and 
+  				t1.orderStatusCd in (3,5,20)
+		</where>
+					
+		order by 
+			t1.createTime	desc
+		
+	</select>
+     
+     <!-- 快递费总金额 -->
+   	 <select id="sumOfExpressFee" parameterType="map" resultType="double">
+   	 	select
+   	 		sum(a.order_express_amt)
+   	 	from
+   	 		order_receive_info b
+   	 	left join
+   	 		order_header a
+   	 	on
+   	 		a.order_id=b.order_id	
+   	 	LEFT JOIN 
+   	 		order_extend c 
+   	 	ON 
+   	 		b.Order_Id = c.Order_Id
+		LEFT JOIN 
+			system_code d 
+		ON 
+			d.Code_Type_Cd='Origin_Platform_Cd' 
+		AND 
+			d.Code_Id=c.Origin_Platform_Cd	
+   	 	<where>
+			<if test="beginTime != '' and beginTime != null">
+        		and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Create_Time,'%Y%m%d')
+     	 	</if>
+       		 <if test="endTime != '' and endTime != null">
+        		and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Create_Time,'%Y%m%d')
+       		 </if>
+       		 <if test="expressId != '' and expressId != null">
+        		and b.express_Id<![CDATA[ = ]]>#{expressId} 
+       		 </if>
+       		 <if test="originPlatformCd != null and originPlatformCd != '' "> and c.Origin_Platform_Cd = #{originPlatformCd}</if>
+       		 and 
+  				a.order_status_cd in (3,5,20)
+		</where>		
+   	 </select>
+</mapper>

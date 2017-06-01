@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreRankingDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		a.User_Id, a.Parent_User_Id, a.Ranking, a.Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstoreRanking">
+		INSERT INTO user_m_store_ranking (
+			User_Id, Parent_User_Id, Ranking, Update_Time
+		) VALUES (
+			#{userId}, #{parentUserId}, #{ranking}, #{updateTime}
+		)
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstoreRanking">
+	   UPDATE user_m_store_ranking SET
+		   Parent_User_Id = #{parentUserId}, 
+		   Ranking = #{ranking}, 
+		   Update_Time = #{updateTime}
+	   WHERE 
+		   User_Id = #{userId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store_ranking where User_Id = #{userId}
+	</delete>
+	
+	<!-- 删除表中所有数据 -->
+	<delete id="deleteAll">
+		TRUNCATE TABLE user_m_store_ranking
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstoreRanking" parameterType="java.lang.Integer">  
+		SELECT a.User_Id, a.Parent_User_Id, a.Ranking, a.Update_Time , b.Head_Portrait_Url,b.User_Name 
+		FROM user_m_store_ranking a 
+		LEFT JOIN user b on a.User_Id=b.User_Id 
+	     WHERE a.User_Id=#{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstoreRanking">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_ranking
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserMstoreRanking" parameterType="UserMstoreRanking">  
+	    select 
+		<include refid="allColumns" />,
+		b.User_Name,
+		b.Head_Portrait_Url 
+	    from user_m_store_ranking a 
+	    left join user b on a.User_Id=b.User_Id 
+	    where 1=1 and b.Parent_User_Id = #{parentUserId} and b.M_Store_Status_Cd=3
+	</select>
+
+</mapper>

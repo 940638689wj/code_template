@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.common.dao.StorePhotoDao">
+
+	<insert id="insertPhoto" parameterType="cn.yr.chile.common.domain.StorePhoto"
+		useGeneratedKeys="true" keyProperty="storePhotoId">
+		insert into store_photo(
+		Store_Id,
+		Store_Photo_Url,
+		Create_Time
+		)values(
+		#{storeId},
+		#{storePhotoUrl},
+		#{createTime}
+		)
+	</insert>
+
+	<select id="findListByStoreId" resultType="cn.yr.chile.common.domain.StorePhoto" parameterType="Integer">
+		select * from store_photo where store_id=#{storeId}
+	</select>
+
+	<delete id = "del" parameterType = "Integer">  
+       delete from store_photo where store_id = #{storeId}  
+	</delete> 
+
+
+</mapper>

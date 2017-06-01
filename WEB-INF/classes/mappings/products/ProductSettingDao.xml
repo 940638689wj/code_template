@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductSettingDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		Product_Id,Top_Time,Is_Gift,Is_Show_Stock,Is_Show_Weight,Score_Discount_Type_Cd,Score_Discount_Value,Stock_Warning_Limit,
+		Is_Show_Tag_Price,Allow_Pay_Type_Cds,Is_Show_Sale_Price,Product_Timing_Shief_Time,Product_Point_Type_Cd,Product_Point_Value,
+		Product_Return_Score
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductSetting" useGeneratedKeys="true" keyProperty="productId">
+	    INSERT INTO product_setting (
+	        Product_Id, Top_Time, Is_Gift, Is_Show_Stock, Is_Show_Weight, 
+	        Score_Discount_Type_Cd, Score_Discount_Value, Stock_Warning_Limit,
+	        Is_Show_Tag_Price,Allow_Pay_Type_Cds,Is_Show_Sale_Price,Product_Timing_Shief_Time,
+	        Product_Point_Type_Cd,Product_Point_Value,Product_Return_Score
+	    ) VALUES (
+	        #{productId}, #{topTime}, #{isGift}, #{isShowStock}, #{isShowWeight}, 
+	        #{scoreDisCountTypeCd},#{scoreDiscountValue}, #{stockWarningLimit},
+	        #{isShowTagPrice}, #{allowPayTypeCds},#{isShowSalePrice},#{productTimingShiefTime},
+	        #{productPointTypeCd},#{productPointValue},#{productReturnScore} 
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductSetting">
+	   UPDATE product_setting SET
+		   Top_Time = #{topTime}, 
+		   Is_Gift = #{isGift}, 
+		   Is_Show_Stock = #{isShowStock}, 
+		   Is_Show_Weight = #{isShowWeight}, 
+		   Score_Discount_Type_Cd = #{scoreDisCountTypeCd}, 
+		   Score_Discount_Value = #{scoreDiscountValue}, 
+		   Stock_Warning_Limit = #{stockWarningLimit},
+		   Is_Show_Tag_Price = #{isShowTagPrice}, 
+		   Allow_Pay_Type_Cds = #{allowPayTypeCds},
+		   Is_Show_Sale_Price = #{isShowSalePrice},
+		   Product_Timing_Shief_Time = #{productTimingShiefTime},
+		   Product_Point_Type_Cd = #{productPointTypeCd},
+		   Product_Point_Value = #{productPointValue},
+		   Product_Return_Score = #{productReturnScore}
+	   WHERE 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM product_setting where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductSetting" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_setting 
+	     WHERE 
+			  Product_Id=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductSetting">  
+	    select 
+		<include refid="allColumns" />
+	    from product_setting
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductSetting" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_setting a
+	    where 1=1
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="isAllowAddCart != null"> and a.Is_Allow_Add_Cart = #{isAllowAddCart}</if>
+		<if test="mainStoreAllowPayTypeCds != null"> and a.Main_Store_Allow_Pay_Type_Cds = #{mainStoreAllowPayTypeCds}</if>
+		<if test="storeAllowPayTypeCds != null"> and a.Store_Allow_Pay_Type_Cds = #{storeAllowPayTypeCds}</if>
+		<if test="mstoreAllowPayTypeCds != null"> and a.M_Store_Allow_Pay_Type_Cds = #{mstoreAllowPayTypeCds}</if>
+		<if test="isSelfPickUp != null"> and a.Is_Self_Pick_Up = #{isSelfPickUp}</if>
+		<if test="isGift != null"> and a.Is_Gift = #{isGift}</if>
+		<if test="shelveChannelCds != null"> and a.Shelve_Channel_Cds = #{shelveChannelCds}</if>
+		<if test="allowRegStartDate != null"> and a.Allow_Reg_Start_Date = #{allowRegStartDate}</if>
+		<if test="allowRegEndDate != null"> and a.Allow_Reg_End_Date = #{allowRegEndDate}</if>
+		<if test="isShowTagPriceText != null"> and a.Is_Show_Tag_Price_Text = #{isShowTagPriceText}</if>
+		<if test="topTime != null"> and a.Top_Time = #{topTime}</if>
+		<if test="isSaledEnable != null"> and a.Is_Saled_Enable = #{isSaledEnable}</if>
+		<if test="isShowInMall != null"> and a.Is_Show_In_Mall = #{isShowInMall}</if>
+		<if test="personLimitNum != null"> and a.Person_limit_Num = #{personLimitNum}</if>
+		<if test="isShowMstoreHomePage != null"> and a.Is_show_M_Store_Home_Page = #{isShowMstoreHomePage}</if>
+		<if test="isShowCommissMstoreManage != null"> and a.Is_Show_Commiss_M_Store_Manage = #{isShowCommissMstoreManage}</if>
+		<if test="limitStartTime != null"> and a.Limit_Start_Time = #{limitStartTime}</if>
+		<if test="limitEndTime != null"> and a.Limit_End_Time = #{limitEndTime}</if>
+	</select>
+
+</mapper>

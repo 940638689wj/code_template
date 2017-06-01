@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Id,
+			p1.Promotion_Name,
+			p1.Promotion_Desc,
+			p1.Promotion_Type_Cd,
+			p1.Status_Cd,
+			p1.Enable_Start_Time,
+			p1.Enable_End_Time,
+			p1.Reg_Start_Time,
+			p1.Reg_End_Time,
+			p1.Quota_Num,
+			p1.Promotion_Url,
+			p1.Is_All_User_Level_Join,
+			p1.Is_All_Area_Join,
+			p1.Is_All_Product_Join,
+			p1.Promotion_Channel_Cds,
+			p1.Special_Sale_Price,
+			p1.Create_Time,
+			p1.Last_Update_Time,
+			p1.Is_All_Order_Join,
+			p1.Encrypt_Code,
+			p1.Promotion_Audit_Status_Cd,
+			p1.Promotion_Long_Desc,
+			p1.Is_All_User_Join
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="Promotion" useGeneratedKeys="true" keyProperty="promotionId">
+	    INSERT INTO promotion (
+			Promotion_Name, 
+			Promotion_Desc, 
+			Promotion_Type_Cd, 
+			Status_Cd, 
+			Enable_Start_Time, 
+			Enable_End_Time, 
+			Reg_Start_Time, 
+			Reg_End_Time, 
+			Quota_Num, 
+			Promotion_Url, 
+			Is_All_User_Level_Join, 
+			Is_All_Area_Join, 
+			Is_All_Product_Join, 
+			Promotion_Channel_Cds, 
+			Special_Sale_Price, 
+			Create_Time, 
+			Last_Update_Time,
+			Is_All_Order_Join,
+			Encrypt_Code,
+			Promotion_Audit_Status_Cd,
+			Promotion_Long_Desc,
+			Is_All_User_Join
+	    ) VALUES (
+			#{promotionName}, 
+			#{promotionDesc}, 
+			#{promotionTypeCd}, 
+			#{statusCd}, 
+			#{enableStartTime}, 
+			#{enableEndTime}, 
+			#{regStartTime}, 
+			#{regEndTime}, 
+			#{quotaNum}, 
+			#{promotionUrl}, 
+			#{isAllUserLevelJoin}, 
+			#{isAllAreaJoin}, 
+			#{isAllProductJoin}, 
+			#{promotionChannelCds}, 
+			#{specialSalePrice}, 
+			#{createTime}, 
+			#{lastUpdateTime},
+			#{isAllOrderJoin},
+			#{encryptCode},
+			#{promotionAuditStatusCd},
+			#{promotionLongDesc},
+			#{isAllUserJoin}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="Promotion">
+	   UPDATE promotion SET
+	   		Promotion_Name = #{promotionName}, 
+	   		Promotion_Desc = #{promotionDesc}, 
+	   		Promotion_Type_Cd = #{promotionTypeCd}, 
+	   		Status_Cd = #{statusCd}, 
+	   		Enable_Start_Time = #{enableStartTime}, 
+	   		Enable_End_Time = #{enableEndTime}, 
+	   		Reg_Start_Time = #{regStartTime}, 
+	   		Reg_End_Time = #{regEndTime}, 
+	   		Quota_Num = #{quotaNum}, 
+	   		Promotion_Url = #{promotionUrl}, 
+	   		Is_All_User_Level_Join = #{isAllUserLevelJoin}, 
+	   		Is_All_Area_Join = #{isAllAreaJoin}, 
+	   		Is_All_Product_Join = #{isAllProductJoin}, 
+	   		Promotion_Channel_Cds = #{promotionChannelCds}, 
+	   		Special_Sale_Price = #{specialSalePrice}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime},
+	   		Is_All_Order_Join = #{isAllOrderJoin},
+	   		Encrypt_Code = #{encryptCode},
+	   		Promotion_Audit_Status_Cd = #{promotionAuditStatusCd},
+	   		Promotion_Long_Desc = #{promotionLongDesc},
+	   		Is_All_User_Join = #{isAllUserJoin}
+	   WHERE 
+			Promotion_Id = #{promotionId}
+	</update>
+
+	<update id="updatePromotionBasicInfo" parameterType="java.util.Map">
+		UPDATE promotion SET
+	   		<if test="promotionName != null">Promotion_Name = #{promotionName},</if>
+	   		<if test="promotionDesc != null">Promotion_Desc = #{promotionDesc},</if>
+	   		Status_Cd = #{statusCd}
+		WHERE
+			Promotion_Id = #{promotionId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion where Promotion_Id = #{promotionId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="Promotion" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion p1
+	     WHERE
+			p1.Promotion_Id=#{promotionId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="Promotion">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<!-- 获取启用的秒杀数据列表 -->
+	<select id="findActivatedSeckillList" resultType="Promotion" parameterType="java.util.HashMap">
+		select
+		<include refid="allColumns" />
+		from promotion p1
+		where
+		p1.Promotion_Type_Cd = '51'
+		and p1.Status_Cd = '1'
+		<if test="isEnableTime!=null and isEnableTime!=''">
+			<![CDATA[
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d')
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		<if test="regTime!=null">
+			<![CDATA[
+    			and DATE_FORMAT(#{regTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Reg_Start_Time, '%Y-%m-%d')
+    			and DATE_FORMAT(#{regTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Reg_End_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findList" resultType="Promotion" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />,
+		s.Code_Cn_Name AS auditStatus
+	    from promotion p1
+		LEFT JOIN system_code s ON s.Code_Type_Cd = 'Promotion_Audit_Status_Cd' AND s.Code_Id = p1.Promotion_Audit_Status_Cd
+	    where 1 = 1
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="promotionName != null and promotionName!=''"> and p1.Promotion_Name like ('%${promotionName}%')</if>
+		<if test="promotionDesc != null"> and p1.Promotion_Desc = #{promotionDesc}</if>
+		<if test="promotionTypeCd != null"> and p1.Promotion_Type_Cd = #{promotionTypeCd}</if>
+		<if test="inPromotionTypeCd != null"> and p1.Promotion_Type_Cd in (${inPromotionTypeCd})</if>
+		<if test="statusCd != null"> and p1.Status_Cd = #{statusCd}</if>
+		<if test="enableStartTime != null"> and p1.Enable_Start_Time = #{enableStartTime}</if>
+		<if test="enableEndTime != null"> and p1.Enable_End_Time = #{enableEndTime}</if>
+		<if test="regStartTime != null"> and p1.Reg_Start_Time = #{regStartTime}</if>
+		<if test="regEndTime != null"> and p1.Reg_End_Time = #{regEndTime}</if>
+		<if test="quotaNum != null"> and p1.Quota_Num = #{quotaNum}</if>
+		<if test="promotionUrl != null"> and p1.Promotion_Url = #{promotionUrl}</if>
+		<if test="isAllUserLevelJoin != null"> and p1.Is_All_User_Level_Join = #{isAllUserLevelJoin}</if>
+		<if test="isAllAreaJoin != null"> and p1.Is_All_Area_Join = #{isAllAreaJoin}</if>
+		<if test="isAllProductJoin != null"> and p1.Is_All_Product_Join = #{isAllProductJoin}</if>
+		<if test="isAllOrderJoin != null"> and p1.Is_All_Order_Join = #{isAllOrderJoin}</if>
+		<if test="promotionChannelCds != null"> and p1.Promotion_Channel_Cds = #{promotionChannelCds}</if>
+		<if test="specialSalePrice != null"> and p1.Special_Sale_Price = #{specialSalePrice}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="like_name != null and like_name != ''"> and p1.Promotion_Name like CONCAT('%',#{like_name},'%')</if>
+		<if test="ge_startDate != null and ge_startDate !=''">
+			<![CDATA[
+    			and DATE_FORMAT(#{ge_startDate}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+	    <if test="le_startDate != null and le_startDate !=''">
+			<![CDATA[
+    			and DATE_FORMAT(#{le_startDate}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+	    <if test="ge_endDate != null and ge_endDate !=''">
+			<![CDATA[
+    			and DATE_FORMAT(#{ge_endDate}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+	    <if test="le_endDate != null and le_endDate !=''">
+			<![CDATA[
+    			and DATE_FORMAT(#{le_endDate}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		
+		<if test="promotionAuditStatusCd != null"> and p1.Promotion_Audit_Status_Cd = #{promotionAuditStatusCd}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+		<if test="isEnableTime!=null and isEnableTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d %H:%i:%s') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d %H:%i:%s') 
+    		]]>
+		</if>
+		<if test="notEnableTime!=null and notEnableTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{notEnableTime}, '%Y-%m-%d %H:%i:%s') >  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d %H:%i:%s')
+    		]]>
+		</if>
+		<if test="regTime!=null and regTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{regTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Reg_Start_Time, '%Y-%m-%d')   
+    			and DATE_FORMAT(#{regTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Reg_End_Time, '%Y-%m-%d') 
+    		]]>
+		</if>
+		<!-- 在使用时间内 -->
+		<if test="isUsedTime!=null and isUsedTime==1">
+    		<![CDATA[   
+    			and DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s') >=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d %H:%i:%s')
+    			and DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d %H:%i:%s')
+    		]]>
+		</if>
+		<if test="types != null and types != null">
+			and p1.Promotion_Type_Cd in
+			<foreach item="item" index="index" collection="types" open="("
+				separator="," close=")">
+				#{item}
+		</foreach>
+		</if>
+		and p1.Status_Cd &lt;&gt; 2
+		ORDER BY p1.Create_Time DESC
+	</select>
+
+	<!-- 获取符合条件的会员 -->
+	<select id="findUserByAreaAndUserLevel" resultType="cn.yr.chile.user.dto.UserLoginDTO" parameterType="java.util.Map">
+		select p3.user_id, p3.phone
+		from
+		(select p1.user_id, p1.phone, count(p2.Coupon_Code) as countCouponCode
+			from user p1
+			left join promotion_coupon_code p2 on p2.user_id = p1.user_id and p2.promotion_id = #{promotionId} AND p2.Coupon_Code IS NOT NULL
+			where
+			p1.Status_Cd = 1 AND p1.user_id != 0
+			<if test="regStartDate != null">
+				<![CDATA[ AND p1.Register_Time > #{regStartDate} ]]>
+			</if>
+			<if test="regEndDate != null">
+				<![CDATA[ AND p1.Register_Time < #{regEndDate} ]]>
+			</if>
+			<if test="provinceIds != null"> and p1.province_id in (${provinceIds})</if>
+			<if test="cityIds != null"> and p1.city_id in (${cityIds})</if>
+			<if test="userLevelIds != null"> and p1.User_Level_Id in (${userLevelIds})</if>
+			group by p1.user_id,p1.phone
+		) as p3
+		<if test="quotaNum != null">
+			where
+				<![CDATA[
+					p3.countCouponCode < #{quotaNum};
+				]]>
+		</if>
+	</select>
+
+	<!-- 根据会员注册时间过滤 优惠券 -->
+	<select id="findPromotionByUserRegisterTime" resultType="Promotion" parameterType="java.util.HashMap">
+		select
+		<include refid="allColumns" />
+		from promotion p1
+		left join promotion_coupon p2 on p2.Promotion_Id = p1.promotion_id
+		where
+			1=1
+		<if test="currentTime!=null">
+			<![CDATA[
+				and DATE_FORMAT(#{currentTime}, '%Y-%m-%d') >=  DATE_FORMAT(p2.Coupon_Take_Start_Time, '%Y-%m-%d')
+				and DATE_FORMAT(#{currentTime}, '%Y-%m-%d') <=  DATE_FORMAT(p2.Coupon_Take_End_Time, '%Y-%m-%d')
+			]]>
+		</if>
+		<if test="registerTime!=null">
+			<![CDATA[
+    			and DATE_FORMAT(#{registerTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Reg_Start_Time, '%Y-%m-%d')
+    			and DATE_FORMAT(#{registerTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Reg_End_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		<if test="inPromotionTypeCd != null"> and p1.Promotion_Type_Cd in (${inPromotionTypeCd})</if>
+		and p1.Status_Cd = '1'
+		<if test="channel!=null and channel != ''"> and p1.Promotion_Channel_Cds like CONCAT('%',#{channel},'%')</if>
+	</select>
+  
+   <!-- 获取活动信息 -->
+  <select id="getPromotionInfo" resultType="Promotion">
+  select 
+    <include refid="allColumns" />
+    from promotion p1
+    <where>
+     <if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="promotionName != null"> and p1.Promotion_Name = #{promotionName}</if>
+		<if test="promotionDesc != null"> and p1.Promotion_Desc = #{promotionDesc}</if>
+		<if test="statusCd != null"> and p1.Status_Cd = #{statusCd}</if>
+		<if test="nowTime !=null and nowTime!=''">
+    		<![CDATA[   
+    			and p1.Enable_Start_Time< #{nowTime}
+    		    and #{nowTime} < p1.Enable_End_Time]]>
+		</if>
+		
+    </where>
+  </select>
+  
+  	
+	
+	<!-- 查询有效的团购信息 -->
+	<select id="findAllAvailableGroupon" resultType="Promotion" parameterType="java.util.HashMap">  
+		select 
+		<include refid="allColumns" />
+	    from promotion p1
+	    where 1 =1
+		<if test="promotionTypeCd != null and promotionTypeCd != ''"> and p1.Promotion_Type_Cd = #{promotionTypeCd}</if>
+		<if test="statusCd != null and statusCd != ''"> and p1.Status_Cd = #{statusCd}</if>
+		and p1.enableEndDate >= NOW()
+	</select>
+	
+	<!-- 查询有效的者组合销售信息 -->
+	<select id="findAllAvailableCollocation" resultType="Promotion" parameterType="java.util.HashMap">  
+		select 
+		<include refid="allColumns" />
+	    from promotion p1
+	    where 1 =1
+		<if test="promotionTypeCd != null and promotionTypeCd != ''"> and p1.Promotion_Type_Cd = #{promotionTypeCd}</if>
+		<if test="statusCd != null and statusCd != ''"> and p1.Status_Cd = #{statusCd}</if>
+		and p1.enableEndDate >= NOW()
+	</select>
+	
+	<!-- 查询有效的红包活动信息 -->
+	<select id="findAllAvailableRedpacket" resultType="Promotion" parameterType="java.util.HashMap">  
+		select 
+		<include refid="allColumns" />
+	    from promotion p1
+	    where 1 =1
+		<if test="promotionTypeCd != null and promotionTypeCd != ''"> and p1.Promotion_Type_Cd = #{promotionTypeCd}</if>
+		<if test="statusCd != null and statusCd != ''"> and p1.Status_Cd = #{statusCd}</if>
+		and p1.enableEndDate >= NOW()
+		and p1.Status_Cd &lt;&gt; 2
+	</select>
+
+	<!-- 根据商品、城市和活动类型查询对应的活动 -->
+	<select id="getIdByProductIdAndType" resultType="Integer" parameterType="java.util.HashMap">
+		SELECT
+			p1.Promotion_Id
+		FROM
+			promotion_product_xref p1
+		LEFT JOIN promotion p2 ON p2.Promotion_Id = p1.Promotion_Id
+		LEFT JOIN promotion_area_xref p3 ON p3.Promotion_Id = p1.promotion_id
+		WHERE
+			p1.Product_Id = #{productId}
+		and p2.Status_Cd = 1
+		and p2.Enable_End_Time > NOW()
+		and (p3.City_Id = #{cityId} or p2.Is_All_Area_Join = 1)
+		and p2.Promotion_Type_Cd = #{promotionTypeCd}
+		<if test="userCreateTime != null and userCreateTime != ''"> 
+			<![CDATA[   
+    			and p2.Reg_Start_Time <= #{userCreateTime}
+    		    and #{userCreateTime} <= p2.Reg_End_Time
+    		]]>
+		</if>
+	</select>
+	
+	<!-- 根据活动Id查询对应的活动类型 -->
+	<select id="getTypeById" resultType="Integer" parameterType="Integer">
+		select
+			Promotion_Type_Cd
+		from
+			promotion
+		where
+			Promotion_Id = #{promotionId}
+	</select>
+	
+	<!-- 查询可用的订单活动 -->
+	<select id="getIdByAllProduct" resultType="Promotion" parameterType="java.util.HashMap">
+		select
+			<include refid="allColumns" />
+		from
+			promotion p1
+			LEFT JOIN promotion_area_xref p2 ON p1.promotion_id = p2.Promotion_Id
+			LEFT JOIN promotion_user_level_xref p3 ON p1.promotion_id = p3.Promotion_Id
+		where
+			p1.Is_All_Product_Join = 1
+			and p1.Status_Cd = 1
+			and p1.Promotion_Type_Cd in(1,2,3,5)
+			and p1.Enable_End_Time > NOW()
+			and (p2.City_Id = #{cityId} or p1.Is_All_Area_Join = 1)
+			and (p3.User_Level_Id = #{userLevelId} or p1.Is_All_User_Level_Join = 1)
+			<if test="userCreateTime != null and userCreateTime != ''"> 
+			<![CDATA[   
+    			and p1.Reg_Start_Time <= #{userCreateTime}
+    		    and #{userCreateTime} <= p1.Reg_End_Time
+    		]]>
+    		order by Promotion_Type_Cd
+		</if>
+	</select>
+	
+	<!-- 根据活动的ID更新活动的状态 -->
+	<update id="updatePromotionStatus" parameterType="java.util.Map">
+	UPDATE promotion SET
+   		Status_Cd = #{statusCd}
+	WHERE
+		Promotion_Id = #{promotionId}
+	</update>
+	
+	<!-- 根据活动的随机码查询对应的活动 -->
+	<select id="getByEncryptCode" resultType="Promotion" parameterType="String">
+		select
+			<include refid="allColumns" />
+		from
+			promotion p1
+		where
+			p1.Encrypt_Code = #{encryptCode}
+	</select>
+	
+	<!-- 返回搭配套餐列表 -->
+	<select id="findCombinaitonList" resultType="CombinationDTO" parameterType="java.util.HashMap">  
+	    select 
+			p1.Promotion_Id,
+			p1.Promotion_Name,
+			p1.Promotion_Desc,
+			p1.Status_Cd,
+			p1.Enable_Start_Time,
+			p1.Enable_End_Time,
+			(select sum(p2.Price) from promotion_product_xref p2 where p2.Promotion_Id = p1.Promotion_Id) as combinationTotal
+	    from promotion p1
+	    where 
+			p1.Promotion_Type_Cd = #{promotionTypeCd}
+		<if test="statusCd != null"> and p1.Status_Cd = #{statusCd}</if>
+		<if test="like_name != null"> and p1.Promotion_Name like CONCAT('%',#{like_name},'%')</if>
+		<if test="isEnableTime!=null and isEnableTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d') 
+    		]]>
+		</if>
+		<if test="notEnableTime!=null and notEnableTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{notEnableTime}, '%Y-%m-%d') >  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 根据活动Id查询搭配套餐 -->
+	<select id="findCombinaitonDto" resultType="CombinationDTO" parameterType="Integer">  
+	    select 
+			p1.Promotion_Id,
+			p1.Promotion_Name,
+			p1.Promotion_Desc,
+			p1.Status_Cd,
+			p1.Enable_Start_Time,
+			p1.Enable_End_Time,
+	    from promotion p1
+	    where 
+			p1.Promotion_Type_Cd = #{promotionTypeCd}
+		<if test="statusCd != null"> and p1.Status_Cd = #{statusCd}</if>
+		<if test="like_name != null"> and p1.Promotion_Name like CONCAT('%',#{like_name},'%')</if>
+		<if test="isEnableTime!=null and isEnableTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d') 
+    		]]>
+		</if>
+		<if test="notEnableTime!=null and notEnableTime!=''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{notEnableTime}, '%Y-%m-%d') >  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d') )
+    		]]>
+		</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 返回活动列表 -->
+	<select id="findPromotionList" resultType="Promotion" parameterType="java.util.HashMap" >  
+	    SELECT
+		<include refid="allColumns" />
+	    FROM promotion p1
+	    WHERE 1=1
+	    <if test="validTime!=null and validTime!=''">
+	    <![CDATA[   
+    			AND DATE_FORMAT(#{validTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d') )
+    		]]>
+   		<![CDATA[   
+   			AND DATE_FORMAT(#{validTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d') )
+   		]]>
+	    </if>
+	    <if test="statusCd !=null and statusCd !=''">
+	    	AND p1.Status_Cd =#{statusCd}
+	    </if>
+	    <if test="promotionTypeCd !=null and promotionTypeCd !=''">
+	    	AND p1.Promotion_Type_Cd =#{promotionTypeCd}
+	    </if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 根据组合套餐Id返回套餐商品列表 -->
+	<select id="findCombProductList" resultType="combinationProductDTO" parameterType="java.lang.Integer">
+		SELECT
+		ppx.Promotion_Id,
+		ppx.Price,
+		ppx.Product_Id,
+		p.Product_Name,
+		p.Default_Price,
+		p.Tag_Price,
+		p.Real_Stock,
+		p.Product_Status_Cd,
+		p.SKU_KEY_Json_Str AS skuKeyJsonStr,
+		p.SKU_Common_Json_Str AS skuCommonJsonStr,
+		ppi.Pic_Url AS productPicUrl,
+		prom.Promotion_Name AS promotionName
+		FROM promotion_product_xref ppx
+		LEFT JOIN product p ON ppx.Product_Id=p.Product_Id
+		LEFT JOIN product_pic_info ppi ON p.Master_Product_ID=ppi.Product_Id
+		LEFT JOIN promotion prom ON prom.Promotion_Id = ppx.Promotion_Id
+		WHERE ppx.Promotion_Id =#{promotionId} AND ppi.Is_Default_Pic=1
+		Order BY ppx.Create_Time DESC
+	</select>
+	<!-- 根据promotionId获取预售活动信息 -->
+	<select id="getPreSaleInfo" resultType="PreSaleInfoDTO" parameterType="java.lang.Integer">
+	SELECT
+	p.Promotion_Id,
+	p.Promotion_Name,
+	p.Enable_Start_Time,
+	p.Enable_End_Time,
+	ppx.Product_Id,
+	ppx.Price,
+	pps.Allow_Pay_Remainder_Start_Time,
+	pps.Allow_Pay_Remainder_End_Time,
+	pps.Send_Time,
+	ppi.Pic_Url AS productPicUrl
+	FROM promotion p
+	LEFT JOIN promotion_product_xref ppx ON ppx.Promotion_Id = p.Promotion_Id
+	LEFT JOIN Product pro ON pro.Product_Id = ppx.Product_Id
+	LEFT JOIN promotion_pre_sale pps ON pps.Promotion_Id = p.Promotion_Id
+	LEFT JOIN product_pic_info ppi ON ppi.Product_Id = pro.Master_Product_ID
+	WHERE p.Promotion_Id = #{promotionId} AND ppi.Is_Default_Pic =1
+	</select>
+	
+	<!-- 根据productId判断是否参与预售活动 -->
+	<select id="getPreSaleInfoByProDuctId" resultType="PreSaleInfoDTO" parameterType="java.lang.Integer">
+	SELECT
+	p.Promotion_Id,
+	p.Promotion_Name,
+	p.Enable_Start_Time,
+	p.Enable_End_Time,
+	ppx.Product_Id,
+	ppx.Price,
+	pps.Allow_Pay_Remainder_Start_Time,
+	pps.Allow_Pay_Remainder_End_Time
+	FROM promotion p
+	LEFT JOIN promotion_product_xref ppx ON ppx.Promotion_Id = p.Promotion_Id
+	LEFT JOIN promotion_pre_sale pps ON pps.Promotion_Id = p.Promotion_Id
+	LEFT JOIN Product pro ON pro.Product_Id = ppx.Product_Id
+	WHERE p.Promotion_Type_Cd = 60
+	AND ppx.Product_Id = #{productId} AND NOW() > p.Enable_Start_Time
+	AND p.Enable_End_Time > NOW() AND p.Status_Cd = 1
+	AND pro.Product_Status_Cd = 1
+	</select>
+	
+	<!-- 根据活动Id，查询搭配套餐中商品相关数据 -->
+	<select id="findCombProductByPromotionId" resultType="CartOrderDTO" parameterType="Integer">
+		select 
+	        p2.Price as firstAddedSalePrice,
+	        p3.Tag_Price,
+	        p3.Product_Id,
+	        p3.Product_Name,
+	        p3.Real_Stock,
+	        p3.Virtual_Stock,
+	        p3.Category_Id,
+	        p3.Master_Product_ID,
+	        p3.Product_Status_Cd,
+	        p3.Product_Type_Cd,
+	        p3.SKU_KEY_Json_Str,
+	        p4.Pic_Url as productPicUrl,
+	        1 as quantity,
+	        p5.Allow_Pay_Type_Cds,
+	    	p5.Product_Return_Score,
+	    	p5.Product_Point_Type_Cd,
+	    	p5.Product_Point_Value,
+			p6.Product_Weight,
+			p6.Product_Weight_Unit_Cd
+		from promotion p1
+		left join promotion_product_xref p2 on p1.Promotion_Id = p2.Promotion_Id
+		left join product p3 on p2.Product_Id = p3.Product_Id
+		left join product_pic_info p4 on p3.Master_Product_ID = p4.Product_Id and p4.Is_Default_Pic = 1
+		left join product_setting p5 on p3.Product_Id = p5.Product_Id
+		left join product_extend p6 on p3.Master_Product_ID = p6.Product_Id
+		where
+			p1.Promotion_Type_Cd = 52
+			and p1.Promotion_Id = #{promotionId}
+	</select>
+	<!-- 获取当前预售活动的商品Id列表 -->
+	<select id="findPreSaleProductIds" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+		SELECT
+			pro.Master_Product_ID
+			FROM promotion p
+			LEFT JOIN promotion_product_xref ppx ON ppx.Promotion_Id = p.Promotion_Id
+			LEFT JOIN Product pro ON pro.Product_Id = ppx.Product_Id
+			WHERE p.Promotion_Type_Cd = 60
+			AND NOW() > p.Enable_Start_Time
+			AND p.Enable_End_Time > NOW() 
+			AND p.Status_Cd = 1
+			AND pro.Product_Status_Cd = 1
+	</select>
+</mapper>

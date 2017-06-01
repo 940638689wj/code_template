@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.store.dao.StoreSumInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Store_Id, Delivery_Times, Service_Times, Service_Total, Sale_Ship_Speed_Score_Avg, Sale_Service_Attr_Score_Avg
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="StoreSumInfo" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO store_sum_info (
+	        Store_Id, Delivery_Times, Service_Times, Service_Total, Sale_Ship_Speed_Score_Avg, Sale_Service_Attr_Score_Avg
+	    ) VALUES (
+	        #{storeId}, #{deliveryTimes}, #{serviceTimes}, #{serviceTotal}, #{saleShipSpeedScoreAvg}, #{saleServiceAttrScoreAvg}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="StoreSumInfo">
+	   UPDATE store_sum_info SET
+		   Store_Id = #{storeId}, 
+		   Delivery_Times = #{deliveryTimes}, 
+		   Service_Times = #{serviceTimes}, 
+		   Service_Total = #{serviceTotal}, 
+		   Sale_Ship_Speed_Score_Avg = #{saleShipSpeedScoreAvg}, 
+		   Sale_Service_Attr_Score_Avg = #{saleServiceAttrScoreAvg}
+	   WHERE 
+	</update>
+	
+	<update id="updateDeliveryTimes">
+		update store_sum_info set
+		Delivery_Times = #{deliveryTimes} 
+		where
+		store_Id = #{storeId}
+	</update>
+	
+		<update id="updateServiceTimes">
+		update store_sum_info set
+		Service_Times = #{serviceTimes}
+		where
+		store_Id = #{storeId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM store_sum_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="StoreSumInfo" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM store_sum_info 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="StoreSumInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from store_sum_info
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="StoreSumInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from store_sum_info a
+	    where 1=1
+		<if test="storeId != null"> and a.Store_Id = #{storeId}</if>
+		<if test="deliveryTimes != null"> and a.Delivery_Times = #{deliveryTimes}</if>
+		<if test="serviceTimes != null"> and a.Service_Times = #{serviceTimes}</if>
+		<if test="serviceTotal != null"> and a.Service_Total = #{serviceTotal}</if>
+		<if test="saleShipSpeedScoreAvg != null"> and a.Sale_Ship_Speed_Score_Avg = #{saleShipSpeedScoreAvg}</if>
+		<if test="saleServiceAttrScoreAvg != null"> and a.Sale_Service_Attr_Score_Avg = #{saleServiceAttrScoreAvg}</if>
+	</select>
+
+</mapper>

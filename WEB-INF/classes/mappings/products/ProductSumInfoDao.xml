@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductSumInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Id, Main_Review_Cnt, Product_Match_Score_Avg, Product_Sale_Cnt
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductSumInfo" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_sum_info (
+	        Product_Id, Main_Review_Cnt, Product_Match_Score_Avg, Product_Sale_Cnt
+	    ) VALUES (
+	        #{productId}, #{mainReviewCnt}, #{productMatchScoreAvg}, #{productSaleCnt}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductSumInfo">
+	   UPDATE product_sum_info SET
+		   Main_Review_Cnt = #{mainReviewCnt}, 
+		   Product_Match_Score_Avg = #{productMatchScoreAvg},
+		   Product_Sale_Cnt = #{productSaleCnt}
+	   WHERE 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_sum_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductSumInfo" parameterType="Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_sum_info 
+	     WHERE 
+			  Product_Id=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductSumInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from product_sum_info
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductSumInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_sum_info a
+	    where 1=1
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="mainReviewCnt != null"> and a.Main_Review_Cnt = #{mainReviewCnt}</if>
+		<if test="productMatchScoreAvg != null"> and a.Product_Match_Score_Avg = #{productMatchScoreAvg}</if>
+	</select>
+	
+	
+	<select id="findProductSumInfoList" resultType="cn.yr.chile.products.dto.ProductSumInfoDTO" parameterType="java.util.HashMap">  
+			select 
+			     a.product_Id,
+			     a.product_name, 
+			     count(a.product_id) countNo,
+			     a.Product_Pic_Url,
+			     a.Bar_Code
+			from order_item a left join
+			order_header b on a.order_id = b.order_id
+			left join product d on d.product_Id = a.product_Id
+			left join order_extend c on b.order_id = c.order_id
+			where 1 = 1
+			and d.Product_Status_Cd = 1
+			and b.order_status_cd not in (1,6)
+			and a.Order_Item_Id not in (select Order_Item_ID from order_return_info where Apply_Status_Cd = 2 )
+		<if test="productName != '' and productName != null">
+        	and a.product_name like ('%${productName}%')
+       	</if>
+			
+	    <if test="beginTime != '' and beginTime != null">
+        	and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(b.Order_Complete_Time,'%Y%m%d')
+       	</if>
+        <if test="endTime != '' and endTime != null">
+        	and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(b.Order_Complete_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+			and c.Origin_Platform_Cd = #{originPlatformCd}
+		</if>
+		group by a.product_id
+	    order by countNo DESC
+	
+	</select>
+
+</mapper>

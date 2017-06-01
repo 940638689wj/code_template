@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.OrgRebateSettingDao">
+	<sql id="orgRebateColumns">
+		a.Org_Id,
+		a.Rebate_Percent,
+		a.Start_Date,
+		a.End_Date
+	</sql>
+	<!-- 插入 -->
+	<insert id="insert" parameterType="OrgRebateSetting" useGeneratedKeys="true" keyProperty="orgId">
+		INSERT INTO org_rebate_setting(
+			Org_Id,
+			Rebate_Percent,
+			Start_Date,
+			End_Date
+		)VALUES(
+			#{orgId},
+			#{rebatePercent},
+			#{startDate},
+			#{endDate}
+		)
+	</insert>
+	<!-- 修改 -->
+	<update id="update" parameterType="cn.yr.chile.promotion.domain.OrgRebateSetting">
+		UPDATE org_rebate_setting SET
+			Rebate_Percent=#{rebatePercent},
+			Start_Date=#{startDate},
+			End_Date=#{endDate}
+		WHERE 
+			Org_Id=#{orgId}
+	</update>
+	
+	<!-- 根据id查询 -->
+	<select id="get" parameterType="java.lang.Integer" resultType="OrgRebateSetting">
+		SELECT 
+			<include refid="orgRebateColumns" />
+		FROM 
+			org_rebate_setting a
+		WHERE
+			a.Org_Id = #{orgId}
+	</select>
+	
+	<select id="findOrgRebatePage" parameterType="cn.yr.chile.promotion.dto.OrgRebateDTO" resultType="java.util.Map">
+		SELECT
+			p2.Org_Id AS branchCompanyOrgId,
+			p2.Org_Num AS branchCompanyOrgNum,
+			p2.Org_Full_Name AS branchCompanyOrgFullName,
+			p3.Org_Id AS largeAreaOrgId,
+			p3.Org_Num AS largeAreaOrgNum,
+			p3.Org_Full_Name AS largeAreaOrgFullName,
+			p1.Org_Id AS officeOrgId,
+			p1.Org_Num AS officeOrgNum,
+			p1.Org_Full_Name AS officeOrgFullName,
+			a.Org_Id AS orgId,
+			a.Start_Date AS startDate,
+			a.End_Date AS endDate,
+			a.Rebate_Percent AS rebatePercent
+		FROM
+			organization p1
+		LEFT JOIN 
+			organization p2 ON p2.Org_Id = p1.Parent_Node
+		LEFT JOIN 
+			organization p3 ON p3.Org_Id = p2.Parent_Node
+		RIGHT JOIN 
+			org_rebate_setting a ON a.Org_Id = p1.Org_Id
+		WHERE 1 = 1
+		<if test="officeOrgFullName != null and officeOrgFullName != ''">
+			AND p1.Org_Full_Name LIKE CONCAT('%',#{officeOrgFullName},'%')
+		</if>
+		<if test="largeAreaOrgFullName != null and largeAreaOrgFullName != ''">
+			AND p3.Org_Full_Name LIKE CONCAT('%',#{largeAreaOrgFullName},'%')
+		</if>
+		<if test="branchCompanyOrgFullName != null and branchCompanyOrgFullName != ''">
+			AND p2.Org_Full_Name LIKE CONCAT('%',#{branchCompanyOrgFullName},'%')
+		</if>
+	</select>
+	<select id="findOrgRebate" parameterType="java.lang.Integer" resultType="cn.yr.chile.promotion.dto.OrgRebateDTO">
+		SELECT
+			p2.Org_Id AS branchCompanyOrgId,
+			p2.Org_Num AS branchCompanyOrgNum,
+			p2.Org_Full_Name AS branchCompanyOrgFullName,
+			p3.Org_Id AS largeAreaOrgId,
+			p3.Org_Num AS largeAreaOrgNum,
+			p3.Org_Full_Name AS largeAreaOrgFullName,
+			p1.Org_Id AS officeOrgId,
+			p1.Org_Num AS officeOrgNum,
+			p1.Org_Full_Name AS officeOrgFullName,
+			a.Org_Id AS orgId,
+			a.Start_Date AS startDate,
+			a.End_Date AS endDate,
+			a.Rebate_Percent AS rebatePercent
+		FROM
+			organization p1
+		LEFT JOIN 
+			organization p2 ON p2.Org_Id = p1.Parent_Node
+		LEFT JOIN 
+			organization p3 ON p3.Org_Id = p2.Parent_Node
+		RIGHT JOIN 
+			org_rebate_setting a ON a.Org_Id = p1.Org_Id
+		WHERE a.Org_Id = #{orgId}
+	</select>
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM org_rebate_setting WHERE Org_Id = #{orgId}
+	</delete>
+</mapper>

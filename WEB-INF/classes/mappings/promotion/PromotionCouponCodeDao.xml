@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionCouponCodeDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Coupon_Code_Id,
+			p1.Coupon_Code,
+			p1.Promotion_Id,
+			p1.User_Id,
+			p1.Take_Time,
+			p1.Used_Time,
+			p1.Coupon_Status_Cd,
+			p1.Create_Time,
+			p1.promotion_dis_rule_id,
+			p1.Sub_ID,
+			p1.Coupon_Code_Value,
+			p1.Order_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionCouponCode" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO promotion_coupon_code (
+			Coupon_Code, 
+			Promotion_Id,
+			User_Id, 
+			Take_Time, 
+			Used_Time, 
+			Coupon_Status_Cd, 
+			Create_Time,
+			promotion_dis_rule_id,
+			Sub_ID,
+			Coupon_Code_Value,
+			Order_Id
+	    ) VALUES (
+			#{couponCode}, 
+			#{promotionId},
+			#{userId}, 
+			#{takeTime}, 
+			#{usedTime}, 
+			#{couponStatusCd}, 
+			#{createTime},
+			#{promotionDisRuleId},
+			#{subId},
+			#{couponCodeValue},
+			#{orderId}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionCouponCode">
+	   UPDATE promotion_coupon_code
+	   <trim prefix="set" suffixOverrides=",">
+	   		<if test="couponCode != null and couponCode != ''">
+		   		Coupon_Code = #{couponCode}, 
+	   		</if>
+	   		<if test="promotionId != null">
+		   		Promotion_Id = #{promotionId},
+	   		</if>
+	   		<if test="userId != null">
+		   		User_Id = #{userId}, 
+	   		</if>
+	   		<if test="takeTime != null">
+		   		Take_Time = #{takeTime}, 
+	   		</if>
+	   		<if test="usedTime != null">
+		   		Used_Time = #{usedTime}, 
+	   		</if>
+ 			<if test="createTime != null">
+		   		Create_Time = #{createTime},
+	   		</if>	 
+ 			<if test="couponStatusCd != null">
+		   		Coupon_Status_Cd = #{couponStatusCd}, 
+	   		</if>	 
+ 			<if test="promotionDisRuleId != null">
+		   		promotion_dis_rule_id = #{promotionDisRuleId},
+	   		</if>
+ 			<if test="subId != null">
+		   		Sub_ID = #{subId},
+	   		</if>	   		
+ 			<if test="couponCodeValue != null">
+		   		Coupon_Code_Value = #{couponCodeValue},
+	   		</if>
+		   <if test="orderId != null">
+			   Order_Id = #{orderId},
+		   </if>
+	   </trim>
+	   WHERE 
+			Coupon_Code_Id = #{couponCodeId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion_coupon_code where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionCouponCode" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_coupon_code p1
+	     WHERE
+			p1.Coupon_Code_Id=#{couponCodeId}
+	</select>
+	
+
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionCouponCode">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon_code p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionCouponCode" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon_code p1
+	    where 1=1 
+		<if test="couponCodeId != null"> and p1.Coupon_Code_Id = #{couponCodeId}</if>
+		<if test="couponCode != null"> and p1.Coupon_Code = #{couponCode}</if>
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="userId != null"> and p1.User_Id = #{userId}</if>
+		<if test="takeTime != null"> and p1.Take_Time = #{takeTime}</if>
+		<if test="usedTime != null"> and p1.Used_Time = #{usedTime}</if>
+		<if test="couponStatusCd != null"> and p1.Coupon_Status_Cd = #{couponStatusCd}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="promotionDisRuleId != null"> and p1.promotion_dis_rule_id = #{promotionDisRuleId}</if>
+		<if test="subId != null"> and p1.Sub_ID = #{subId}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+
+
+	<!-- 红包使用明细 分页获取 -->
+	<select id="findRedPacketUseDetailList" resultType="cn.yr.chile.promotion.dto.RedPacketUseDetailDTO" parameterType="java.util.HashMap">
+		SELECT
+		p1.User_Id as userId,
+		p1.Create_Time as usedTime,
+		p2.Phone as phone,
+		p3.Order_Id as orderId,
+		p1.Order_Number as orderNumber,
+		p1.Packet_Expend as packetValue
+		FROM
+		user_red_packet_detail p1
+		LEFT JOIN user p2 ON p1.User_Id = p2.User_Id
+		LEFT JOIN order_header p3 ON p1.Order_Number = p3.Order_Number
+		WHERE p1.Packet_Expend != ''
+		<if test="startUsedTime != null">
+    		<![CDATA[
+    			and DATE_FORMAT(#{startUsedTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Create_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		<if test="endtUsedTime != null">
+    		<![CDATA[
+    			and DATE_FORMAT(#{endtUsedTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Create_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		order by p1.Create_Time DESC,p2.Phone
+	</select>
+
+	<!-- 红包发放明细 分页获取 -->
+	<select id="findRedPacketGiveDetailList" resultType="cn.yr.chile.promotion.dto.RedPacketGiveDetailDTO" parameterType="java.util.HashMap">
+		SELECT
+		p1.Coupon_Code_Id as couponCodeId,
+		p1.Promotion_Id as promotionId,
+		p1.User_Id as userId,
+		p1.Take_Time as takeTime,
+		p2.Promotion_Name as promotionName,
+		p3.Phone as phone
+		FROM
+		promotion_coupon_code p1
+		LEFT JOIN promotion p2 ON p1.Promotion_Id = p2.Promotion_Id
+		LEFT JOIN user p3 ON p1.User_Id = p3.User_Id
+		WHERE p2.Promotion_Type_Cd = 56
+		<if test="startTakeTime != null">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{startTakeTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Take_Time, '%Y-%m-%d')   
+    		]]>
+		</if>
+		<if test="endtTakeTime != null">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{endtTakeTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Take_Time, '%Y-%m-%d')   
+    		]]>
+		</if>
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="phone != null"> and p4.Phone as phone = #{phone}</if>
+		<if test="orderId != null"> and p5.Order_Id = #{orderId}</if>
+		<if test="couponStatusCd != null"> and p1.Coupon_Status_Cd = #{couponStatusCd}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		order by p1.Take_Time DESC
+	</select>
+	<!-- 用户优惠券详情 -->
+		<select id="findCouponByUserId" resultType="UserCouponDTO" parameterType="Integer">
+			select 
+				a.Used_Time,a.Coupon_Status_Cd,b.Discount_Type_Cd,b.Discount_Value,b.Discount_Desc,b.Discount_Display_Color_Cd,
+				c.Coupon_Value,d.Promotion_Name,d.Enable_Start_Time,d.Enable_End_Time,b.Discount_Value
+			from 
+				promotion_coupon_code a
+				left join promotion_discount_rule b on a.promotion_dis_rule_id=b.Id
+				left join promotion_coupon c on a.Promotion_Id=c.Promotion_Id
+				left join promotion d on a.Promotion_Id=d.Promotion_Id
+			where 
+				a.User_id=#{userId}
+				and d.Promotion_Type_Cd in (54,55)
+			order by
+				d.Enable_End_Time desc
+		</select>
+	<!-- 用户可使用的优惠券列表 -->
+	<select id="findCouponListByUserId" resultType="cn.yr.chile.promotion.dto.UserCanUseCouponDTO" parameterType="java.util.HashMap">
+		select 
+			p1.Coupon_Code_Id as couponCodeId,
+			p1.Promotion_Id as promotionId,
+			p3.Id as id,
+			p3.Promotion_Condition_Id as conditionId,
+			p3.Discount_Type_Cd as discountTypeCd,
+			p3.Discount_Value as discountValue,
+			p3.Discount_Desc as discountDesc,
+			p2.Promotion_Name as promotionName,
+			p2.Promotion_Desc as promotionDesc,
+			p2.Promotion_Type_Cd as promotionTypeCd
+		from 
+			promotion_coupon_code p1
+			left join promotion p2 on p1.Promotion_Id=p2.Promotion_Id
+			left join promotion_discount_rule p3 on p1.Promotion_Id=p3.Promotion_Id and p1.promotion_dis_rule_id = p3.Id
+		where 
+			p1.Coupon_Status_Cd = 1 
+			and p2.Is_All_Product_Join = #{isAllProductJoin}
+			and p2.Status_Cd =1 
+			and (p2.Promotion_Type_Cd = 54 or p2.Promotion_Type_Cd = 55)
+			and p1.User_Id=#{userId} 
+			<![CDATA[   
+   				and DATE_FORMAT(#{nowDate}, '%Y-%m-%d') >=  DATE_FORMAT(p2.Enable_Start_Time, '%Y-%m-%d')  
+   				and DATE_FORMAT(#{nowDate}, '%Y-%m-%d') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d')  
+   			]]>
+		order by
+			p3.Discount_Value asc
+	</select>
+	
+	<!-- 查询用户使用的优惠券 -->
+	<select id="getCouponById" resultType="cn.yr.chile.promotion.dto.UserCanUseCouponDTO" parameterType="Integer">
+		select 
+			p1.Coupon_Code_Id as couponCodeId,
+			p1.Promotion_Id as promotionId,
+			p3.Id as id,
+			p3.Promotion_Condition_Id as conditionId,
+			p3.Discount_Type_Cd as discountTypeCd,
+			p3.Discount_Value as discountValue,
+			p3.Discount_Desc as discountDesc,
+			p2.Promotion_Name as promotionName,
+			p2.Promotion_Desc as promotionDesc,
+			p2.Promotion_Type_Cd as promotionTypeCd,
+			p2.Is_All_Product_Join as isAllProductJoin,
+			p2.Is_All_Order_Join as isAllOrderJoin
+		from 
+			promotion_coupon_code p1
+			left join promotion p2 on p1.Promotion_Id=p2.Promotion_Id
+			left join promotion_discount_rule p3 on p1.Promotion_Id=p3.Promotion_Id and p1.promotion_dis_rule_id = p3.id
+		where 
+			p1.Coupon_Status_Cd = 1 
+			and p2.Status_Cd =1 
+			and p1.Coupon_Code_Id=#{couponCodeId}
+		order by
+			p3.Discount_Value asc
+	</select>
+
+	<!-- 根据促销活动ID、discountRuleId 获取数据的条数-->
+	<select id="getCountByPromotionIdAndDiscountRuleId" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT count(*)
+		FROM promotion_coupon_code p1
+		WHERE
+		p1.Promotion_Id=#{promotionId}
+		AND p1.promotion_dis_rule_id =#{promotionDisRuleId}
+	</select>
+
+	<!-- 根据促销活动ID、discountRuleId、userId 获取数据的条数-->
+	<select id="getCountByPromotionIdAndDiscountRuleIdAndUserId" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT count(*)
+		FROM promotion_coupon_code p1
+		<where>
+				<if test="promotionId != null"> AND p1.Promotion_Id=#{promotionId}</if>
+				<if test="promotion_dis_rule_id != null"> AND p1.promotion_dis_rule_id =#{promotionDisRuleId}</if>
+				<if test="userId != null"> AND p1.User_Id =#{userId}</if>
+		</where>
+	</select>
+	
+	<!-- 根据活动Id和活动规则Id查询对应的数据 -->
+	<select id="getUserCanUseCouponDTOById" resultType="cn.yr.chile.promotion.dto.UserCanUseCouponDTO" parameterType="java.util.HashMap">
+		select 
+			p1.Promotion_Id as promotionId,
+			p1.Promotion_Name as promotionName,
+			p1.Promotion_Desc as promotionDesc,
+			p1.Promotion_Type_Cd as promotionTypeCd,
+			p2.Id as id,
+			p2.Promotion_Condition_Id as conditionId,
+			p2.Discount_Type_Cd as discountTypeCd,
+			p2.Discount_Value as discountValue,
+			p2.Discount_Desc as discountDesc
+		from 
+			promotion p1
+			left join promotion_discount_rule p2 on p1.Promotion_Id=p2.Promotion_Id
+		where 
+			p1.Promotion_Id = #{promotionId} 
+			<if test="Id != null"> and p2.Id=#{Id}</if>
+			limit 1
+	</select>
+	
+	<!-- 根据活动Id和条件Id查询对应的数据 -->
+	<select id="getUserCanUseCouponDTOByConditionId" resultType="cn.yr.chile.promotion.dto.UserCanUseCouponDTO" parameterType="java.util.HashMap">
+		select 
+			p1.Promotion_Id as promotionId,
+			p1.Promotion_Name as promotionName,
+			p1.Promotion_Desc as promotionDesc,
+			p1.Promotion_Type_Cd as promotionTypeCd,
+			p2.Condition_Id as conditionId,
+			p2.Condition_Expression as conditionExpression
+		from 
+			promotion p1
+			left join promotion_condition p2 on p1.Promotion_Id=p2.Promotion_Id
+		where 
+			p1.Promotion_Id = #{promotionId} 
+			and p2.Condition_Id=#{conditionId}
+			limit 1
+	</select>
+	
+	<!-- 根据促销活动ID获取数据的条数-->
+    <select id="getCount" resultType="java.lang.Integer" parameterType="int">  
+		SELECT
+		count(*)
+	     FROM promotion_coupon_code p1
+	     WHERE
+			p1.Promotion_Id=#{promotionId}
+	</select>
+
+	<!-- 根据促销活动ID、状态 获取数据的条数-->
+	<select id="getCountByPromotionIdAndStatus" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT count(*)
+	    FROM promotion_coupon_code p1
+	    WHERE
+	    p1.Promotion_Id=#{promotionId}
+		<if test="couponStatusCd != null"> AND p1.Coupon_Status_Cd =#{couponStatusCd}</if>
+		AND not p1.Take_Time is NULL
+	</select>
+	
+	<!-- 优惠券使用明细 分页获取 -->
+	<select id="findCouponUseDetailList" resultType="cn.yr.chile.promotion.dto.CouponUseDetailDTO" parameterType="java.util.HashMap">
+		SELECT
+		p1.Coupon_Code_Id as couponCodeId,
+		p1.Coupon_Code as couponCode,
+		p1.Coupon_Code_Value as couponCodeValue,
+		p1.User_Id as userId,
+		p1.Take_Time as takeTime,
+		p1.Used_Time as usedTime,
+		p1.Create_Time as createTime,
+		p1.Coupon_Status_Cd as couponStatusCd,
+		p2.Promotion_Name as promotionName,
+		p4.Phone as phone,
+		p4.User_Name as userName,
+		p5.Order_Id as orderId,
+		p5.Discount as realUseCouponValue,
+		p6.Order_Number as orderNumber,
+		p6.Order_Total_Amt as orderTotalAmt,
+		s.Code_Cn_Name AS orderStatusName
+		FROM
+		promotion_coupon_code p1
+		LEFT JOIN promotion p2 ON p1.Promotion_Id = p2.Promotion_Id
+		LEFT JOIN promotion_coupon p3 ON p1.Promotion_Id = p3.Promotion_Id
+		LEFT JOIN user p4 ON p1.User_Id = p4.User_Id
+		LEFT JOIN order_promotion_info p5 ON p1.Coupon_Code_Id = p5.Coupon_Code_Id
+		LEFT JOIN order_header p6 ON p5.Order_Id = p6.Order_Id
+		LEFT JOIN system_code s ON s.Code_Id = p6.Order_Status_Cd AND s.Code_Type_Cd = 'ORDER_STATUS_CD'
+		WHERE
+			1=1
+		<if test="promotionTypeCd == null"> and p2.Promotion_Type_Cd in (53,54,55)</if>
+		<if test="promotionTypeCd != null and promotionTypeCd == 56"> and p2.Promotion_Type_Cd = #{promotionTypeCd}</if>
+		<if test="startUsedTime != null and startUsedTime != ''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{startUsedTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Used_Time, '%Y-%m-%d')   
+    		]]>
+		</if>
+		<if test="endUsedTime != null and endUsedTime != ''">
+    		<![CDATA[   
+    			and DATE_FORMAT(#{endUsedTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Used_Time, '%Y-%m-%d')
+    		]]>
+		</if>
+		<if test="promotionId != null and promotionId != ''"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="couponCode != null and couponCode != ''"> and p1.Coupon_Code like CONCAT('%',#{couponCode},'%')</if>
+		<if test="couponName != null and couponName != ''"> and p2.Promotion_Name like CONCAT('%',#{couponName},'%')</if>
+		<if test="phone != null and phone != ''"> and p4.Phone like CONCAT('%',#{phone},'%')</if>
+		<if test="orderNumber != null and orderNumber != ''"> and p6.Order_Number like CONCAT('%',#{orderNumber},'%')</if>
+		<if test="orderId != null and orderId != ''"> and p5.Order_Id = #{orderId}</if>
+		<if test="couponStatusCd != null and couponStatusCd != ''"> and p1.Coupon_Status_Cd = #{couponStatusCd}</if>
+		<if test="createTime != null and createTime != ''"> and p1.Create_Time = #{createTime}</if>
+		ORDER BY p1.Used_Time DESC,p1.Coupon_Code_Id
+	</select>
+
+	<!-- 根据促销活动ID、状态 获取用户领取的数量-->
+	<select id="getCountByPromotionIdStatusAndUserId" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT count(*)
+	    FROM promotion_coupon_code p1
+	    WHERE
+	    p1.Promotion_Id=#{promotionId}
+	    and p1.User_Id IS NOT NULL
+		<if test="couponStatusCd != null and couponStatusCd != 0"> AND p1.Coupon_Status_Cd =#{couponStatusCd}</if>
+	</select>
+	
+	<!-- 根据促销活动ID获取数据的条数-->
+	<select id="getCountByPromotionId" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT count(*)
+		FROM promotion_coupon_code p1
+		WHERE
+		p1.Promotion_Id=#{promotionId}
+		AND p1.User_Id IS NOT NULL
+	</select>
+	
+	<select id="getInfoByPromotionId" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT *
+		FROM promotion_coupon_code p1
+		WHERE
+		p1.Promotion_Id=#{promotionId}
+	</select>
+	
+	<!-- 根据促销活动ID获取数据的条数-->
+	<select id="getCountByPromotionIdAndUserId" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT count(*)
+		FROM promotion_coupon_code p1
+		WHERE
+		p1.Promotion_Id=#{promotionId}
+		and p1.User_Id = #{userId}
+	</select>
+	
+	<!-- 用户可使用的优惠券列表 -->
+	<select id="findCouponsByUserId" resultType="cn.yr.chile.promotion.dto.UserCanUseCouponDTO" parameterType="java.lang.Integer">
+		select 
+			p1.Coupon_Code_Id as couponCodeId,
+			p1.Promotion_Id as promotionId,
+			p3.Id as id,
+			p3.Promotion_Condition_Id as conditionId,
+			p3.Discount_Type_Cd as discountTypeCd,
+			p3.Discount_Value as discountValue,
+			p3.Discount_Desc as discountDesc,
+			p2.Promotion_Name as promotionName,
+			p2.Promotion_Desc as promotionDesc,
+			p2.Promotion_Type_Cd as promotionTypeCd,
+			p2.Is_All_Product_Join as isAllProductJoin,
+			p2.Is_All_Order_Join as isAllOrderJoin
+		from 
+			promotion_coupon_code p1
+			left join promotion p2 on p1.Promotion_Id=p2.Promotion_Id
+			left join promotion_discount_rule p3 on p1.Promotion_Id=p3.Promotion_Id and p1.promotion_dis_rule_id = p3.Id
+		where 
+			p1.Coupon_Status_Cd = 1 
+			and p2.Status_Cd =1 
+			and p2.Promotion_Type_Cd in(53,54,55)
+			and p1.User_Id=#{userId} 
+			<![CDATA[   
+   				and DATE_FORMAT(now(), '%Y-%m-%d') >=  DATE_FORMAT(p2.Enable_Start_Time, '%Y-%m-%d')  
+   				and DATE_FORMAT(now(), '%Y-%m-%d') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d')  
+   			]]>
+		order by
+			p3.Discount_Value asc
+	</select>
+	
+	<!-- 根据活动Id,获取该活动用户已领取的红包 -->
+	<select id="getPromotionCouponCodeByUserId" resultType="PromotionCouponCode" parameterType="java.util.Map" >
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon_code p1
+	    left join promotion p2 on p1.Promotion_Id = p2.promotion_id
+	    where 
+	    p2.Promotion_Type_Cd = 56
+	    and p1.Promotion_Id = #{promotionId}
+	    and p1.User_Id = #{userId}
+		
+	</select>
+	
+	<!-- 根据活动Id获取已被领取的红包 -->
+	<select id="getUseRedPacketCountByPromotionId" resultType="PromotionCouponCode" parameterType="int" >
+	    select 
+			<include refid="allColumns" />
+	    from promotion_coupon_code p1
+	    where 
+		    p1.Promotion_Id = #{promotionId}
+		    and p1.User_Id IS NOT NULL
+		order by p1.Take_Time
+	</select>
+	
+	<!-- 根据活动Id查询未被被领取的红包 -->
+	<select id="getNotUseRedPacketCountByPromotionId" resultType="PromotionCouponCode" parameterType="int" >
+	    select 
+			<include refid="allColumns" />
+	    from promotion_coupon_code p1
+	    where 
+		    p1.Promotion_Id = #{promotionId}
+		    and p1.User_Id IS NULL
+		
+	</select>
+	
+	<!-- 获取用户能够使用的红包 -->
+	<select id="getRedPacketByUserId" resultType="PromotionCouponCode" parameterType="int" >
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon_code p1
+	    left join promotion p2 on p1.Promotion_Id = p2.promotion_id
+	    where 
+	    p2.Promotion_Type_Cd = 56
+	    and p2.Status_Cd = 1
+	    <![CDATA[   
+   				and DATE_FORMAT(now(), '%Y-%m-%d') >=  DATE_FORMAT(p2.Enable_Start_Time, '%Y-%m-%d')  
+   				and DATE_FORMAT(now(), '%Y-%m-%d') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d')  
+   			]]>
+   		and p1.Coupon_Status_Cd = 1
+	    and p1.User_Id = #{userId}
+		
+	</select>
+
+	<select id="findByOrderId" resultType="PromotionCouponCode" parameterType="int" >
+		SELECT
+		<include refid="allColumns"/>
+		,
+		s1.Code_Cn_Name AS codeTypeName
+		FROM promotion_coupon_code p1
+		LEFT JOIN order_promotion_info opi ON p1.Coupon_Code_Id = opi.Coupon_Code_Id
+		LEFT JOIN promotion pr ON p1.promotion_Id = pr.promotion_id
+		LEFT JOIN system_code s1 ON p1.Coupon_Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Coupon_Status_Cd'
+		WHERE p1.Order_Id = #{orderId}
+		AND pr.Promotion_Type_Cd = 70
+	</select>
+	
+	<select id="getPromotionCouponCodeByMap" resultType="PromotionCouponCode" parameterType="java.util.Map">
+		SELECT
+		<include refid="allColumns" />,
+		p2.Allow_Use_End_Time
+		FROM promotion_coupon_code p1
+		LEFT JOIN promotion_groupon p2 ON p1.Promotion_Id = p2.promotion_id
+		WHERE p1.Order_Id = #{orderId} AND p1.User_Id = #{userId}
+	</select>
+
+	<!--根据orderid获取对应的团购券-->
+	<select id="findPromotionCouponCodeByOrderId" resultType="Map" parameterType="Integer">
+		SELECT
+		<include refid="allColumns" />
+		FROM promotion_coupon_code p1
+		LEFT JOIN promotion p ON p.`promotion_id` = p1.`Promotion_Id`
+		WHERE p1.Order_Id = #{orderId}
+		AND p.`Promotion_Type_Cd` = 70
+	</select>
+</mapper>

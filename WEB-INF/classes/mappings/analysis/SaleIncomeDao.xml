@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.SaleIncomeDao">
+	
+	<!-- 查询搜索范围内的订单日期、成交量、成交额，商品成交量 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.SaleIncome" parameterType="java.util.Map">
+        SELECT
+            DATE_FORMAT(t1.Payamt_Time,'%Y-%m-%d %T') AS reportTime,
+            t1.Payamt_Type_Cd AS typeCd,
+            t2.Code_Cn_Name AS typeName,
+            t1.Amount AS amount,
+            t3.Consume AS consumeScore,
+            t4.Order_Number AS orderNumber,
+            t5.Login_Name AS loginName,
+            t5.User_Name AS userName
+        FROM
+	        order_payamt t1
+        LEFT JOIN system_code t2 ON t2.Code_Id = t1.Payamt_Type_Cd
+        AND t2.Code_Type_Cd = "PAYAMT_TYPE_CD"
+        LEFT JOIN order_pay_info t3 ON t3.Order_Id = t1.Order_Id
+        LEFT JOIN order_header t4 ON t4.Order_Id = t1.Order_Id
+        LEFT JOIN USER t5 ON t5.User_Id = t4.User_Id
+        LEFT JOIN order_extend t6 ON t6.Order_Id = t4.Order_Id
+        WHERE t3.Pay_Type_Code = 3
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t1.Payamt_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t1.Payamt_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and t6.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        UNION ALL
+        SELECT
+            DATE_FORMAT(p1.Create_Time,'%Y-%m-%d %T') AS reportTime,
+            p1.OPER_Event_Type_Cd AS typeCd,
+            p2.Code_Cn_Name AS typeName,
+            p1.Balance_Income AS amount,
+            "" AS consumeScore,
+            "" AS orderNumber,
+            p4.Login_Name AS loginName,
+            p4.User_Name AS userName
+        FROM
+            user_balance_detail p1
+        LEFT JOIN system_code p2 ON p2.Code_Id = p1.OPER_Event_Type_Cd
+        AND p2.Code_Type_Cd = "OPER_EVENT_TYPE_CD"
+        LEFT JOIN order_header p3 ON p3.Order_Number = p1.Order_Number
+        LEFT JOIN USER p4 ON p4.User_Id = p3.User_Id
+        LEFT JOIN order_extend p5 ON p5.Order_Id = p5.Order_Id
+        WHERE
+            p1.OPER_Event_Type_Cd IN (6, 7)
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(p1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(p1.Create_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+            and p5.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        ORDER BY
+            reportTime DESC
+    </select>
+
+</mapper>

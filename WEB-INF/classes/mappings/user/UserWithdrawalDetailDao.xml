@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserWithdrawalDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Withdrawal_Detail_Id, User_Withdrawal_Acct_ID, Withdrawal_Type_Cd, Withdrawal_Amt, Apply_Time, Apply_Status_Cd, Admin_User_Id, Admin_User_Name, Deal_Time, Remark, User_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserWithdrawalDetail" useGeneratedKeys="true" keyProperty="Withdrawal_Detail_Id">
+	    INSERT INTO user_withdrawal_detail (
+	        User_Withdrawal_Acct_ID, Withdrawal_Type_Cd, Withdrawal_Amt, Apply_Time, Apply_Status_Cd, Admin_User_Id, Admin_User_Name, Deal_Time, Remark, User_Id
+	    ) VALUES (
+	        #{userWithdrawalAcctID},#{withdrawalTypeCd},#{withdrawalAmt}, #{applyTime}, #{applyStatusCd}, #{adminUserId}, #{adminUserName}, #{dealTime}, #{remark}, #{userId}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserWithdrawalDetail">
+	   UPDATE user_withdrawal_detail SET
+			User_Withdrawal_Acct_ID = #{userWithdrawalAcctID},
+			Withdrawal_Type_Cd = #{withdrawalTypeCd},
+		   Withdrawal_Amt = #{withdrawalAmt}, 
+		   Apply_Time = #{applyTime}, 
+		   Apply_Status_Cd = #{applyStatusCd}, 
+		   Admin_User_Id = #{adminUserId}, 
+		   Admin_User_Name = #{adminUserName}, 
+		   Deal_Time = #{dealTime}, 
+		   Remark = #{remark} 
+	   WHERE 
+		   Withdrawal_Detail_Id = #{withdrawalDetailId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_withdrawal_detail where Withdrawal_Detail_Id = #{withdrawalDetailId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserWithdrawalDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_withdrawal_detail 
+	     WHERE 
+			  Withdrawal_Detail_Id=#{withdrawalDetailId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserWithdrawalDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_withdrawal_detail
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findWithdrawList" resultType="WithdrawDTO" parameterType="WithdrawDTO">  
+		select 
+		a.Withdrawal_Detail_Id,
+		a.Withdrawal_Amt,
+		a.Withdrawal_Type_Cd,
+		(select Code_Cn_Name from system_code where Code_Type_Cd='WITHDRAWAL_TYPE_CD' and Code_Id=a.Withdrawal_Type_Cd) Withdrawal_Type_Name,
+		a.Apply_Status_Cd,
+		(select Code_Cn_Name from system_code where Code_Type_Cd='Apply_Status_Cd' and Code_Id=a.Apply_Status_Cd) Apply_Status_Name,
+		a.Apply_Time,
+		a.Admin_User_Name,
+		a.Deal_Time,
+		a.Remark,
+		b.User_Name,
+		b.Phone,
+		b.Identity_Id,
+		c.Opening_Bank_Name,
+		c.Opening_Account_Name,
+		c.Opening_Account_No,
+		c.Bank_Type_Cd,
+		(select Code_Cn_Name from system_code where Code_Type_Cd='BANK_TYPE_CD' and Code_Id=c.Bank_Type_Cd) Bank_Type_Name     
+		from user_withdrawal_detail a 
+		left join user b on a.User_Id=b.User_Id 
+		left join user_withdrawal_account c on a.User_Withdrawal_Acct_ID=c.Id 
+		<where> 
+		1=1 
+			<if test="null!=phone and ''!=phone"> and b.Phone LIKE CONCAT('%',#{phone},'%') </if>
+			<if test="null!=bankTypeCd">and c.Bank_Type_Cd=#{bankTypeCd} </if>
+			<if test="null!=applyStatusCd">and a.Apply_Status_Cd=#{applyStatusCd} </if>
+			<if test="null != applyStartDate and '' != applyStartDate"> and DATE_FORMAT(a.Apply_Time,'%Y-%m-%d') >= DATE_FORMAT(#{applyStartDate},'%Y-%m-%d') </if>
+			<if test="null != applyEndDate and '' != applyEndDate"><![CDATA[ and DATE_FORMAT(a.Apply_Time,'%Y-%m-%d') <= DATE_FORMAT(#{applyEndDate},'%Y-%m-%d') ]]></if>
+			<if test="null != dealStartDate and '' != dealStartDate"> and DATE_FORMAT(a.Deal_Time,'%Y-%m-%d') >= DATE_FORMAT(#{dealStartDate},'%Y-%m-%d') </if>
+			<if test="null != dealEndDate and '' != dealEndDate"><![CDATA[ and DATE_FORMAT(a.Deal_Time,'%Y-%m-%d') <= DATE_FORMAT(#{dealEndDate},'%Y-%m-%d') ]]></if>
+		</where>
+		order by a.Deal_Time DESC,a.Apply_Time DESC
+	</select>
+	
+	<!-- 2016.07.20 By caobr 根据用户Id查询提现明细 -->
+	<select id="findWithdrawalList" parameterType="UserWithdrawalDetail" resultType="UserWithdrawalDetail">
+		SELECT a.Withdrawal_Detail_Id, a.User_Withdrawal_Acct_ID, a.Withdrawal_Type_Cd, a.Withdrawal_Amt, a.Apply_Time,
+			   a.Apply_Status_Cd, a.Admin_User_Id, a.Admin_User_Name, a.Deal_Time, a.Remark, a.User_Id,b.Code_Cn_Name as applyStatusDesc
+		FROM user_withdrawal_detail a LEFT JOIN system_code b on (a.Apply_Status_Cd=b.Code_Id and b.Code_Type_Cd='Apply_Status_Cd') 
+		WHERE a.User_Id=#{userId} AND a.Withdrawal_Type_Cd=#{withdrawalTypeCd} ORDER BY Apply_Time DESC
+	</select>
+	
+	<!-- 2016.07.20 By caobr 不同状态的提现金额. 查询提现审核中->对应状态待审核、打款中->对应状态审核通过、已提现金额->对应状态已打款（'申请状态':1:待审核 2:审核通过 3:审核未通过 4:已打款'） -->
+	<select id="getAmtByApplyStatusAndUserId" parameterType="UserWithdrawalDetail" resultType="java.math.BigDecimal">
+		SELECT SUM(Withdrawal_Amt) FROM user_withdrawal_detail 
+		WHERE 1=1 
+			<if test="userId != null">
+				AND User_Id=#{userId} 
+			</if>
+			<if test="applyStatusCd != null">
+				AND Apply_Status_Cd=#{applyStatusCd} 
+			</if> 
+			<if test="withdrawalTypeCd != null">
+				AND Withdrawal_Type_Cd=#{withdrawalTypeCd}
+			</if> 
+	</select>
+	
+	<!--  -->
+	<select id="getUserWithdrawalListByUserId" parameterType="java.lang.Integer" resultType="UserWithdrawalDetail">
+		SELECT <include refid="allColumns"/> FROM user_withdrawal_detail WHERE User_Id=#{userId}
+	</select>
+</mapper>

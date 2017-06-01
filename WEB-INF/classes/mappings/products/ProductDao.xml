@@ -1,0 +1,1210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		Product_Id, Product_Name, Product_Type_Cd, Product_Status_Cd, SKU_KEY_Json_Str,
+		SKU_Common_Json_Str, Default_Price, Tag_Price, Real_Stock,
+		Virtual_Stock, Virtual_Sale_Cnt, Bar_Code, Brand_Id, Category_Id,Outside_Id,
+		Master_Product_ID,Last_Update_Time,Last_Update_User_Id,Is_Default_SKU,Product_Group_ID
+	</sql>
+    <!-- 新增 -->
+    <insert id="insert" parameterType="cn.yr.chile.products.domain.Product" useGeneratedKeys="true" keyProperty="productId">
+		INSERT INTO product (
+		Product_Name, Product_Type_Cd, Product_Status_Cd, SKU_KEY_Json_Str, SKU_Common_Json_Str,
+		Default_Price, Tag_Price,Real_Stock,Virtual_Stock,Virtual_Sale_Cnt, 
+		Bar_Code,Brand_Id,Category_Id,Outside_Id,Master_Product_ID,
+		Last_Update_Time,Last_Update_User_Id,Is_Default_SKU,Product_Group_ID
+		) VALUES (
+		#{productName}, #{productTypeCd}, #{productStatusCd}, #{skuKeyJsonStr}, #{skuCommonJsonStr},
+		#{defaultPrice}, #{tagPrice},#{realStock},#{virtualStock},#{virtualSaleCnt},
+		#{barCode},#{brandId},#{categoryId},#{outsideId}, #{masterProductId}, 
+		#{lastUpdateTime},#{lastUpdateUserId},#{isDefaultSku},#{productGroupId}
+		)
+	</insert>
+    <!-- 修改 -->
+    <update id="update" parameterType="Product">
+		UPDATE product SET
+		Product_Name = #{productName},
+		Product_Type_Cd = #{productTypeCd},
+		Product_Status_Cd = #{productStatusCd},
+		SKU_KEY_Json_Str = #{skuKeyJsonStr},
+		SKU_Common_Json_Str = #{skuCommonJsonStr},
+		Default_Price = #{defaultPrice},
+		Tag_Price = #{tagPrice},
+		Real_Stock = #{realStock},
+		Virtual_Stock = #{virtualStock},
+		Virtual_Sale_Cnt = #{virtualSaleCnt},
+		Bar_Code = #{barCode},
+		Brand_Id = #{brandId},
+		Category_Id = #{categoryId},
+		Outside_Id = #{outsideId},
+		Master_Product_ID = #{masterProductId},
+		Last_Update_Time = #{lastUpdateTime},
+		Last_Update_User_Id = #{lastUpdateUserId},
+		Is_Default_SKU = #{isDefaultSku},
+		Product_Group_ID = #{productGroupId}
+		WHERE
+		Product_Id = #{productId}
+	</update>
+
+    <update id="updateAll" parameterType="Product">
+        UPDATE product SET
+        <if test="productName !=''and productName!=null">
+            Product_Name = #{productName},
+        </if>
+        <if test="productTypeCd!=null">
+            Product_Type_Cd = #{productTypeCd},
+        </if>
+        <if test="productStatusCd !=''and productStatusCd!=null">
+            Product_Status_Cd = #{productStatusCd},
+        </if>
+        <if test="skuKeyJsonStr !=''and skuKeyJsonStr!=null">
+            SKU_KEY_Json_Str = #{skuKeyJsonStr},
+        </if>
+        <if test="skuCommonJsonStr !=''and skuCommonJsonStr!=null">
+            SKU_Common_Json_Str = #{skuCommonJsonStr},
+        </if>
+        <if test="defaultPrice !=''and defaultPrice!=null">
+            Default_Price = #{defaultPrice},
+        </if>
+        <if test="tagPrice !=''and tagPrice!=null">
+            Tag_Price = #{tagPrice},
+        </if>
+        <if test="realStock!=null">
+            Real_Stock = #{realStock},
+        </if>
+        <if test="virtualStock!=null">
+            Virtual_Stock = #{virtualStock},
+        </if>
+        <if test="virtualSaleCnt !=''and virtualSaleCnt!=null">
+            Virtual_Sale_Cnt = #{virtualSaleCnt},
+        </if>
+        <if test=" barCode!=null">
+            Bar_Code = #{barCode},
+        </if>
+        <if test="brandId!=null">
+            Brand_Id = #{brandId},
+        </if>
+        <if test=" categoryId!=null">
+            Category_Id = #{categoryId},
+        </if>
+        <if test="outsideId!=null">
+            Outside_Id = #{outsideId},
+        </if>
+        <if test="lastUpdateUserId!=null">
+            Last_Update_User_Id = #{lastUpdateUserId},
+        </if>
+        <if test="isDefaultSku!=null">
+            Is_Default_SKU = #{isDefaultSku},
+        </if>
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE 1=1
+        <if test="masterProductId!=null">
+          and Master_Product_ID = #{masterProductId}
+        </if>
+        <if test="productId!=null">
+            and Product_Id = #{productId}
+        </if>
+    </update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM product where
+		product_id = #{productId}
+	</delete>
+
+    <!-- 删除sku -->
+    <delete id="deleteBySku" parameterType="int">
+        DELETE FROM product where
+        1=1
+        and Is_Default_SKU =0
+        and Master_Product_ID = #{0}
+    </delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="Product" parameterType="Integer">
+		SELECT p1.*,p2.sum FROM product p1 
+			LEFT JOIN 
+		(SELECT p.Product_Id,SUM(p.Real_Stock) as sum from product p
+			GROUP BY p.Master_Product_ID) p2 
+		ON p2.Product_Id=p1.Product_Id
+			WHERE p1.Product_Id=#{productId}
+	</select>
+
+    <!-- 根据主键获取 -->
+    <select id="getByOutSideId" resultType="Product" parameterType="String">
+		SELECT p1.*,p2.sum FROM product p1
+		LEFT JOIN
+		(SELECT p.Product_Id,SUM(p.Real_Stock) as sum from product p
+		GROUP BY p.Master_Product_ID) p2
+		ON p2.Product_Id=p1.Product_Id
+		WHERE p1.Outside_Id=#{0}
+	</select>
+    <!-- 根据主键获取 -->
+    <select id="getProductDTO" resultType="ProductDTO"
+            parameterType="Integer">
+		SELECT
+		*
+		FROM product
+		LEFT JOIN product_pic_info on
+		product_pic_info.Product_Id=product.Product_Id
+		and product_pic_info.Is_Default_Pic=1
+		WHERE
+		product.product_id=#{productId}
+	</select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="Product">
+        select
+        <include refid="allColumns"/>
+        from product
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findList" resultType="Product" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from product a
+        where 1=1
+        <if test="productId != null">and a.Product_Id = #{productId}</if>
+        <if test="productName != null">and a.Product_Name = #{productName}</if>
+        <if test="productStatusCd != null">and a.Product_Status_Cd = #{productStatusCd}</if>
+        <if test="categoryId != null">and a.Category_Id = #{categoryId}</if>
+        <if test="brandId != null">and a.Brand_Id = #{brandId}</if>
+        <if test="productTypeCd != null">and a.Product_Type_Cd = #{productTypeCd}</if>
+        <if test="barCode != null">and a.Bar_Code = #{barCode}</if>
+        <if test="defaultPrice != null">and a.Default_Price = #{defaultPrice}</if>
+        <if test="tagPrice != null">and a.Tag_Price = #{tagPrice}</if>
+        <if test="lastUpdateTime != null">and a.Last_Update_Time = #{lastUpdateTime}</if>
+        <if test="lastUpdateUserId != null">and a.Last_Update_User_Id = #{lastUpdateUserId}</if>
+        <if test="masterProductId != null">and a.Master_Product_ID = #{masterProductId}</if>
+        <if test="productGroupId !=null">and a.Product_Group_ID = #{productGroupId}</if>
+        order by a.Product_Id asc
+    </select>
+
+    <!-- 取微店需要显示的产品id -->
+    <select id="findProductIdsForMStore" resultType="Integer"
+            parameterType="Integer">
+		(select a.Product_Id
+		from product a
+		left join product_setting b
+		on a.Product_Id = b.Product_Id
+		where b.Is_show_M_Store_Home_Page = 1
+		and
+		a.Product_Status_Cd = 1 ORDER BY a.Product_Id desc)
+		union all
+		(SELECT
+		product_id FROM product_user_xref WHERE User_Id = #{userId} ORDER BY
+		Display_Id asc)
+	</select>
+
+    <select id="findProductsForMStoreDefault" resultType="ProductDTO">
+        select d.Pic_Url,
+        a.Product_Id,
+        a.Product_Name,
+        e.Brand_Name,
+        b.Category_Name,
+        a.Tag_Price,
+        a.Default_Price,
+        a.Last_Update_Time,
+        IFNULL(f.reward1,0) as distribution_Reward,
+        IFNULL(f.reward2,0) as url_Rebate,
+        IFNULL(f.reward3,0) as shop_Rebate,
+        a.Product_Status_Cd,
+        h.Shelve_Channel_Cds,
+        h.Top_Time
+        from product a
+        left join product_category b
+        on a.Category_Id = b.Category_Id
+        left join (
+        select Product_Id,Pic_Url from product_pic_info where Is_Default_Pic = '1'
+        )
+        d
+        on a.Product_Id = d.Product_Id
+        left join product_brand e
+        on a.Brand_Id
+        = e.Brand_Id
+        left join
+        ( select
+        w.Product_Id,
+        w.Is_Enable1,
+        (CASE WHEN w.Is_Enable1 = '1' THEN
+        (CASE WHEN w.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(w.Rebete_Fix_Percent,0)*IFNULL(w.Default_Price,0),2)
+        WHEN w.Is_Fix_Amount = '1' THEN IFNULL(w.Rebate_Fix_Amount,0)
+        WHEN w.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward1,
+        s.Is_Enable2,
+        (CASE WHEN s.Is_Enable2 = '1' THEN
+        (CASE WHEN s.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(s.Rebete_Fix_Percent,0)*IFNULL(s.Default_Price,0),2)
+        WHEN s.Is_Fix_Amount = '1' THEN IFNULL(s.Rebate_Fix_Amount,0)
+        WHEN s.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward2,
+        t.Is_Enable3,
+        (CASE WHEN t.Is_Enable3 = '1' THEN
+        (CASE WHEN t.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(t.Rebete_Fix_Percent,0)*IFNULL(t.Default_Price,0),2)
+        WHEN t.Is_Fix_Amount = '1' THEN IFNULL(t.Rebate_Fix_Amount,0)
+        WHEN t.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward3
+        from
+        <!-- 发展分销奖励 -->
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable1,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '1') w
+        left join
+        <!-- URL返利 -->
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable2,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '2') s
+        on w.Product_Id = s.Product_Id
+        left join
+        <!-- 微店返利 -->
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable3,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '3') t
+        on w.Product_Id = t.Product_Id
+        ) f
+        on a.Product_Id = f.Product_ID
+        left join product_setting h
+        on
+        a.Product_Id = h.Product_ID
+        where
+        h.Is_show_M_Store_Home_Page = 1
+        and
+        a.Product_Status_Cd = 1 ORDER BY a.Product_Id desc
+    </select>
+
+    <select id="findProductsForMStoreByProductStatus" resultType="ProductDTO">
+        select d.Pic_Url,
+        a.Product_Id,
+        a.Product_Name,
+        e.Brand_Name,
+        b.Category_Name,
+        a.Tag_Price,
+        a.Default_Price,
+        a.Last_Update_Time,
+        IFNULL(f.reward1,0) as distribution_Reward,
+        IFNULL(f.reward2,0) as url_Rebate,
+        IFNULL(f.reward3,0) as shop_Rebate,
+        a.Product_Status_Cd,
+        h.Shelve_Channel_Cds,
+        h.Top_Time,
+        pux.Display_Id
+        from product a
+        left join product_category b
+        on a.Category_Id = b.Category_Id
+        left join (
+        select Product_Id,Pic_Url from product_pic_info where Is_Default_Pic = '1'
+        )
+        d
+        on a.Product_Id = d.Product_Id
+        left join product_brand e
+        on a.Brand_Id
+        = e.Brand_Id
+        left join
+        ( select
+        w.Product_Id,
+        w.Is_Enable1,
+        (CASE WHEN w.Is_Enable1 = '1' THEN
+        (CASE WHEN w.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(w.Rebete_Fix_Percent,0)*IFNULL(w.Default_Price,0),2)
+        WHEN w.Is_Fix_Amount = '1' THEN IFNULL(w.Rebate_Fix_Amount,0)
+        WHEN w.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward1,
+        s.Is_Enable2,
+        (CASE WHEN s.Is_Enable2 = '1' THEN
+        (CASE WHEN s.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(s.Rebete_Fix_Percent,0)*IFNULL(s.Default_Price,0),2)
+        WHEN s.Is_Fix_Amount = '1' THEN IFNULL(s.Rebate_Fix_Amount,0)
+        WHEN s.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward2,
+        t.Is_Enable3,
+        (CASE WHEN t.Is_Enable3 = '1' THEN
+        (CASE WHEN t.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(t.Rebete_Fix_Percent,0)*IFNULL(t.Default_Price,0),2)
+        WHEN t.Is_Fix_Amount = '1' THEN IFNULL(t.Rebate_Fix_Amount,0)
+        WHEN t.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward3
+        from
+        <!-- 发展分销奖励 -->
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable1,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '1') w
+        left join
+        <!-- URL返利 -->
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable2,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '2') s
+        on w.Product_Id = s.Product_Id
+        left join
+        <!-- 微店返利 -->
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable3,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '3') t
+        on w.Product_Id = t.Product_Id
+        ) f
+        on a.Product_Id = f.Product_ID
+        left join product_setting h
+        on
+        a.Product_Id = h.Product_ID
+        left join product_user_xref pux
+        on a.Product_Id = pux.Product_Id
+        where
+        pux.User_Id = #{userId}
+        and pux.Product_Status_Cd = #{productStatus}
+        ORDER BY
+        pux.Display_Id asc
+    </select>
+
+    <select id="findProductsToBeChosen" resultType="ProductDTO">
+        select d.Pic_Url,
+        a.Product_Id,
+        a.Product_Name,
+        e.Brand_Name,
+        b.Category_Name,
+        a.Tag_Price,
+        a.Default_Price,
+        a.Last_Update_Time,
+        IFNULL(f.reward1,0) as distribution_Reward,
+        IFNULL(f.reward2,0) as url_Rebate,
+        IFNULL(f.reward3,0) as shop_Rebate,
+        a.Product_Status_Cd,
+        h.Shelve_Channel_Cds,
+        h.Top_Time
+        from product a
+        left join product_category b
+        on a.Category_Id = b.Category_Id
+        left join (
+        select Product_Id,Pic_Url from product_pic_info where Is_Default_Pic = '1'
+        )
+        d
+        on a.Product_Id = d.Product_Id
+        left join product_brand e
+        on a.Brand_Id
+        = e.Brand_Id
+        left join
+        ( select
+        w.Product_Id,
+        w.Is_Enable1,
+        (CASE WHEN w.Is_Enable1 = '1' THEN
+        (CASE WHEN w.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(w.Rebete_Fix_Percent,0)*IFNULL(w.Default_Price,0),2)
+        WHEN w.Is_Fix_Amount = '1' THEN IFNULL(w.Rebate_Fix_Amount,0)
+        WHEN w.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward1,
+        s.Is_Enable2,
+        (CASE WHEN s.Is_Enable2 = '1' THEN
+        (CASE WHEN s.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(s.Rebete_Fix_Percent,0)*IFNULL(s.Default_Price,0),2)
+        WHEN s.Is_Fix_Amount = '1' THEN IFNULL(s.Rebate_Fix_Amount,0)
+        WHEN s.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward2,
+        t.Is_Enable3,
+        (CASE WHEN t.Is_Enable3 = '1' THEN
+        (CASE WHEN t.Is_Fix_Amount = '0' THEN
+        truncate(IFNULL(t.Rebete_Fix_Percent,0)*IFNULL(t.Default_Price,0),2)
+        WHEN t.Is_Fix_Amount = '1' THEN IFNULL(t.Rebate_Fix_Amount,0)
+        WHEN t.Is_Fix_Amount = '-1' THEN 0
+        END)
+        ELSE 0
+        END) as reward3
+        from
+
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable1,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '1') w
+        left join
+
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable2,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '2') s
+        on w.Product_Id = s.Product_Id
+        left join
+
+        (select
+        a.Product_Id,
+        IFNULL(b.Is_Enable,0) as Is_Enable3,
+        IFNULL(b.Is_Fix_Amount,-1) as Is_Fix_Amount,
+        IFNULL(b.Rebate_Fix_Amount,0) as Rebate_Fix_Amount,
+        IFNULL(b.Rebete_Fix_Percent,0) as Rebete_Fix_Percent,
+        IFNULL(a.Default_Price,0) as Default_Price
+        from product a
+        left join product_rebate_setting b
+        on a.Product_Id = b.Product_ID
+        where b.Rebate_Type_Cd = '3') t
+        on w.Product_Id = t.Product_Id
+        ) f
+        on a.Product_Id = f.Product_ID
+        left join product_setting h
+        on
+        a.Product_Id = h.Product_ID
+        WHERE
+        a.Product_Id IN(
+        SELECT Product_Id FROM product_setting x
+        WHERE
+        x.Product_Id NOT IN (SELECT Product_Id FROM product_user_xref pux WHERE pux.User_Id = #{userId} AND
+        pux.Product_Status_Cd = 1)
+        AND
+        x.Is_show_M_Store_Home_Page = 0
+        AND
+        find_in_set('5', x.Shelve_Channel_Cds)
+        )
+        <if test="condition != null and condition != 'all' ">
+            AND (
+            a.Product_Name LIKE CONCAT('%','${condition}','%' )
+            )
+        </if>
+    </select>
+    <!--原来是Integer productId-->
+    <select id="findProductById" resultType="Product"
+            parameterType="java.lang.String">
+		SELECT
+			p.Product_Id,p.Outside_Id,p.Real_Stock,p.Default_Price
+		from product p
+		WHERE 1=1
+		and p.Product_Status_Cd = 1
+		and p.Outside_Id = #{0}
+	</select>
+    <!-- 查询商品信息 -->
+    <select id="findProductList" resultType="ProductDTO"
+            parameterType="java.util.Map">
+        SELECT
+        p.Product_Id,a.s as sum,p.Product_Type_Cd,l.Product_Id as labelProduct,l.Display_Id as
+        displayId,l.Label_Id,p.Product_Name,b.Brand_Name,c.Category_Name,
+        p.Bar_Code,p.Real_Stock,p.Tag_Price,p1.Is_Default_Pic,s.Top_Time,
+        p.Default_Price,p.Last_Update_Time,p.Brand_Id,p.Category_Id,p.SKU_Common_Json_Str,
+        p.Is_Default_SKU,s.Stock_Warning_Limit,p.Product_Status_Cd,p1.Pic_Url,e.Blg_Store_ID as
+        storeId,p.Master_Product_ID
+        FROM product p
+        LEFT JOIN product_brand b on b.Brand_Id=p.Brand_Id
+        LEFT JOIN product_category c on c.Category_Id=p.Category_Id
+        LEFT JOIN product_setting s on s.Product_Id=p.Product_Id
+        LEFT JOIN product_pic_info p1 ON p.Product_Id=p1.Product_Id
+        LEFT JOIN product_label_xref l ON l.Product_Id=p.Product_Id
+        LEFT JOIN product_extend e on e.product_Id=p.product_Id
+        LEFT JOIN (SELECT Master_Product_ID,SUM(Real_Stock) as s FROM product GROUP BY 1) a on
+        a.Master_Product_ID=p.Master_Product_ID
+        WHERE 1=1
+        and p1.Is_Default_Pic=1
+        and p.Is_Default_SKU=1
+        <if test="brandId != null and brandId !=''">and p.Brand_Id = #{brandId}</if>
+        <if test="storeId != null and storeId !=''">and e.Blg_Store_ID = #{storeId}</if>
+        <if test="categoryId != null and categoryId !=''">and p.Category_Id IN
+            <foreach item="item" index="index" collection="categoryId" open="(" separator="," close=")">#{item}
+            </foreach>
+        </if>
+        <if test="productGroupId != null and productGroupId!=''">and p.Product_Group_ID = #{productGroupId}</if>
+        <if test="productName != null and productName !='' ">
+            and p.Product_Name like CONCAT('%',#{productName},'%')
+        </if>
+        <if test="productId != null and productId !='' ">
+            and p.Product_Id = #{productId}
+        </if>
+        <if test="productStatusCd != null and productStatusCd !=''">and p.Product_Status_Cd in (${productStatusCd})</if>
+        <if test="productTypeCd != null and productTypeCd !=''">and p.Product_Type_Cd = #{productTypeCd}</if>
+        <if test="statusCd != null and statusCd !=''">and p.Product_Status_Cd != #{statusCd}</if>
+        <if test="labelId != null and labelId ==1">and l.Label_Id =1</if>
+        <if test="labelId != null and labelId ==2">and l.Label_Id =2</if>
+        <if test="labelId != null and labelId ==0">and l.Label_Id is null</if>
+
+        <choose>
+            <when test="labelId != null ">
+                order by l.Display_Id asc
+            </when>
+            <otherwise>
+                order by p.Product_Id desc
+            </otherwise>
+        </choose>
+        <if test="orderBy != null">ORDER BY 1 DESC </if>
+    </select>
+
+    <!-- 根据品牌和系列查询商品的基础信息 -->
+    <select id="findProductBaseList" resultType="ProductBaseDTO"
+            parameterType="java.util.Map">
+        select
+        p1.Product_Id as productId,
+        p1.Product_Name as productName,
+        p1.Tag_Price as tagPrice,
+        p1.Default_Price as defaultPrice,
+        p1.SKU_KEY_Json_Str as skuKeyJsonStr,
+        p1.Last_Update_Time as lastUpdateTime,
+        p2.Brand_Name as brandName,
+        p3.Category_Name as categoryName,
+        p1.Real_Stock
+        from
+        product p1
+        left join product_brand p2 on p1.Brand_Id = p2.Brand_Id
+        left join product_category p3 on p1.Category_Id = p3.Category_Id
+        where
+        p1.Product_Status_Cd = 1
+        <if test="brandId != null and brandId !=''">and p2.Brand_Id = #{brandId}</if>
+        <if test="categoryId != null  and categoryId !=''">and p3.Category_Id in(${categoryId})</if>
+        <if test="productId != null and productId !=''">and p1.Product_Id = #{productId}</if>
+        <if test="productName != null and productName !=''">and p1.Product_Name like CONCAT('%',#{productName},'%')</if>
+        <if test="productTypeCd != null  and productTypeCd !=''">and p1.Product_Type_Cd = #{productTypeCd}</if>
+        <if test="showSku == null">AND p1.Product_Id = p1.Master_Product_ID</if>
+        <if test="showSku != null and showSku == 1">
+            AND p1.Product_Id NOT IN (
+            select p.product_id
+            from product p
+            where p.Master_Product_ID = p.product_id
+            and (SELECT count(1) from product where Master_Product_ID = p.Master_Product_ID) &gt; 1
+            )
+        </if>
+        <if test="promotionType != null and promotionType != ''"><!-- 根据活动类型，剔除掉已有在使用的活动商品 -->
+            AND p1.Product_Id NOT IN (
+              SELECT ppx.Product_Id FROM promotion pp
+              LEFT JOIN promotion_product_xref ppx ON  pp.Promotion_Id = ppx.Promotion_Id
+              WHERE pp.Promotion_Type_Cd = #{promotionType}
+              <![CDATA[
+    			AND DATE_FORMAT(now(), '%Y-%m-%d') <=  DATE_FORMAT(pp.Enable_End_Time, '%Y-%m-%d')
+    		]]>
+            )
+        </if>
+        <if test="sort != null  and sort !=''">order by #{sort}</if>
+        <if test="sort == null">order by p1.Product_Id DESC</if>
+    </select>
+
+    <!-- 根据多个商品Id查询对应数据 -->
+    <select id="findProductBaseInProductId" resultType="ProductBaseDTO"
+            parameterType="java.util.Map">
+        select
+        p1.Product_Id as productId,
+        p1.Product_Name as productName,
+        p1.Tag_Price as tagPrice,
+        p1.Default_Price as defaultPrice,
+        p1.Last_Update_Time as lastUpdateTime,
+        p1.Real_Stock as realStock,
+        p2.Brand_Name as brandName,
+        p3.Category_Name as categoryName,
+        p4.Pic_Url as picUrl
+        from
+        product p1
+        left join product_brand p2 on p1.Brand_Id = p2.Brand_Id
+        left join product_category p3 on p1.Category_Id = p3.Category_Id
+        left join product_pic_info p4 on p1.Product_Id = p4.Product_Id and p4.Is_Default_Pic = 1
+        where
+        p1.Product_Id in
+        <foreach item="item" index="index" collection="ids" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        order by p1.Product_Id
+    </select>
+
+    <!-- 判断上架商品是否存在该单位 -->
+    <select id="findProList" resultType="Product" parameterType="java.util.Map">
+        select
+        <include refid="allColumns"/>
+        from
+        product
+        where 1=1
+        and (Basic_Unit_Type_Cd = #{basicUnitTypeCd} or Sale_Unit_Type_Cd =
+        #{basicUnitTypeCd})
+        and Product_Status_Cd = '1'
+    </select>
+
+    <!-- 获取 可用商品(上架、未删除)的总数量 -->
+    <select id="readAllActiveProductCount" resultType="Integer">
+		select
+		count(*)
+		from
+		product p1
+		where p1.Product_Status_Cd = 1
+	</select>
+
+    <!-- 查询门店 -->
+    <select id="findStoreList" resultType="ProductStoreDTO"
+            parameterType="java.util.Map">
+        select
+        s.store_Id,
+        s.store_Number,
+        s.Store_Name,
+        b.Area_Name as province_Name,
+        c.Area_Name as city_Name
+        from store s left join area b
+        on s.Province_Id = b.Id
+        left
+        join area c
+        on s.City_Id = c.Id
+        where 1 =1
+        <if test="storeId != null and storeId !=''">and s.store_Id = #{storeId}</if>
+        <if test="storeName != null and storeName !=''">and s.Store_Name like CONCAT('%',#{storeName},'%')</if>
+        <if test="provinceId != null and provinceId !=''">and s.Province_Id = #{provinceId}</if>
+        <if test="provinceId != null and provinceId !=''">and s.City_Id = #{cityId}</if>
+        <if test="regionId != null and regionId !=''">and s.Region_Id = #{regionId}</if>
+        <if test="branchId != null and branchId !=''">and s.Branch_Id = #{branchId}</if>
+        <if test="officeId != null and officeId !=''">and s.Office_Id = #{officeId}</if>
+        <if test="noType != null and noType != ''">and s.Store_Type_Cd <![CDATA[ <> ]]> #{noType}</if>
+    </select>
+    <select id="findStoreProduct" resultType="cn.yr.chile.store.dto.StoreProductDTO" parameterType="java.util.Map">
+    select a.Product_Id,a.Product_Name,a.Product_Status_Cd,b.pic_url,a.Default_Price,a.Tag_Price
+    from product a 
+    left join (select pic_url,product_Id from product_pic_info where is_default_pic = '1') b
+    on a.product_Id = b.product_Id
+    
+    where a.Product_Id not in (
+      select Product_id from store_unshelve_product_xref 
+      where Store_Id = #{storeId}
+    )
+   </select>
+
+    <!-- 分页获取 可用商品(上架、未删除 ) -->
+    <select id="readAllActiveProducts" resultType="cn.yr.chile.products.dto.ProductSolrDTO"
+            parameterType="java.util.Map">
+		select
+		p1.Product_Id,
+		p1.Product_Status_Cd,
+		p1.Product_Name,
+		p1.Category_Id,
+		p1.Brand_Id,
+		p1.Default_Price,
+		p1.Tag_Price,
+		p1.Last_Update_Time,
+		p1.Product_Type_Cd,
+		p3.Product_Detail_Desc,
+		p2.Top_Time,
+		p2.Allow_Pay_Type_Cds,
+		p2.Is_Show_Tag_Price,
+		p2.Is_Show_Sale_Price,
+		p4.Product_Sale_Cnt,
+		p5.Template_Area_ID,
+		p5.Blg_Store_ID
+		from
+		product p1
+		LEFT JOIN product_setting p2 ON p2.Product_Id = p1.Product_Id
+		LEFT JOIN product_extend p3 ON p3.Product_Id = p1.Product_Id
+		LEFT JOIN product_sum_info p4 ON p4.Product_Id = p1.Product_Id
+		LEFT JOIN product_extend p5 ON p5.Product_Id = p1.Product_Id
+		where Product_Status_Cd = 1
+		and p1.Is_Default_SKU = 1
+		limit #{firstResult},#{pageSize}
+	</select>
+
+    <select id="readProductsByIds" resultType="cn.yr.chile.products.dto.ProductSolrDTO" parameterType="java.util.Map">
+		select
+		p1.Product_Id,
+		p1.Product_Status_Cd,
+		p1.Product_Name,
+		p1.Category_Id,
+		p1.Brand_Id,
+		p1.Default_Price,
+		p1.Tag_Price,
+		p1.Last_Update_Time,
+		p1.Product_Type_Cd,
+		p2.Pic_Url,
+		p3.Top_Time,
+		p3.Allow_Pay_Type_Cds,
+		p3.Is_Show_Tag_Price,
+		p3.Is_Show_Sale_Price,
+		p4.Product_Sale_Cnt,
+		p5.Template_Area_ID,
+		p5.Product_Sub_Title,
+		p5.Blg_Store_ID
+		from
+		product p1
+		LEFT JOIN product_pic_info p2 ON p2.Product_Id = p1.Product_Id AND p2.Is_Default_Pic=1
+		LEFT JOIN product_setting p3 ON p3.Product_Id = p1.Product_Id
+		LEFT JOIN product_sum_info p4 ON p4.Product_Id = p1.Product_Id
+		LEFT JOIN product_extend p5 ON p5.Product_Id = p1.Product_Id
+		where p1.Product_Id in ${productIds}
+		and p1.Is_Default_SKU = 1
+	</select>
+    <select id="readProductSolrDTOById" resultType="cn.yr.chile.products.dto.ProductSolrDTO"
+            parameterType="java.lang.Integer">
+		select
+		p1.Product_Id,
+		p1.Product_Status_Cd,
+		p1.Product_Name,
+		p1.Category_Id,
+		p1.Brand_Id,
+		p1.Default_Price,
+		p1.Last_Update_Time,
+		p2.Pic_Url,
+		p3.Top_Time,
+		p3.Product_Timing_Shief_Time
+		from
+		product p1
+		LEFT JOIN product_pic_info p2 ON p2.Product_Id = p1.Product_Id AND p2.Is_Default_Pic=1
+		LEFT JOIN product_setting p3 ON p3.Product_Id = p1.Product_Id
+		where p1.Product_Id = #{0};
+	</select>
+
+    <!--商品扩展信息  -->
+    <select id="selectProductInfo" resultType="cn.yr.chile.products.dto.ProductInfoDTO" parameterType="Integer">
+	  select
+	  a.Product_id, a.Product_Status_Cd,
+	  b.Rebate_Fix_Amount,b.Rebete_Fix_Percent,b.Is_Show_In_Page,b.Rebate_Type_Cd,
+	  d.Is_Allow_Add_Cart,count(c.Review_Content) as countReview,
+	  d.Shelve_Channel_Cds
+	  from Product a
+	  Left Join product_rebate_setting b on a.Product_Id = b.Product_Id
+	  Left Join product_review c on a.Product_Id = c.Product_Id
+	  Left Join product_setting d on a.Product_Id = d.Product_Id
+	  where a.Product_Id = #{productId}		
+	</select>
+    <!-- 统计商品数目 -->
+    <select id="getProductNum" resultType="String" parameterType="Product">
+        select
+        count(*)
+        from product a
+        LEFT JOIN product_pic_info p1 ON a.Product_Id=p1.Product_Id
+        <where>
+            p1.Is_Default_Pic=1
+            <if test="productTypeCd != null and productTypeCd !=''">and a.Product_Type_Cd = #{productTypeCd}</if>
+            <if test="productStatusCd != null and productStatusCd !=''">and a.Product_Status_Cd = #{productStatusCd}</if>
+        </where>
+    </select>
+
+    <!-- 统计商品数目-->
+    <select id="getProductNum2" resultType="String" parameterType="java.util.Map">
+		SELECT
+			COUNT(*)
+		FROM product p
+		LEFT JOIN product_pic_info p1 ON p.Product_Id=p1.Product_Id
+		WHERE 1=1
+		AND p1.Is_Default_Pic=1
+        <if test="productStatusCd != null and productStatusCd !=''">
+		    AND p.Product_Status_Cd = #{productStatusCd}
+        </if>
+        <if test="productTypeCd != null and productTypeCd !=''">
+		    AND p.Product_Type_Cd = #{productTypeCd}
+        </if>
+	</select>
+
+    <!-- 查询微店主的店里上架的全部产品 -->
+    <select id="findProductsByMstore" resultType="cn.yr.chile.products.dto.ProductMstoreXrefDTO"
+            parameterType="ProductUserXref">
+		SELECT pux.User_Id, pux.Display_Id, pux.Product_Status_Cd as mstoreProductStatusCd, 
+				ppi.Pic_Url,
+			 	p.Product_Id, p.Product_Name, p.Product_Status_Cd, p.Category_Id, p.Brand_Id,
+				p.Product_Type_Cd, p.Basic_Unit_Type_Cd, p.Sale_Unit_Type_Cd, p.Bar_Code,
+				p.Default_Price, p.Tag_Price
+		FROM product_user_xref pux LEFT JOIN product p ON pux.Product_Id=p.Product_Id 
+			 LEFT JOIN product_pic_info ppi ON (ppi.Product_Id=pux.Product_Id AND ppi.Is_Default_Pic=1)
+		WHERE pux.User_Id=#{userId} AND pux.Product_Status_Cd=#{productStatusCd}
+		ORDER BY pux.Display_Id ASC
+	</select>
+
+    <!--  -->
+    <select id="findDefaultProductsByMstore" resultType="ProductDTO">
+		SELECT ppi.Pic_Url, p.Product_Id, p.Product_Name, p.Product_Status_Cd, p.Category_Id, p.Brand_Id,p.Product_Type_Cd, 
+				p.Basic_Unit_Type_Cd, p.Sale_Unit_Type_Cd, p.Bar_Code, p.Default_Price, p.Tag_Price
+		FROM product_setting ps LEFT JOIN product p ON ps.Product_Id=p.Product_Id
+			 LEFT JOIN product_pic_info ppi ON (ppi.Product_Id=p.Product_Id AND ppi.Is_Default_Pic=1)
+		WHERE ps.Is_show_M_Store_Home_Page=1 AND p.Product_Status_Cd = 1 
+	</select>
+
+    <!-- 分页查询是赠品的商品 -->
+    <select id="findProductIsGiftDTO" resultType="Product" parameterType="java.util.Map">
+		SELECT p.Product_Id, p.Product_Name, p.Default_Price, p.Tag_Price
+		FROM product p 
+			 LEFT JOIN product_setting ps ON ps.Product_Id=p.Product_Id
+		WHERE ps.Is_Gift=1 AND p.Product_Status_Cd = 1 
+	</select>
+
+    <!-- 根据活动Id和多个商品Id查询，组合商品对应数据 (组合销售活动,预售)-->
+    <select id="findProductCombinationProductId" resultType="ProductCombinationDTO"
+            parameterType="java.util.Map">
+        select
+        pp1.productId,
+        pp1.productName,
+        pp1.real_Stock,
+        pp1.tagPrice,
+        pp1.defaultPrice,
+        pp1.lastUpdateTime,
+        pp1.brandName,
+        pp1.categoryName,
+        pp1.price,
+        pp1.userLimitNum,
+        pp1.isUsed
+        from(
+        select
+        p1.Product_Id as productId,
+        p1.Product_Name as productName,
+        p1.Real_Stock AS real_Stock,
+        p1.Tag_Price as tagPrice,
+        p1.Default_Price as defaultPrice,
+        p1.Last_Update_Time as lastUpdateTime,
+        p2.Brand_Name as brandName,
+        p3.Category_Name as categoryName,
+        p4.Price as price,
+        p4.User_Limit_Num as userLimitNum,
+        1 as isUsed
+        from
+        product p1
+        left join product_brand p2 on p1.Brand_Id = p2.Brand_Id
+        left join product_category p3 on p1.Category_Id = p3.Category_Id
+        left join promotion_product_xref p4 on p1.Product_Id = p4.Product_Id
+        where
+        p4.Promotion_Id = #{promotionId}
+        and p1.Product_Id in
+        <foreach item="item" index="index" collection="ids" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        UNION ALL
+        select
+        p1.Product_Id AS productId,
+        p1.Product_Name AS productName,
+        p1.Real_Stock AS real_Stock,
+        p1.Tag_Price AS tagPrice,
+        p1.Default_Price AS defaultPrice,
+        p1.Last_Update_Time AS lastUpdateTime,
+        p2.Brand_Name AS brandName,
+        p3.Category_Name AS categoryName,
+        null as price,
+        null as userLimitNum,
+        0 as isUsed
+        FROM
+        product p1
+        LEFT JOIN product_brand p2 ON p1.Brand_Id = p2.Brand_Id
+        LEFT JOIN product_category p3 ON p1.Category_Id = p3.Category_Id
+        where
+        p1.Product_Id in
+        <foreach item="item" index="index" collection="ids" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+        )pp1 GROUP BY productId order by isUsed
+    </select>
+
+    <!-- 查询手机首页装修商品信息 -->
+    <select id="findDecorateProductList" resultType="ProductDecorateDTO"
+            parameterType="java.util.Map">
+        select
+        a.Product_Id as id,
+        a.Category_Id as categoryID,
+        a.Product_Name as name,
+        s.Pic_Url as img,
+        a.Default_Price as priceReal,
+        a.Tag_Price as priceOrigin
+        from product a
+        left join product_setting t
+        on a.Product_Id = t.Product_Id
+        left join product_pic_info s
+        on (a.Product_Id = s.Product_Id and s.Is_Default_Pic = '1')
+        where a.Product_Status_Cd = '1'
+        <if test="categoryId != null  and categoryId !=''">and a.Category_Id = #{categoryId}</if>
+        <if test="productId != null and productId !=''">and a.Product_Id = #{productId}</if>
+        <if test="productName != null and productName !=''">and a.Product_Name like CONCAT('%',#{productName},'%')</if>
+        order by a.Product_Id desc
+    </select>
+
+    <!-- 查询微店装修商品信息 -->
+    <select id="findMSDecorateProductList" resultType="ProductDecorateDTO"
+            parameterType="java.util.Map">
+        select
+        a.Product_Id as id,
+        a.Category_Id as categoryID,
+        a.Product_Name as name,
+        s.Pic_Url as img,
+        a.Default_Price as priceReal,
+        a.Tag_Price as priceOrigin
+        from product a
+        left join product_setting t
+        on a.Product_Id = t.Product_Id
+        left join product_pic_info s
+        on (a.Product_Id = s.Product_Id and s.Is_Default_Pic = '1')
+        where a.Product_Status_Cd = '1'
+        <if test="categoryId != null  and categoryId !=''">and a.Category_Id = #{categoryId}</if>
+        <if test="productId != null and productId !=''">and a.Product_Id = #{productId}</if>
+        <if test="productName != null and productName !=''">and a.Product_Name like CONCAT('%',#{productName},'%')</if>
+        order by a.Product_Id desc
+    </select>
+
+    <!-- 查询门店装修商品信息 -->
+    <select id="findSDecorateProductList" resultType="ProductDecorateDTO"
+            parameterType="java.util.Map">
+        select
+        a.Product_Id as id,
+        a.Category_Id as categoryID,
+        a.Product_Name as name,
+        s.Pic_Url as img,
+        a.Default_Price as priceReal,
+        a.Tag_Price as priceOrigin
+        from product a
+        left join product_setting t
+        on a.Product_Id = t.Product_Id
+        left join product_pic_info s
+        on (a.Product_Id = s.Product_Id and s.Is_Default_Pic = '1')
+        where a.Product_Status_Cd = '1'
+        <if test="categoryId != null  and categoryId !=''">and a.Category_Id = #{categoryId}</if>
+        <if test="productId != null and productId !=''">and a.Product_Id = #{productId}</if>
+        <if test="productName != null and productName !=''">and a.Product_Name like CONCAT('%',#{productName},'%')</if>
+        order by a.Product_Id desc
+    </select>
+
+    <!-- 查询手机首页装修商品信息 -->
+    <select id="getIndexProduct" resultType="ProductDecorateDTO"
+            parameterType="java.lang.Long">
+		select 
+			a.Product_Id as id,
+			a.Category_Id as categoryID,
+		    a.Product_Name as name,
+		    s.Pic_Url as img,
+		   	a.Default_Price as priceReal,
+		    a.Tag_Price as priceOrigin
+		from product a
+		left join product_setting t
+		on a.Product_Id = t.Product_Id
+		left join product_pic_info s
+		on (a.Product_Id = s.Product_Id and s.Is_Default_Pic = '1')
+		where 1 = 1
+		and a.Product_Id = #{productId}
+	</select>
+
+    <select id="findByExpressTemplateId" parameterType="java.lang.Integer"
+            resultType="cn.yr.chile.products.dto.ProductSolrDTO">
+		select
+		p1.Product_Id
+		from
+		product p1
+		LEFT JOIN product_extend p2 ON p2.Product_Id = p1.Product_Id
+		where
+		p1.Is_Default_SKU = 1
+		and p1.Product_Status_Cd = 1
+		and p1.Product_Type_Cd = 2
+		and p2.Template_Area_ID = #{0}
+	</select>
+
+    <select id="findByStoreId" parameterType="java.lang.Integer" resultType="cn.yr.chile.products.dto.ProductSolrDTO">
+		select
+		p1.Product_Id
+		from
+		product p1
+		LEFT JOIN product_extend p2 ON p2.Product_Id = p1.Product_Id
+		where
+		p1.Is_Default_SKU = 1
+		and p1.Product_Status_Cd = 1
+		and p1.Product_Type_Cd = 2
+		and p2.Blg_Store_ID = #{0}
+	</select>
+
+    <select id="getVillageIdByProductId" parameterType="java.lang.Integer" resultType="java.lang.Long">
+		SELECT
+			p2.Village_ID
+		FROM
+			product_extend p1
+		LEFT JOIN store p2 ON p2.Store_Id = p1.Blg_Store_ID
+		WHERE
+			p1.Product_Id = #{0}
+	</select>
+
+    <update id="updateProductRealStock" parameterType="java.util.Map">
+		update product set Real_Stock = #{realStock} where Product_Id =#{productId}
+	</update>
+
+    <!-- 查询商品成交记录 -->
+    <select id="findDealRecordList" parameterType="ProductDealRecordDTO" resultType="cn.yr.chile.products.dto.ProductDealRecordDTO">
+        SELECT
+        u.Login_Name AS userName,
+        u.Head_Portrait_Url AS headPortraitUrl,
+        oh.Create_Time AS createTime,
+        oi.Quantity AS quantity
+        FROM order_header oh
+        LEFT JOIN order_item oi ON oh.Order_Id = oi.Order_Id
+        LEFT JOIN user u ON oh.User_Id = u.User_Id
+        LEFT JOIN product p ON p.Product_Id = oi.Product_Id
+        WHERE p.Master_Product_ID =#{productId}
+        AND oh.Order_Status_Cd = 5
+        <if test="beginTime !=null and begeinTime !='' ">
+            AND oh.Create_Time <![CDATA[ >= ]]> #{beginTime}
+        </if>
+        <if test="endTime !=null and endTime !='' ">
+            AND oh.Create_Time <![CDATA[ <= ]]> #{endTime}
+        </if>
+        ORDER BY oh.Create_Time
+        <if test="size != null and sum != null">
+	     	LIMIT #{sum},#{size}
+	     </if>
+    </select>
+
+    <!--获取sku商品-导出-->
+    <select id="findSkuProduct" resultType="ProductDTO" parameterType="java.util.Map">
+        SELECT
+        p.Product_ID,
+        p.Master_Product_ID,
+        p.Product_Name,
+        p.SKU_KEY_Json_Str,
+        p.SKU_Common_Json_Str,
+        p.Is_Default_SKU,
+        p.Tag_Price,
+        p.Default_Price,
+        p.Outside_Id,
+        c.category_Name,
+        a.stock as realStock,
+        b.Brand_Name
+        FROM product p
+        LEFT JOIN product_category c on c.Category_Id=p.Category_Id
+        LEFT JOIN (SELECT Master_Product_ID,SUM(Real_Stock) as stock FROM product GROUP BY 1) a
+        on a.Master_Product_ID=p.Master_Product_ID
+        LEFT JOIN product_brand b on b.Brand_Id=p.Brand_Id
+        WHERE 1=1
+        <if test="brandId != null and brandId !=''">and p.Brand_Id = #{brandId}</if>
+        <if test="storeId != null and storeId !=''">and e.Blg_Store_ID = #{storeId}</if>
+        <if test="categoryId != null and categoryId !=''">and p.Category_Id = #{categoryId}</if>
+        <if test="productGroupId != null and productGroupId!=''">and p.Product_Group_ID = #{productGroupId}</if>
+        <if test="productName != null and productName !='' ">
+            and p.Product_Name like CONCAT('%',#{productName},'%')
+        </if>
+        <if test="productId != null and productId !='' ">
+            and p.Product_Id = #{productId}
+        </if>
+        <if test="productStatusCd != null and productStatusCd !=''">and p.Product_Status_Cd = #{productStatusCd}</if>
+        <if test="productTypeCd != null and productTypeCd !=''">and p.Product_Type_Cd = #{productTypeCd}</if>
+        <if test="statusCd != null and statusCd !=''">and p.Product_Status_Cd != #{statusCd}</if>
+        GROUP BY 1
+        order by p.Product_Id desc,p.Is_Default_SKU DESC
+        <!-- 		<if test="start != null and pageSize !=null"> LIMIT #{start},#{pageSize}</if>-->
+    </select>
+
+    <!-- 定时上架任务 修改商品上架状态 -->
+    <update id="updateProductStatusCdByProductTimingShiefJob" parameterType="java.lang.Integer">
+		update product SET Product_Status_Cd=1 WHERE Master_Product_ID=#{0}
+	</update>
+    <update id="updateProductTimingShiefTimeByProductTimingShiefJob" parameterType="java.lang.Integer">
+		update product_setting SET Product_Timing_Shief_Time=null WHERE Product_Id=#{0}
+	</update>
+
+    <!-- 获取需要定时上架 的商品 -->
+    <select id="findNeedTimingShiefProducts" resultType="cn.yr.chile.products.dto.ProductSolrDTO">
+		select
+		p1.Product_Id,
+		p1.Product_Status_Cd,
+		p3.Product_Timing_Shief_Time
+		from
+		product p1
+		LEFT JOIN product_setting p3 ON p3.Product_Id = p1.Product_Id
+		where p1.Product_Status_Cd = '2' AND p3.Product_Timing_Shief_Time IS NOT NULL
+	</select>
+
+    <!-- 查询手机首页装修限时抢购商品信息 -->
+    <select id="findSecondKillProductList" resultType="ProductDecorateDTO"
+            parameterType="java.util.Map">
+        select
+        a.Product_Id as id,
+        a.Category_Id as categoryID,
+        a.Product_Name as name,
+        s.Pic_Url as img,
+        p.Discount_Value as priceReal,
+        a.Tag_Price as priceOrigin
+        from promotion_product_xref ppx
+        LEFT JOIN product a
+        ON a.Product_Id = ppx.Product_Id
+        left join product_pic_info s
+        on (a.Product_Id = s.Product_Id and s.Is_Default_Pic = '1')
+        LEFT JOIN promotion_discount_rule p
+        ON p.Promotion_Id = ppx.Promotion_Id
+        where a.Product_Status_Cd = '1'
+        <if test="promotionId != null and promotionId !=''"> and ppx.Promotion_Id = #{promotionId}</if>
+        <if test="categoryId != null  and categoryId !=''"> and a.Category_Id = #{categoryId}</if>
+        <if test="productId != null and productId !=''"> and a.Product_Id = #{productId}</if>
+        <if test="productName != null and productName !=''"> and a.Product_Name like CONCAT('%',#{productName},'%')</if>
+        order by a.Product_Id desc
+    </select>
+
+    <!-- 查询手机首页装修限时抢购关联分类商品信息 -->
+    <select id="findSecondKillProductListByCategory" resultType="ProductDecorateDTO" parameterType="java.util.Map">
+        SELECT
+        a.Product_Id as id,
+        a.Category_Id as categoryID,
+        a.Product_Name as name,
+        s.Pic_Url as img,
+        (SELECT Discount_Value FROM promotion_discount_rule WHERE Promotion_Id =#{promotionId}) AS priceReal,
+        a.Tag_Price as priceOrigin
+        FROM product a
+        LEFT JOIN product_pic_info s ON (a.Product_Id = s.Product_Id AND s.Is_Default_Pic = '1')
+        WHERE a.Product_Status_Cd = '1'
+        <if test="categoryId != null  and categoryId !=''"> and a.Category_Id = #{categoryId}</if>
+        <if test="categoryIdStrParam != null  and categoryIdStrParam !=''"> and a.Category_Id IN (${categoryIdStrParam})</if>
+        <if test="productId != null and productId !=''"> and a.Product_Id = #{productId}</if>
+        <if test="productName != null and productName !=''"> and a.Product_Name like CONCAT('%',#{productName},'%')</if>
+        order by a.Product_Id desc
+    </select>
+
+</mapper>

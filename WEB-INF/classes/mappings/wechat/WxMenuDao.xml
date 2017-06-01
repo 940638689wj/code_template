@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.wechat.dao.WxMenuDao">
+    <sql id="allColumns">
+        a.Menu_Id,
+        a.Parent_Menu_Id,
+        a.Menu_Name,
+        a.Menu_Type,
+        a.Menu_Data,
+        a.Menu_Sort,
+        a.Create_Time,
+        a.Last_Update_Time
+    </sql>
+
+    <update id="update">
+        UPDATE wx_menu SET
+        Parent_Menu_Id = #{parentMenuId},
+        Menu_Name = #{menuName},
+        Menu_Type = #{menuType},
+        Menu_Data = #{menuData},
+        Menu_Sort = #{menuSort},
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE Menu_Id = #{menuId}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="menuId">
+        INSERT INTO wx_menu(
+            Parent_Menu_Id,
+            Menu_Name,
+            Menu_Type,
+            Menu_Data,
+            Menu_Sort,
+            Create_Time
+        ) VALUES (
+            #{parentMenuId},
+            #{menuName},
+            #{menuType},
+            #{menuData},
+            #{menuSort},
+            #{createTime}
+        )
+    </insert>
+    
+    <!-- 查询所有数据 -->
+    <select id="findAllList" resultType="WxMenu">
+        SELECT
+        <include refid="allColumns"/>
+        FROM wx_menu a ORDER BY a.Menu_Sort DESC, a.Last_Update_Time
+    </select>
+
+    <!-- 根据 parent_id 查询 -->
+    <select id="findByParentId" resultType="WxMenu" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM wx_menu a WHERE a.Parent_Menu_Id = #{0}
+        ORDER BY a.Menu_Sort
+    </select>
+
+    <!-- 根据 id 查询 -->
+    <select id="get" resultType="WxMenu" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM wx_menu a WHERE a.Menu_Id = #{0}
+         ORDER BY a.Menu_Sort DESC, a.Last_Update_Time
+    </select>
+
+    <delete id="delete">
+        DELETE FROM wx_menu WHERE Menu_Id = #{menuId}
+    </delete>
+</mapper>

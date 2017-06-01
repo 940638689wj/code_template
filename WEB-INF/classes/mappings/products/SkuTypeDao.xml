@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.SkuTypeDao">
+<!-- 用于select查询公用抽取的列 -->
+
+	<resultMap type="cn.yr.chile.products.dto.SkuTypeDTO" id="skuTypeMapList">
+		<id property="skuTypeId" column="SKU_Type_ID"/> <!--主键-->
+		<result property="skuTypeDesc" column="SKU_Type_Desc"/>
+		<result property="skuDisplayId" column="Display_ID"/>
+		<collection property="allowedValues" resultMap="skuValueMap" />
+	</resultMap>
+
+	 <!--goodsimage resultmap-->
+	<resultMap id="skuValueMap" type="cn.yr.chile.products.domain.SkuKeyValue">
+		<id column="SKU_KEY" property="skuKey"/>
+		<result property="skuTypeId" column="SKU_Type_ID" />
+		<result property="skuValue" column="SKU_VALUE" />
+		<result property="displayId" column="Display_ID" />
+		<result property="statusCd" column="Status_Cd" />
+	</resultMap>
+
+	<sql id="allColumns">
+		a.SKU_Type_ID,
+		a.SKU_Type_Desc,
+		a.Display_ID,
+		a.Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="SkuType" useGeneratedKeys="true" keyProperty="skuTypeId">
+	    INSERT INTO sku_type (
+	        SKU_Type_ID, 
+	        SKU_Type_Desc,
+	        Display_ID, 
+	        Create_Time
+	    ) VALUES (
+	        #{skuTypeId},
+	        #{skuTypeDesc},
+	        #{displayId},
+	        #{createTime}    
+	    )
+	</insert>
+	<!-- 修改 -->
+	<update id="update" parameterType="SkuType">
+	   UPDATE sku_type SET
+		   SKU_Type_Desc = #{skuTypeDesc}, 
+		   Display_ID=#{displayId},
+		   Create_Time = #{createTime}
+	   WHERE 
+		   SKU_Type_ID = #{skuTypeId}
+	</update>
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="SkuType" parameterType="java.util.Map">  
+	    select 
+		<include refid="allColumns" />
+	    from sku_type a
+	    ORDER BY a.Display_ID asc
+	</select>
+	<select id="findAll" resultType="SkuType" >  
+	    select 
+		<include refid="allColumns" />
+	    from sku_type a
+	    ORDER BY a.Display_ID asc
+	</select>
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="SkuType" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM sku_type a
+	     WHERE 
+		a.SKU_Type_ID = #{skuTypeId}
+	</select>
+	
+	<!-- 根据主键获取sku类型名称 -->
+	<select id="getskuTypeDesc" resultType="String" parameterType="Integer">  
+		SELECT
+			SKU_Type_Desc
+	    FROM sku_type
+	    WHERE 
+			SKU_Type_ID = #{skuTypeId}
+	</select>
+
+	<!--统计sku数目-->
+	<select id="findskuNumList" parameterType="java.util.Map" resultType="SkuType">
+		SELECT st.*
+		from sku_type st
+		LEFT JOIN sku_key_value sk ON sk.SKU_Type_ID = st.SKU_Type_ID
+		LEFT JOIN product_sku_key_xref ps ON ps.SKU_Key_ID =sk.SKU_KEY
+		LEFT JOIN product p ON p.Product_Id = ps.Master_Product_ID
+		where 1=1
+		<if test="brandId != null and brandId !=''"> and p.Brand_Id = #{brandId}</if>
+		<if test="categoryId != null and categoryId !=''"> and p.Category_Id = #{categoryId}</if>
+		<if test="productGroupId != null and productGroupId!=''"> and p.Product_Group_ID = #{productGroupId}</if>
+		<if test="productName != null and productName !='' ">
+			and p.Product_Name like CONCAT('%',#{productName},'%')
+		</if>
+		<if test="productId != null and productId !='' ">
+			and p.Product_Id = #{productId}
+		</if>
+		<if test="productTypeCd != null and productTypeCd !=''"> and p.Product_Type_Cd = #{productTypeCd}</if>
+		<if test="statusCd != null and statusCd !=''"> and p.Product_Status_Cd != #{statusCd}</if>
+		<if test="productStatusCd != null and productStatusCd !=''"> and p.Product_Status_Cd = #{productStatusCd}</if>
+		GROUP BY 1
+		ORDER BY 1 DESC
+	</select>
+
+	<!--//配置关联查询-->
+	<select id="findSkuTypeListByQuery" resultMap="skuTypeMapList">
+	SELECT
+		s.SKU_Type_ID,
+		s.SKU_Type_Desc,
+		s.Display_ID,
+		sk.SKU_KEY,
+		sk.SKU_Type_ID,
+		sk.SKU_VALUE,
+		sk.Display_ID,
+		sk.Status_Cd
+	from sku_type s
+	LEFT JOIN sku_key_value sk on sk.SKU_Type_ID = s.SKU_Type_ID
+		WHERE 1=1
+		AND sk.Status_Cd != 0
+		ORDER BY s.Display_ID ,sk.Display_ID
+	</select>
+</mapper>

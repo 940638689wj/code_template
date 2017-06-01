@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.CrowdFundOrderDao">
+    <select id="getPayData" parameterType="Map" resultType="cn.yr.chile.order.dto.CrowdFundDTO">
+		SELECT 
+			p.promotion_id AS promotionId,
+			p.Promotion_Name AS promotionName,
+			pcf.`Crowd_Fund_per_Amt` AS perAmt,
+			pcf.`Personal_Join_Limit` AS personalJoinLimit,
+			pcf.`Crowd_Fund_Product_Amt` / pcf.`Crowd_Fund_per_Amt` AS requireNum,
+			COUNT(DISTINCT pcfc.promotion_crowd_fund_Code_ID) AS currentPeopleNum,
+			ppi.Pic_Url AS picUrl,
+			pro.Product_Id AS productId,
+			COUNT(DISTINCT pcfc2.promotion_crowd_fund_Code_ID) AS currentUserNum
+		FROM `promotion` p
+		LEFT JOIN `promotion_crowd_fund` pcf ON p.`promotion_id` = pcf.`Promotion_Id`
+		LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.`promotion_Id` = p.`promotion_id`
+		LEFT JOIN `promotion_crowd_fund_code` pcfc2 ON pcfc2.`promotion_Id` = p.`promotion_id` AND pcfc2.User_ID = #{userId}
+		LEFT JOIN promotion_product_xref ppx ON (ppx.`Promotion_Id` = p.`promotion_id`)
+		LEFT JOIN product pro ON (pro.Product_Id = ppx.Product_Id)
+		LEFT JOIN product_pic_info ppi ON ppi.Product_Id = pro.Master_Product_ID AND ppi.Is_Default_Pic = 1
+		WHERE p.promotion_id = #{promotionId}
+	</select>
+
+    <select id="jsonListData" parameterType="Map" resultType="cn.yr.chile.order.dto.CrowdFundDTO">
+        SELECT
+        P.`promotion_id` AS promotionId,
+        P.`Promotion_Name` AS promotionName,
+        P.`Promotion_Desc` AS promotionDesc,
+        PCF.`Calc_Time` AS calcTime,
+        PCF.`Calc_Time_millsec` AS calcTimeMillsec,
+        PCF.`Win_Code` AS winCode,
+        PCF.Crowd_Fund_per_Amt AS perAmt,
+        PCF.`Crowd_Fund_Status_Cd` AS crowdFundStatusCd,
+        PCF.Is_Taked AS isTaked,
+        pro.Default_Price AS defaultPrice,
+        ppi.Pic_Url AS picUrl,
+        O.`Order_Id` AS orderId,
+        O.Order_Pay_Status_Cd AS orderPayStatusCd,
+        O.Order_Property_Cd AS orderPropertyCd,
+        oi.quantity AS quantity,
+        u.`Login_Name` AS winnerLoginName,
+        u.user_id AS winnerUserId,
+        PCF.`Crowd_Fund_Product_Amt` / PCF.`Crowd_Fund_per_Amt` AS requireNum,
+        COUNT(pcfc2.promotion_crowd_fund_Code_ID) AS currentPeopleNum
+        FROM `order_promotion_info` OPI
+        LEFT JOIN `promotion_crowd_fund` PCF ON PCF.`Promotion_Id` = OPI.`Promotion_Id`
+        LEFT JOIN `promotion` P ON P.`promotion_id` = OPI.`Promotion_Id`
+        LEFT JOIN `order_header` O ON OPI.`Order_Id` = O.`Order_Id`
+        LEFT JOIN `order_item` oi ON oi.Order_Id = O.`Order_Id`
+        LEFT JOIN promotion_product_xref ppx ON (ppx.`Promotion_Id` = OPI.`promotion_id`)
+        LEFT JOIN product pro ON (pro.Product_Id = ppx.Product_Id)
+        LEFT JOIN product_pic_info ppi ON ppi.Product_Id = pro.Master_Product_ID AND ppi.Is_Default_Pic = 1
+        LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.`promotion_Id` = OPI.`Promotion_Id` AND pcfc.`Is_Wined` = 1
+        LEFT JOIN `promotion_crowd_fund_code` pcfc2 ON pcfc2.`promotion_Id` = OPI.`Promotion_Id`
+        LEFT JOIN USER u ON u.`User_Id` = pcfc.`User_ID`
+        WHERE O.`User_Id` = #{userId}
+        AND OPI.`Promotion_Type_Cd` = 80
+        <if test="pc == null">/*如果是手机端的请求则添加以下条件*/
+            AND O.Order_Property_Cd = 0
+            AND O.Order_Pay_Status_Cd = 2
+            <if test="statusCd != null">
+                AND PCF.`Crowd_Fund_Status_Cd` = #{statusCd}
+            </if>
+        </if>
+        GROUP BY O.`Order_Id`
+        ORDER BY O.`Create_Time` DESC
+    </select>
+
+    <select id="getCrowdFundDTO" parameterType="Integer" resultType="cn.yr.chile.order.dto.CrowdFundDTO">
+		SELECT
+			P.`promotion_id` AS promotionId,
+			p.Enable_End_Time AS promotionEndTime,
+			PCF.`Calc_Time` AS calcTime,
+			PCF.`Calc_Time_millsec` AS calcTimeMillsec,
+			PCF.Crowd_Fund_per_Amt AS perAmt,
+			PCF.`Crowd_Fund_Status_Cd` AS crowdFundStatusCd,
+			PCF.Is_Taked AS isTaked,
+			PCF.`Personal_Join_Limit` AS personalJoinLimit,
+			pro.Default_Price AS defaultPrice,
+			O.`Order_Id` AS orderId,
+			o.Order_Number AS orderNumber,
+			O.Order_Pay_Status_Cd AS orderPayStatusCd,
+			O.Order_Property_Cd AS orderPropertyCd,
+			o.Order_Pay_Amt AS orderPayAmt,
+			oi.quantity AS quantity,
+			o2.Discount AS balanceDiscount,
+			PCF.`Crowd_Fund_Product_Amt` / PCF.`Crowd_Fund_per_Amt` AS requireNum,
+			COUNT(DISTINCT pcfc.promotion_crowd_fund_Code_ID) AS currentPeopleNum,
+			COUNT(DISTINCT pcfc2.promotion_crowd_fund_Code_ID) AS currentUserNum
+		FROM `order_promotion_info` OPI
+		LEFT JOIN `promotion_crowd_fund` PCF ON PCF.`Promotion_Id` = OPI.`Promotion_Id`
+		LEFT JOIN `promotion` P ON P.`promotion_id` = OPI.`Promotion_Id`
+		LEFT JOIN `order_header` O ON OPI.`Order_Id` = O.`Order_Id`
+		LEFT JOIN `order_item` oi ON oi.Order_Id = O.`Order_Id`
+		LEFT JOIN promotion_product_xref ppx ON (ppx.`Promotion_Id` = OPI.`promotion_id`)
+		LEFT JOIN product pro ON (pro.Product_Id = ppx.Product_Id)
+		LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.`promotion_Id` = OPI.`Promotion_Id`
+		LEFT JOIN `promotion_crowd_fund_code` pcfc2 ON pcfc2.`promotion_Id` = p.`promotion_id` AND pcfc2.User_ID = o.User_Id
+		LEFT JOIN order_pay_info o2 ON o2.order_id = o.Order_Id AND o2.Pay_type_Code = 2
+		WHERE O.`Order_Id` = #{0}
+	</select>
+
+	<select id="getCrowdFundDTOForDetail" resultType="cn.yr.chile.order.dto.CrowdFundDTO" parameterType="Map">
+		SELECT
+			P.`promotion_id` AS promotionId,
+			P.`Promotion_Name` AS promotionName,
+			P.`Promotion_Desc` AS promotionDesc,
+			PCF.`Calc_Time` AS calcTime,
+			PCF.`Calc_Time_millsec` AS calcTimeMillsec,
+			PCF.`Win_Code` AS winCode,
+			PCF.Crowd_Fund_per_Amt AS perAmt,
+			PCF.`Crowd_Fund_Status_Cd` AS crowdFundStatusCd,
+			PCF.Is_Taked AS isTaked,
+			pro.Default_Price AS defaultPrice,
+			ppi.Pic_Url AS picUrl,
+			O.`Order_Id` AS orderId,
+			O.Order_Pay_Status_Cd AS orderPayStatusCd,
+			O.Order_Property_Cd AS orderPropertyCd,
+			O.User_Id AS userId,
+			O.Order_Number AS orderNumber,
+			o.Order_Status_Cd AS  orderStatusCd,
+			oi.quantity AS quantity,
+			u.`Login_Name` AS winnerLoginName,
+			u.user_id AS winnerUserId,
+			PCF.`Crowd_Fund_Product_Amt` / PCF.`Crowd_Fund_per_Amt` AS requireNum,
+			COUNT(pcfc2.promotion_crowd_fund_Code_ID) AS currentPeopleNum,
+			pcfc.order_id AS awardOrderId
+		FROM `order_promotion_info` OPI
+		LEFT JOIN `promotion_crowd_fund` PCF ON PCF.`Promotion_Id` = OPI.`Promotion_Id`
+		LEFT JOIN `promotion` P ON P.`promotion_id` = OPI.`Promotion_Id`
+		LEFT JOIN `order_header` O ON OPI.`Order_Id` = O.`Order_Id`
+		LEFT JOIN `order_item` oi ON oi.Order_Id = O.`Order_Id`
+		LEFT JOIN `promotion_product_xref` ppx ON (ppx.`Promotion_Id` = OPI.`promotion_id`)
+		LEFT JOIN `product` pro ON (pro.Product_Id = ppx.Product_Id)
+		LEFT JOIN `product_pic_info` ppi ON ppi.Product_Id = pro.Master_Product_ID AND ppi.Is_Default_Pic = 1
+		LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.`promotion_Id` = OPI.`Promotion_Id` AND pcfc.`Is_Wined` = 1
+		LEFT JOIN `promotion_crowd_fund_code` pcfc2 ON pcfc2.`promotion_Id` = OPI.`Promotion_Id`
+		LEFT JOIN USER u  ON u.`User_Id` = pcfc.`User_ID`
+		WHERE o.order_id = #{orderId}
+	</select>
+
+
+	<select id="getOrderDetail" parameterType="Map" resultType="java.util.Map">
+		SELECT 
+			P.`promotion_id` AS promotionId,
+			P.`Promotion_Name` AS promotionName,
+			P.`Promotion_Desc` AS promotionDesc,
+			PCF.`Calc_Time` AS calcTime,
+			PCF.`Crowd_Fund_Status_Cd` AS crowdFundStatusCd,
+			PCF.`Calc_Time_millsec` AS calcTimeMillsec,
+			PCF.`Win_Code` AS winCode,
+			ppi.Pic_Url AS picUrl,
+			O.`Order_Id` AS orderId,
+			O.Order_Status_Cd AS orderStatusCd,
+			u.`Login_Name` AS winnerLoginName,
+			u.user_id AS winnerUserId,
+			pcf.Is_Taked AS isTaked,
+			pcfc.Order_ID AS winOrderId,
+			PCF.`Crowd_Fund_Product_Amt` / PCF.`Crowd_Fund_per_Amt` AS requireNum,
+			COUNT(DISTINCT pcfc2.promotion_crowd_fund_Code_ID) AS currentPeopleNum
+		FROM `order_promotion_info` OPI
+		LEFT JOIN `promotion_crowd_fund` PCF ON PCF.`Promotion_Id` = OPI.`Promotion_Id`
+		LEFT JOIN `promotion` P ON P.`promotion_id` = OPI.`Promotion_Id`
+		LEFT JOIN promotion_product_xref ppx ON (ppx.`Promotion_Id` = OPI.`promotion_id`)
+		LEFT JOIN product pro ON (pro.Product_Id = ppx.Product_Id)
+		LEFT JOIN product_pic_info ppi ON ppi.Product_Id = pro.Master_Product_ID AND ppi.Is_Default_Pic = 1
+		LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.`promotion_Id` = OPI.`Promotion_Id` AND pcfc.`Is_Wined` = 1
+		LEFT JOIN `order_header` O ON O.`Order_Id` = pcfc.Order_ID
+		LEFT JOIN USER u  ON u.`User_Id` = pcfc.`User_ID`
+		LEFT JOIN `promotion_crowd_fund_code` pcfc2 ON pcfc2.`promotion_Id` = OPI.`Promotion_Id`
+		WHERE O.`User_Id` = #{userId}
+		AND OPI.`Promotion_Id` = #{promotionId}
+	</select>
+
+    <select id="getOrderInfo" parameterType="Map" resultType="java.util.Map">
+		SELECT 
+			o.Order_Id AS orderId,
+			o.Order_Number AS orderNumber,
+			o.Create_Time AS createTime
+		FROM `order_header` o
+		LEFT JOIN `order_promotion_info` opi ON opi.Order_Id = o.Order_Id
+		WHERE 
+			o.ORDER_PAY_STATUS_CD = 2
+			AND opi.Promotion_Id = #{promotionId}
+			AND o.User_Id = #{userId}
+	</select>
+
+    <select id="getFundCodeNumByOrderId" resultType="String" parameterType="Integer">
+		SELECT fund_Code_Num AS fundCodeNum FROM promotion_crowd_fund_code WHERE Order_ID = #{0}
+	</select>
+
+    <select id="findCodeNumList" resultType="Map" parameterType="Integer">
+		SELECT 
+			p.`fund_Code_Num`,
+			p.`Create_Time`,
+			p.`Order_Pay_Time_millsec`,
+			u.`Login_Name`
+		FROM `promotion_crowd_fund_code` p
+		LEFT JOIN USER u ON p.`User_ID` = u.`User_Id`
+		WHERE p.`promotion_Id` = #{0}
+	</select>
+
+    <select id="countOrderRecode" parameterType="Integer" resultType="Integer">
+		SELECT
+			COUNT(o.order_id) AS countNum
+		FROM `order_promotion_info` opi
+		LEFT JOIN `order_header` o ON opi.`Order_Id` = o.`Order_Id`
+		LEFT JOIN USER u ON u.`User_Id` = o.`User_Id`
+		LEFT JOIN order_item oi ON oi.`Order_Id` = opi.`Order_Id`
+		WHERE
+			opi.`Promotion_Id` = #{0}
+			AND O.Order_Property_Cd = 0
+			AND O.Order_Pay_Status_Cd = 2
+	</select>
+
+    <select id="findOrderRecode" parameterType="Map" resultType="Map">
+		SELECT 
+			o.`Create_Time` AS time,
+			u.`Login_Name` AS name,
+			u.`Head_Portrait_Url` AS img,
+			oi.`Quantity` AS num
+		FROM `order_promotion_info` opi
+		LEFT JOIN `order_header` o ON opi.`Order_Id` = o.`Order_Id`
+		LEFT JOIN USER u ON u.`User_Id` = o.`User_Id`
+		LEFT JOIN order_item oi ON oi.`Order_Id` = opi.`Order_Id`
+		WHERE 
+			opi.`Promotion_Id` = #{promotionId}
+			AND O.Order_Property_Cd = 0
+			AND O.Order_Pay_Status_Cd = 2
+		ORDER BY opi.`Id`
+		LIMIT #{page},#{size}
+	</select>
+
+    <select id="checkAward" parameterType="Map" resultType="Integer">
+		SELECT p1.`Order_ID`
+		FROM `promotion_crowd_fund_code` p1
+		LEFT JOIN `promotion_crowd_fund` p2 ON p1.`promotion_Id` = p2.`Promotion_Id`
+		WHERE 
+			p1.Promotion_ID = #{promotionId}
+			AND p1.user_id = #{userId}
+			AND p1.Is_Wined = 1
+			AND p2.`Is_Taked` = 0
+	</select>
+
+    <select id="jsonAwardData" parameterType="Map" resultType="Map">
+				SELECT
+			p.Product_Name AS productName,
+			ppi.Pic_Url AS picUrl,
+			p.SKU_KEY_Json_Str AS sku,
+			p.Master_Product_ID AS masterProductId,
+			pcf.Crowd_Fund_per_Amt AS perAmt,
+			p2.`Promotion_Name` AS promotionName,
+			p2.`promotion_id` AS promotionId,
+			oi.quantity,
+			oi.`Product_Total` AS productTotal
+		FROM `promotion_product_xref` ppx
+		LEFT JOIN `product` p ON ppx.Product_Id = p.Product_Id
+		LEFT JOIN product_pic_info ppi ON ppi.Product_Id = p.Master_Product_ID AND ppi.Is_Default_Pic = 1
+		LEFT JOIN promotion_crowd_fund pcf ON ppx.Promotion_Id = pcf.Promotion_Id
+		LEFT JOIN `promotion_crowd_fund_code` pcfc ON pcfc.promotion_id = pcf.Promotion_Id AND pcfc.Is_Wined = 1
+		LEFT JOIN `order_item` oi ON oi.`Order_Id` = pcfc.order_id
+		LEFT JOIN promotion p2 ON p2.`promotion_id` = pcf.promotion_id
+		WHERE ppx.Promotion_Id = #{promotionId}
+	</select>
+
+	<!--获取已经过期的众筹订单id-->
+	<select id="findExpireCrowdFundOrder" resultType="cn.yr.chile.order.domain.OrderHeader">
+		SELECT
+			o.order_Id,
+			o.Order_Number,
+			o.Order_Pay_Amt,
+			o.Order_Total_Amt,
+			o.User_Id
+		FROM `promotion_crowd_fund` pcf
+		LEFT JOIN `order_promotion_info` opi ON pcf.promotion_id = opi.promotion_id
+		LEFT JOIN order_header o ON o.Order_Id = opi.Order_Id
+		LEFT JOIN `promotion` p ON p.promotion_id = opi.Promotion_Id
+		WHERE
+		p.Enable_End_Time &lt; NOW()
+		AND pcf.Crowd_Fund_Status_Cd = 0
+		AND o.Order_Pay_Status_Cd  = 2
+		AND o.Order_Property_Cd = 0
+		AND p.Status_Cd = 1
+	</select>
+
+	<update id="changeExpireCrowdFundOrder" parameterType="Integer">
+		UPDATE order_header SET Order_Property_Cd = 12 WHERE Order_Id IN
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+
+	<!--更新过期的众筹状态-->
+	<update id="changeExpireCrowdFundPromotion">
+		UPDATE promotion p
+		SET
+		p.Status_Cd = 0
+		WHERE
+		p.Enable_End_Time &lt; NOW()
+		AND p.promotion_id IN (SELECT Promotion_Id FROM `promotion_crowd_fund` WHERE Crowd_Fund_Status_Cd = 0)
+	</update>
+
+	<update id="refundCrowdFundOrderCallBack" parameterType="String">
+		UPDATE
+		  `order_return_info` ori,
+		  `order_header` o
+		SET
+		  o.`Order_Property_Cd` = 12,
+		  ori.Is_Return_Amt = 1
+		WHERE ori.Order_Id = o.Order_Id
+		  AND o.`Order_Number` = #{0}
+	</update>
+
+</mapper>

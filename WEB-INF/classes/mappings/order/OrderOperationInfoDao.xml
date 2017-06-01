@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderOperationInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        id, Order_Id, Oper_User_Id, Oper_Name, Oper_Time, Oper_Type_Cd, Oper_Desc,Is_Success,Oper_User_Type_Cd
+	</sql>
+
+	<sql id="systemcode">
+		s.Code_Cn_Name as oper_Type_Desc
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderOperationInfo" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_operation_info (
+	        Order_Id, Oper_User_Id, Oper_Name, Oper_Time, Oper_Type_Cd, Oper_Desc,Is_Success,Oper_User_Type_Cd
+	    ) VALUES (
+	        #{orderId}, #{operUserId}, #{operName}, now(), #{operTypeCd}, #{operDesc} ,#{isSuccess},#{operUserTypeCd}      
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderOperationInfo">
+	   UPDATE order_operation_info SET
+		   Order_Id = #{orderId}, 
+		   Oper_User_Id = #{operUserId}, 
+		   Oper_Name = #{operName}, 
+		   Oper_Type_Cd = #{operTypeCd}, 
+		   Oper_Desc = #{operDesc},
+		   Is_Success = #{isSuccess},
+		   Oper_User_Type_Cd = #{operUserTypeCd}
+	   WHERE 
+		   id = #{id}
+	</update>
+	
+	<update id="updateSuccessStatus" parameterType="OrderOperationInfo">
+		UPDATE order_operation_info SET
+		   Is_Success = #{isSuccess}
+	   WHERE 
+		   id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_operation_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderOperationInfo" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_operation_info 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderOperationInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from order_operation_info
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderOperationInfo" parameterType="OrderOperationInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from order_operation_info a
+	    where 1=1
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="operUserId != null"> and a.Oper_User_Id = #{operUserId}</if>
+		<if test="operName != null"> and a.Oper_Name = #{operName}</if>
+		<if test="operTime != null"> and a.Oper_Time = #{operTime}</if>
+		<if test="operTypeCd != null"> and a.Oper_Type_Cd = #{operTypeCd}</if>
+		<if test="operDesc != null"> and a.Oper_Desc = #{operDesc}</if>
+		<if test="isSuccess != null ">and a.Is_Success = #{isSuccess}</if>
+		<if test="operUserTypeCd != null ">and a.Oper_User_Type_Cd = #{operUserTypeCd}</if>
+	</select>
+	
+	<select id="findOperationInfosByOrderId"  resultType="OrderOperationInfo">
+		 select 
+		<include refid="allColumns" />,
+		<include refid="systemcode"/>
+	    from order_operation_info o
+	    left join system_code s 
+	    on o.Oper_Type_Cd = s.Code_Id
+	    where o.Order_Id = #{0}
+	    and s.Code_Type_Cd = #{1}
+	    order by o.Oper_Time asc
+	</select>
+	
+	<select id="getOperationInfoByOrderIdAndOperTypeCd" resultType="OrderOperationInfo">
+		select * from order_operation_info where Order_Id = #{orderId} and Oper_Type_Cd = #{operTypeCd} limit 0 ,1 
+	</select>
+
+</mapper>

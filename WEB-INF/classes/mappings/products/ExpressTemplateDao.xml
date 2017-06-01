@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ExpressTemplateDao">
+
+	<sql id="expressTemplateColumns">
+		a.Template_Id as Template_Id,
+		a.Template_Name as
+		Template_Name,
+		a.First_value as First_value,
+		a.First_price as
+		First_price,
+		a.Continue_value as Continue_value,
+		a.Continue_price as
+		Continue_price,
+		a.Calc_Type_Cd as Calc_Type_Cd,
+		a.Calc_Unit_Type_Cd as
+		Calc_Unit_Type_Cd,
+		a.Is_Default_Template as Is_Default_Template
+	</sql>
+	<sql id="expressTemplateCalcColumns">
+		b.Template_Calc_ID,
+		b.Template_id,
+		b.First_value,
+		b.First_price,
+		b.Continue_value,
+		b.Continue_price,
+		b.Calc_Type_Cd,
+		b.Distances,
+		b.Fee_Per_Km,
+		b.Limit_Order_Pay_Amt,
+		b.Status_Cd
+	</sql>
+	<sql id="expressTemplateAreaColums">
+		b.Template_Area_Id,
+		b.Template_id,
+		b.Area_id,
+		b.Area_names,
+		b.Is_Center_Point,
+		b.Status_Cd
+	</sql>
+
+	<select id="getById" resultType="cn.yr.chile.products.domain.ExpressTemplate"
+		parameterType="Integer">
+		select * from express_template where template_Id = #{templateId}
+	</select>
+
+	<!-- 查询所有运费模板 -->
+	<select id="findAllList" resultType="cn.yr.chile.products.domain.ExpressTemplate">
+		SELECT
+		<include refid="expressTemplateColumns" />
+		FROM express_template a
+		<where>
+			<if test="templateId != null">
+				a.Template_Id = #{templateId}
+			</if>
+		</where>
+		ORDER BY a.Template_Id ASC
+	</select>
+
+	<!-- 按照主键自增值排序 -->
+	<select id="findCalcList" resultType="cn.yr.chile.products.domain.ExpressTemplateCalc">
+		SELECT
+		<include refid="expressTemplateCalcColumns" />
+		FROM express_template_calc b,express_template a
+		WHERE a.Template_Id = b.Template_id
+		ORDER BY b.Template_Calc_ID ASC
+	</select>
+	<!-- 查询所有运费模板的地区 -->
+	<select id="findAreaList" resultType="cn.yr.chile.products.domain.ExpressTemplateArea">
+		SELECT
+		<include refid="expressTemplateAreaColums" />
+		FROM express_template_area b,express_template a
+		WHERE a.Template_Id = b.Template_id
+		ORDER BY a.Template_Id ASC
+	</select>
+	<!-- 查询运费地区:中心点List -->
+	<select id="findAreaCenterList" resultType="cn.yr.chile.products.domain.ExpressTemplateArea">
+		SELECT
+		b.Area_names,b.Template_id,b.Area_id
+		FROM express_template_area
+		b,express_template a
+		WHERE a.Template_Id = b.Template_id
+		AND
+		Is_Center_Point = 1
+	</select>
+	<!-- 查询模板对应的运费地区List -->
+	<select id="findAreaDestinationList" parameterType="java.lang.Integer"
+		resultType="cn.yr.chile.products.domain.ExpressTemplateArea">
+		SELECT
+		b.Area_names,b.Template_id,b.Area_id,b.First_value,b.First_price,b.Continue_value,b.Continue_price,b.Area_Group_ID
+		FROM express_template_area b,express_template a
+		WHERE a.Template_Id =
+		b.Template_id
+		and a.Template_Id = #{templateId}
+	</select>
+	<!-- 查询模板对应运费区域分组list -->
+	<select id="findAreaDestinationGroupList" parameterType="java.lang.Integer"
+		resultType="cn.yr.chile.products.domain.ExpressTemplateArea">
+			SELECT 
+			  b.Area_names,
+			  b.Template_id,
+			  b.Area_id,
+			  b.First_value,
+			  b.First_price,
+			  b.Continue_value,
+			  b.Continue_price,
+			  b.Area_Group_ID 
+			FROM
+			  express_template_area b,
+			  express_template a 
+			WHERE a.Template_Id = b.Template_id 
+			  AND a.Template_Id = #{templateId}
+			GROUP BY b.Area_Group_ID 
+	</select>
+	<!-- 根据模板ID和地区查找所对应的运费计算方式 -->
+	<select id="findTemplateAreaCount" parameterType="java.util.Map"
+		resultType="cn.yr.chile.products.domain.ExpressTemplateArea">
+			SELECT 
+			  b.Area_names,
+			  b.Template_id,
+			  b.Area_id,
+			  b.First_value,
+			  b.First_price,
+			  b.Continue_value,
+			  b.Continue_price,
+			  b.Area_Group_ID 
+			FROM
+			  express_template_area b 
+			WHERE b.Template_id = #{templateId}
+			  AND b.Area_id = #{areaId} 
+	</select>
+	<!-- 删除运费模板信息 -->
+	<delete id="deleteExpressArea" parameterType="int">
+		DELETE FROM
+		express_template_area
+		WHERE Template_Id = #{Template_Id}
+	</delete>
+	<delete id="deleteExpress" parameterType="int">
+		DELETE FROM
+		express_template
+		WHERE Template_Id = #{Template_Id}
+	</delete>
+
+	<!-- 新增快递运费模板 -->
+	<insert id="insertExpress" parameterType="cn.yr.chile.products.domain.ExpressTemplate"
+		useGeneratedKeys="true" keyProperty="templateId">
+		INSERT INTO express_template(
+		Template_Name,
+		First_value,
+		First_price,
+		Continue_value,
+		Continue_price,
+		Calc_Type_Cd,
+		Calc_Unit_Type_Cd,
+		Is_Default_Template
+		)VALUES(
+		#{templateName},
+		#{firstValue},
+		#{firstPrice},
+		#{continueValue},
+		#{continuePrice},
+		#{calcTypeCd},
+		#{calcUnitTypeCd},
+		#{isDefaultTemplate}
+		)
+	</insert>
+	<insert id="insertExpressArea" parameterType="cn.yr.chile.products.domain.ExpressTemplateArea">
+		INSERT INTO
+		express_template_area(
+		Template_Area_Id,
+		Template_id,
+		Area_id,
+		Area_names,
+		Is_Center_Point,
+		Status_Cd,
+		First_value,
+		First_price,
+		Continue_value,
+		Continue_price,
+		Area_Group_ID
+		)VALUES(
+		#{templateAreaId},
+		#{templateId},
+		#{areaId},
+		#{areaNames},
+		#{isCenterPoint},
+		#{statusCd},
+		#{firstValue},
+		#{firstPrice},
+		#{continueValue},
+		#{continuePrice},
+		#{areaGroupID}
+		)
+	</insert>
+
+	<!-- 修改快递模板 -->
+	<update id="updateExpress" parameterType="cn.yr.chile.products.domain.ExpressTemplate">
+		UPDATE express_template
+		SET
+		Template_Name = #{templateName},
+		First_value = #{firstValue},
+		First_price = #{firstPrice},
+		Continue_value = #{continueValue},
+		Continue_price = #{continuePrice}
+		WHERE Template_Id = #{templateId}
+	</update>
+
+	<update id="updateExpressArea" parameterType="cn.yr.chile.products.domain.ExpressTemplateArea">
+		UPDATE
+		express_template_area
+		SET
+		Area_id = #{areaId},
+		Area_names = #{areaNames},
+		Is_Center_Point = #{isCenterPoint}
+		WHERE Template_id = #{templateId}
+	</update>
+
+	<update id="updateExpressCalc" parameterType="cn.yr.chile.products.domain.ExpressTemplateCalc">
+		UPDATE 
+		  express_template_calc 
+		SET
+		  First_value = #{firstValue},
+		  First_price = #{firstPrice},
+		  Continue_value = #{continueValue},
+		  Continue_price = #{continuePrice},
+		  Calc_Type_Cd = #{calcTypeCd},
+		  Limit_Order_Pay_Amt = #{limitOrderPayAmt}
+		WHERE Template_id = #{templateId} 
+	</update>
+
+	<select id="findExpressTemplateAreaByTemplateId" resultType="ExpressTemplateArea"
+		parameterType="java.lang.Integer">
+		SELECT 
+		  a.Template_Area_Id,
+		  a.Template_id,
+		  a.Area_id,
+		  a.Area_names,
+		  a.Is_Center_Point,
+		  a.Status_Cd 
+		FROM
+		  express_template_area a 
+		WHERE a.Template_id = #{0} 
+	</select>
+
+	<select id="findExpressTemplateAreaByAreaId" resultType="ExpressTemplateArea"
+		parameterType="java.lang.Long">
+		SELECT 
+		  p1.Template_Area_Id,
+		  p1.Template_id,
+		  p1.Area_id,
+		  p1.Area_names,
+		  p1.Is_Center_Point,
+		  p1.Status_Cd 
+		FROM
+		  express_template_area p1 
+		WHERE p1.Area_id = #{0} 
+	</select>
+
+	<select id="findExpressTemplateCalcByAreaId" resultType="ExpressTemplateCalc"
+		parameterType="java.lang.Long">
+		SELECT 
+		  p1.First_value,
+		  p1.First_price,
+		  p1.Continue_value,
+		  p1.Continue_price,
+		  p1.Calc_Type_Cd,
+		  p1.Limit_Order_Pay_Amt 
+		FROM
+		  express_template_calc p1 
+		  LEFT JOIN express_template_area p2 
+		    ON p2.Template_id = p1.Template_id 
+		WHERE p2.Area_id = #{0} 
+	</select>
+
+	<select id="findAreaIdList" resultType="java.lang.String"
+		parameterType="java.lang.Long">
+		SELECT 
+		  p2.Area_id 
+		FROM
+		  express_template_area p2 
+		WHERE p2.Template_id IN 
+		  (SELECT 
+		    p1.Template_id 
+		  FROM
+		    express_template_area p1 
+		  WHERE p1.Area_id = #{0}
+		  )
+	</select>
+
+
+</mapper>

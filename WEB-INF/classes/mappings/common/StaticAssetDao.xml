@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="cn.yr.chile.common.dao.StaticAssetDao">
+    <!--全局开启缓存，如果某个方法不想实现缓存，则添加 useCache="false" 属性-->
+    <!--<cache readOnly="true" type="org.mybatis.caches.ehcache.EhcacheCache"></cache>-->
+
+    <sql id="allColumns">
+        b.static_asset_id,
+        b.create_time,
+        b.last_update_time,
+        b.file_extension,
+        b.file_size,
+        b.full_url,
+        b.mime_type_cd,
+        b.name,
+        b.height,
+        b.width
+    </sql>
+
+    <!-- 插入用户 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="staticAssetId">
+        INSERT INTO static_asset(
+            create_time,
+            last_update_time,
+            file_extension,
+            file_size,
+            full_url,
+            mime_type_cd,
+            name,
+            height,
+            width
+        ) VALUES (
+            #{dateCreated},
+            #{dateUpdated},
+            #{fileExtension},
+            #{fileSize},
+            #{fullUrl},
+            #{mimeType},
+            #{name},
+            #{height},
+            #{width}
+        )
+    </insert>
+	<select id="getByFullUrl" resultType="StaticAsset" parameterType="java.lang.String">
+        SELECT
+          <include refid="allColumns"/>
+        FROM static_asset b
+        WHERE b.full_url = #{0}
+    </select>
+	
+</mapper>

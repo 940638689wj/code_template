@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PickupcouponPackageDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		p1.Pickup_Coupon_Package_ID,
+		p1.Pickup_Coupon_ID,
+		p1.Package_Name,
+		p1.Package_Desc,
+		p1.Package_Pic_Url,
+		p1.Create_Time,
+		p1.Last_Update_Time
+	</sql>
+
+    <select id="findListByPickupcouponCodeId" resultType="PickupcouponPackage" parameterType="java.lang.Integer">
+		SELECT
+		<include refid="allColumns"/>
+		FROM pickupcoupon_package p1
+		LEFT JOIN pickupcoupon_code p2 ON p1.Pickup_Coupon_ID = p2.Pickup_Coupon_List_Id
+		WHERE p2.Pickup_Coupon_Code_ID = #{pickupcouponCodeId}
+    </select>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="PickupcouponPackage" useGeneratedKeys="true" keyProperty="pickupCouponPackageId">
+	    INSERT INTO pickupcoupon_package (
+			Pickup_Coupon_ID,
+			Package_Name,
+			Package_Desc,
+			Package_Pic_Url,
+			Create_Time
+	    ) VALUES (
+			#{pickupCouponId},
+			#{packageName},
+			#{packageDesc},
+			#{packagePicUrl},
+			#{createTime}
+	    )
+	</insert>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="PickupcouponPackage" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pickupcoupon_package p1
+        WHERE
+        p1.Pickup_Coupon_Package_ID=#{id}
+    </select>
+
+    <!--根据提货券ID删除提货券所有礼包-->
+    <delete id="deleteByPickupCouponId" parameterType="java.lang.Integer">
+		DELETE FROM pickupcoupon_package
+		WHERE Pickup_Coupon_ID = #{pickupCouponId}
+	</delete>
+
+    <!--插入礼包中的商品信息-->
+    <insert id="insertProductXref" parameterType="pickupPackageProductXref">
+		INSERT INTO pickup_package_product_xref(
+			Pickup_Coupon_Package_ID,
+			Product_ID,
+			Create_Time
+		) VALUES (
+			#{pickupCouponPackageId},
+			#{productId},
+			#{createTime}
+		)
+	</insert>
+
+	<!-- 根据 Pickup_Coupon_ID获取 PickupcouponPackage -->
+	<select id="findByPickupCouponId" resultType="PickupcouponPackage" parameterType="java.lang.Integer">
+		SELECT
+		<include refid="allColumns"/>
+		FROM
+		pickupcoupon_package p1
+		WHERE
+		p1.Pickup_Coupon_ID = #{0}
+	</select>
+
+	<!--根据礼包id获取商品列表-->
+	<select id="findProductByPackageId" resultType="Product" parameterType="java.lang.Integer">
+		SELECT
+		p.Product_Id,
+		p.Product_Name,
+		p.Product_Type_Cd,
+		p.Product_Status_Cd,
+		p.SKU_KEY_Json_Str,
+		p.SKU_Common_Json_Str,
+		p.Default_Price,
+		p.Tag_Price,
+		p.Real_Stock,
+		p.Virtual_Stock,
+		p.Virtual_Sale_Cnt,
+		p.Bar_Code,
+		p.Brand_Id,
+		p.Category_Id,
+		p.Outside_Id,
+		p.Master_Product_ID,
+		p.Last_Update_Time,
+		p.Last_Update_User_Id,
+		p.Is_Default_SKU,
+		p.Product_Group_ID
+		FROM product p
+		LEFT JOIN pickup_package_product_xref px ON p.Product_ID = px.Product_ID
+		WHERE px.Pickup_Coupon_Package_ID = #{pickupCouponPackageId}
+	</select>
+
+</mapper>

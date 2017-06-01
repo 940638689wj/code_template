@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.AwardsItemDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+			a.id as id,
+			a.Awards_Id as awardsId,
+			a.Name as name,
+			a.Tip as tip,
+			a.Count as count,
+			a.Seq as seq,
+			a.Curr_Win_Cnt as currWinCount,
+			a.Probability as probability,
+			a.Is_Winning as winningFlag,
+			a.One_User_Max as oneUserMax,
+			a.Winning_Type_Cd as winningType,
+			a.Winning_Value as winningValue,
+			a.Create_Time as createTime,
+			a.Last_Update_Time as lastUpdateTime,
+			a.item_pic_url as itemPicUrl
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="AwardsItem" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO awards_item (
+	    	Awards_Id, 
+			Name, 
+			Tip, 
+			Count, 
+			Seq, 
+			Curr_Win_Cnt, 
+			Probability, 
+			Is_Winning, 
+			One_User_Max, 
+			Winning_Type_Cd, 
+			Winning_Value, 
+			Create_Time, 
+			Last_Update_Time,
+			item_pic_url
+	    ) VALUES (
+	    	#{awardsId}, 
+			#{name}, 
+			#{tip}, 
+			#{count}, 
+			#{seq}, 
+			#{currWinCount}, 
+			#{probability}, 
+			#{winningFlag}, 
+			#{oneUserMax}, 
+			#{winningType}, 
+			#{winningValue}, 
+			#{createTime}, 
+			#{lastUpdateTime},
+			#{itemPicUrl}
+			
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="AwardsItem">
+	   UPDATE awards_item SET
+	   		Awards_Id = #{awardsId}, 
+	   		Name = #{name}, 
+	   		Tip = #{tip}, 
+	   		Count = #{count}, 
+	   		Seq = #{seq}, 
+	   		Curr_Win_Cnt = #{currWinCount}, 
+	   		Probability = #{probability}, 
+	   		One_User_Max = #{oneUserMax}, 
+	   		Is_Winning = #{winningFlag}, 
+	   		Winning_Type_Cd = #{winningType}, 
+	   		Winning_Value = #{winningValue}, 
+	   		Create_Time = #{createTime},
+	   		Last_Update_Time = #{lastUpdateTime},
+	   		item_pic_url = #{itemPicUrl}
+	   WHERE 
+			id = #{id}
+	</update>
+
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="long">
+		DELETE FROM awards_item where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="findAwardsItemById" resultType="AwardsItem" parameterType="long">
+        SELECT
+        <include refid="allColumns"/>
+        FROM awards_item a
+        WHERE
+        a.id=#{id}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="AwardsItem">
+        select
+        <include refid="allColumns"/>
+        from awards_item a
+        <if test="order_col != null">order by a.${order_col}</if>
+    </select>
+
+	<!-- 根据游戏Id查询游戏奖项设置 -->
+    <select id="findAwardsItemList" resultType="AwardsItem" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from awards_item a
+        <where>
+            <if test="awardsId != null and awardsId !=''">and a.Awards_Id = #{awardsId}</if>
+        </where>
+        ORDER BY a.Seq ASC
+    </select>
+
+	<!-- 根据游戏Id查询博饼游戏奖项设置 -->
+	<select id="findBoCakeAwardsItemList" resultType="AwardsItem" parameterType="java.util.HashMap">
+		select
+		<include refid="allColumns"/>,
+		s.Code_Cn_Name AS boCakeAwardsName
+		from awards_item a
+		LEFT JOIN system_code s ON s.Code_Type_Cd = "Dice_Prize_Type_Cd" AND a.Seq = s.Code_Id
+		<where>
+			<if test="awardsId != null and awardsId !=''">and a.Awards_Id = #{awardsId}</if>
+		</where>
+		ORDER BY a.Seq ASC
+	</select>
+
+
+</mapper>

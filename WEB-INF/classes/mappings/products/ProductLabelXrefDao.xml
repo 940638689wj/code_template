@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductLabelXrefDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Id, Label_Id, Create_Time,Display_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductLabelXref" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_label_xref (
+	        <include refid="allColumns" />
+	    ) VALUES (
+	        #{productId}, #{labelId}, #{createTime},#{displayId}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductLabelXref">
+	   UPDATE product_label_xref SET
+		   Create_Time = #{createTime},
+		   Label_Id = #{labelId},
+		   Display_Id = #{displayId}
+	   WHERE 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_label_xref where Label_Id = #{labelId}
+	</delete>
+	<!-- 删除 -->
+	<delete id="deleteByProductId" parameterType="int">
+		DELETE FROM product_label_xref where Product_Id = #{productId}
+	</delete>
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductLabelXref" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_label_xref 
+	     WHERE 
+			  id = #{id}
+	</select>
+	<!-- 根据主键获取 -->
+    <select id="findListById" resultType="ProductLabelXref" parameterType="java.util.Map">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_label_xref 
+	     WHERE 
+			  Label_Id = #{labelId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductLabelXref">  
+	    select 
+		<include refid="allColumns" />
+	    from product_label_xref
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductLabelXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_label_xref a
+	    where 1=1
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="labelId != null"> and a.Label_Id = #{labelId}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findListByProductId" resultType="ProductLabelXref" parameterType="java.util.HashMap">
+		select
+		<include refid="allColumns" />
+		from product_label_xref a
+		where a.Product_Id = #{productId}
+	</select>
+
+	<select id="readProductsByLabelId" resultType="cn.yr.chile.products.dto.ProductSolrDTO" parameterType="java.lang.Integer">
+		select
+		p2.Product_Id,
+		p2.Product_Status_Cd,
+		p2.Product_Name,
+		p2.Category_Id,
+		p2.Brand_Id,
+		p2.Default_Price,
+		p2.Last_Update_Time,
+		p2.Product_Type_Cd,
+		p3.Pic_Url
+		from
+		product_label_xref p1
+		LEFT JOIN product p2 ON p2.Product_Id = p1.Product_Id
+		LEFT JOIN product_pic_info p3 ON p3.Product_Id = p1.Product_Id AND p2.Is_Default_Pic=1
+		where p1.Label_Id = ${0}
+		ORDER BY p1.Display_Id
+	</select>
+</mapper>

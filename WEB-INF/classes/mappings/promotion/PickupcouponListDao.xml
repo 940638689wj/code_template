@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PickupcouponListDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+			p1.Pickup_Coupon_ID,
+			p1.Pickup_Coupon_Name,
+			p1.Pickup_Coupon_Desc,
+			p1.Pickup_Amt,
+			p1.Pickup_Cnt,
+			p1.Card_Prefix,
+			p1.Allow_Use_Start_Time,
+			p1.Allow_Use_End_Time,
+			p1.Status_Cd,
+			p1.Audit_Status_Cd,
+			p1.Create_Time,
+			p1.Last_Update_Time
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="PickupcouponList" useGeneratedKeys="true" keyProperty="pickupCouponId">
+	    INSERT INTO pickupcoupon_list (
+			Pickup_Coupon_Name,
+			Pickup_Coupon_Desc,
+			Pickup_Amt,
+			Pickup_Cnt,
+			Card_Prefix,
+			Allow_Use_Start_Time,
+			Allow_Use_End_Time,
+			Status_Cd,
+			Audit_Status_Cd,
+			Create_Time
+	    ) VALUES (
+			#{pickupCouponName},
+			#{pickupCouponDesc},
+			#{pickupAmt},
+			#{pickupCnt},
+			#{cardPrefix},
+			#{allowUseStartTime},
+			#{allowUseEndTime},
+			#{statusCd},
+			#{auditStatusCd},
+			#{createTime}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="PickupcouponList">
+        UPDATE pickupcoupon_list SET
+        <if test="pickupCouponName != null and pickupCouponName != ''">
+            Pickup_Coupon_Name = #{pickupCouponName},
+        </if>
+        <if test="pickupCouponDesc != null and pickupCouponDesc != ''">
+            Pickup_Coupon_Desc = #{pickupCouponDesc},
+        </if>
+        <if test="pickupAmt != null">
+            Pickup_Amt = #{pickupAmt},
+        </if>
+        <if test="pickupCnt != null">
+            Pickup_Cnt = #{pickupCnt},
+        </if>
+        <if test="cardPrefix != null and cardPrefix != ''">
+            Card_Prefix = #{cardPrefix},
+        </if>
+        <if test="allowUseStartTime != null">
+            Allow_Use_Start_Time = #{allowUseStartTime},
+        </if>
+        <if test="allowUseEndTime != null">
+            Allow_Use_End_Time = #{allowUseEndTime},
+        </if>
+        <if test="statusCd != null">
+            Status_Cd = #{statusCd},
+        </if>
+        <if test="auditStatusCd != null">
+            Audit_Status_Cd = #{auditStatusCd},
+        </if>
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE
+        Pickup_Coupon_ID = #{pickupCouponId}
+    </update>
+
+    <!-- 删除 -->
+    <update id="delete" parameterType="java.lang.Integer">
+		UPDATE pickupcoupon_list
+		SET Status_Cd = 2
+		WHERE Pickup_Coupon_ID = #{id}
+	</update>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="PickupcouponList" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pickupcoupon_list p1
+        WHERE
+        p1.Pickup_Coupon_ID=#{id}
+    </select>
+
+    <!-- 根据主键获取 -->
+    <select id="getByPickupCouponCodeId" resultType="PickupcouponList" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pickupcoupon_list p1
+        LEFT JOIN pickupcoupon_code p2 ON p2.Pickup_Coupon_List_Id=p1.Pickup_Coupon_ID
+        WHERE
+        p2.Pickup_Coupon_Code_ID=#{0}
+    </select>
+    
+    <!-- 分页查询提货券 -->
+    <select id="findPickupcouponList" resultType="PickupcouponListDTO" parameterType="java.util.Map">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        st.Store_Name,
+        s1.Code_Cn_Name AS statusName,
+        s2.Code_Cn_Name AS auditStatusName
+        FROM
+        pickupcoupon_list p1
+        LEFT JOIN pickupcoupon_list_store_xref ps ON p1.Pickup_Coupon_ID = ps.Pickup_Coupon_ID
+        LEFT JOIN store st ON ps.Pickup_Store_ID = st.Store_Id
+        LEFT JOIN system_code s1 ON p1.Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Status_Cd'
+        LEFT JOIN system_code s2 ON p1.Audit_Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'AUDIT_STATUS_CD'
+        <where>
+            p1.Status_Cd IN (0,1)
+            <if test="statusCd == 1">
+                AND p1.Allow_Use_End_Time &gt; NOW()
+            </if>
+            <if test="statusCd == -1">
+                AND p1.Allow_Use_End_Time &lt; NOW()
+            </if>
+            <if test="pickupCouponName !='' and pickupCouponName !=null">
+                AND p1.Pickup_Coupon_Name LIKE CONCAT('%',#{pickupCouponName},'%')
+            </if>
+            <if test="allowUseStartForStartTime != null">
+                AND p1.Allow_Use_Start_Time &gt;= #{allowUseStartForStartTime}
+            </if>
+            <if test="allowUseStartForEndTime != null">
+                AND p1.Allow_Use_Start_Time &lt;= #{allowUseStartForEndTime}
+            </if>
+            <if test="allowUseEndForStartTime != null">
+                AND p1.Allow_Use_End_Time &gt;= #{allowUseEndForStartTime}
+            </if>
+            <if test="allowUseEndForEndTime != null">
+                AND p1.Allow_Use_End_Time &lt;= #{allowUseEndForEndTime}
+            </if>
+        </where>
+        ORDER BY p1.Pickup_Coupon_ID DESC
+    </select>
+
+    <insert id="insertStoreXref" parameterType="PickupcouponListStoreXref">
+		INSERT INTO pickupcoupon_list_store_xref(
+			Pickup_Coupon_ID,
+			Pickup_Store_ID,
+			Create_Time
+		) VALUES (
+			#{pickupCouponId},
+			#{pickupStoreId},
+			#{createTime}
+		)
+	</insert>
+
+    <!--根据提货券ID删除提货券所有门店-->
+    <delete id="deleteStoreXrefByPickupCouponId" parameterType="java.lang.Integer">
+        DELETE FROM pickupcoupon_list_store_xref
+        WHERE Pickup_Coupon_ID = #{pickupCouponId}
+    </delete>
+
+    <!--修改启用状态-->
+    <update id="changeStatus">
+        UPDATE pickupcoupon_list
+        SET Status_Cd = #{1}
+        WHERE Pickup_Coupon_ID = #{0}
+    </update>
+
+    <!--resultMap：根据id获取提货券所有关联信息-->
+    <resultMap id="PickupcouponListDTOMapping" type="PickupcouponListDTO">
+        <id property="pickupCouponId" column="Pickup_Coupon_ID"/>
+        <result property="pickupCouponName" column="Pickup_Coupon_Name"/>
+        <result property="pickupCouponDesc" column="Pickup_Coupon_Desc"/>
+        <result property="pickupAmt" column="Pickup_Amt"/>
+        <result property="pickupCnt" column="Pickup_Cnt"/>
+        <result property="cardPrefix" column="Card_Prefix"/>
+        <result property="allowUseStartTime" column="Allow_Use_Start_Time"/>
+        <result property="allowUseEndTime" column="Allow_Use_End_Time"/>
+        <result property="statusCd" column="Status_Cd"/>
+        <result property="pickupStoreId" column="Pickup_Store_ID"/>
+        <result property="storeName" column="Store_Name"/>
+        <result property="statusName" column="statusName"/>
+        <result property="auditStatusCd" column="Audit_Status_Cd"/>
+        <!--提货券关联的礼包信息-->
+        <collection property="pickupcouponPackageList" column="Pickup_Coupon_ID" ofType="PickupcouponPackageDTO">
+            <id property="pickupCouponPackageId" column="Pickup_Coupon_Package_ID"/>
+            <result property="packageName" column="Package_Name"/>
+            <result property="packageDesc" column="Package_Desc"/>
+            <result property="packagePicUrl" column="Package_Pic_Url"/>
+            <!--礼包关联的商品信息-->
+            <collection property="pickupPackageProductXrefList" column="Pickup_Coupon_Package_ID" ofType="PickupPackageProductXref">
+                <!--<id property="pickupCouponPackageId" column="Pickup_Coupon_Package_ID"/>-->
+                <result property="productId" column="Product_ID"/>
+            </collection>
+        </collection>
+    </resultMap>
+    <!--根据id获取提货券所有关联信息-->
+    <select id="getPickupcouponListDTO" resultMap="PickupcouponListDTOMapping" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        pls.Pickup_Store_ID,
+        st.Store_Name,
+        pp.Pickup_Coupon_Package_ID,
+        pp.Package_Name,
+        pp.Package_Desc,
+        pp.Package_Pic_Url,
+        ppx.Product_ID,
+        s1.Code_Cn_Name AS statusName
+        FROM pickupcoupon_list p1
+        LEFT JOIN pickupcoupon_list_store_xref pls ON p1.Pickup_Coupon_ID = pls.Pickup_Coupon_ID
+        LEFT JOIN store st ON pls.Pickup_Store_ID = st.Store_Id
+        LEFT JOIN pickupcoupon_package pp ON p1.Pickup_Coupon_ID = pp.Pickup_Coupon_ID
+        LEFT JOIN pickup_package_product_xref ppx ON pp.Pickup_Coupon_Package_ID = ppx.Pickup_Coupon_Package_ID
+        LEFT JOIN system_code s1 ON p1.Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Status_Cd'
+        WHERE p1.Pickup_Coupon_ID = #{pickupCouponId}
+    </select>
+
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserConsumeCalcDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        User_Id, 
+        Consume_Cnt, 
+        Current_Year_Consume_Cnt, 
+        Total_Consume_Amt, 
+        Current_Year_Total_Consume_Amt, 
+        Update_Time,
+        Develop_User_Cnt,
+        Develop_User_Rebate_Amt,
+        Develop_User_Score,
+        Develop_User_Sale_Amt,
+        Url_Rebate_Amt,
+        User_Rebate_Develop_Sale_Amt,
+        Total_Score,
+        User_Balance,
+        Red_Packet_Balance,
+        User_Product_Point
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserConsumeCalc" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_consume_calc (
+	    	User_Id,
+			Consume_Cnt, 
+	        Current_Year_Consume_Cnt, 
+	        Total_Consume_Amt, 
+	        Current_Year_Total_Consume_Amt, 
+	        Update_Time,
+	        Develop_User_Cnt,
+	        Develop_User_Rebate_Amt,
+	        Develop_User_Score,
+	        Develop_User_Sale_Amt,
+	        Url_Rebate_Amt,
+	        User_Rebate_Develop_Sale_Amt,
+	        Total_Score,
+	        User_Balance,
+	        Red_Packet_Balance,
+	        User_Product_Point
+	    ) VALUES (
+	    	#{userId},
+	        #{consumeCnt},
+	        #{currentYearConsumeCnt},
+	        #{totalConsumeAmt},
+	        #{currentYearTotalConsumeAmt},
+	        #{updateTime},
+	        #{developUserCnt},
+	        #{developUserRebateAmt},
+	        #{developUserScore},
+	        #{developUserSaleAmt},
+	        #{UrlRebateAmt},
+	        #{userRebateDevelopSaleAmt},
+	        #{totalScore},
+	        #{userBalance},
+	        #{redPacketBalance},
+	        #{userProductPoint}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserConsumeCalc">
+	   UPDATE user_consume_calc SET
+			Consume_Cnt=#{consumeCnt}, 
+			Current_Year_Consume_Cnt=#{currentYearConsumeCnt}, 
+			Total_Consume_Amt=#{totalConsumeAmt}, 
+			Current_Year_Total_Consume_Amt=#{currentYearTotalConsumeAmt}, 
+			Update_Time=#{updateTime},
+			Develop_User_Cnt=#{developUserCnt},
+			Develop_User_Rebate_Amt=#{developUserRebateAmt},
+			Develop_User_Score=#{developUserScore},
+			Develop_User_Sale_Amt=#{developUserSaleAmt},
+			Url_Rebate_Amt=#{urlRebateAmt},
+			User_Rebate_Develop_Sale_Amt=#{userRebateDevelopSaleAmt},
+			Total_Score=#{totalScore},
+			User_Balance=#{userBalance},
+			Red_Packet_Balance=#{redPacketBalance},
+			User_Product_Point=#{userProductPoint}
+	   WHERE
+		   User_Id = #{userId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_consume_calc where User_Id = #{userId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserConsumeCalc" parameterType="Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_consume_calc 
+	     WHERE 
+			  User_Id=#{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserConsumeCalc">  
+	    select 
+		<include refid="allColumns" />
+	    from user_consume_calc
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserConsumeCalc" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_consume_calc a
+	    <where>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="updateTime != null"> and a.Update_Time = #{updateTime}</if>
+		</where>
+	</select>
+	
+
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserDevelopDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.User_Id, a.Develop_User_Id, a.Rebate_Amt, a.Score, a.Create_Time
+	</sql>
+	
+	<sql id="userColumns">
+		b.User_Name,b.phone,b.userTypeName,b.userLevelName,b.registerTime,b.mstoreStatusCd 
+	</sql>
+	
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserDevelopDetail">
+	    INSERT INTO user_develop_detail (
+	        User_Id, Develop_User_Id, Rebate_Amt, Score, Create_Time
+	    ) VALUES (
+	        #{userId}, #{developUserId}, #{rebateAmt}, #{score}, #{createTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserDevelopDetail">
+	   UPDATE user_develop_detail SET
+		   Rebate_Amt = #{rebateAmt}, 
+		   Score = #{score}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   User_Id = #{userId} and 
+		   Develop_User_Id = #{developUserId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_develop_detail where User_Id = #{userId} and Develop_User_Id = #{developUserId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserDevelopDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" /> 
+	     FROM user_develop_detail a  
+	     WHERE 
+	     	User_Id = #{userId} and a.Develop_User_Id=#{developUserId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserDevelopDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_develop_detail a
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserDevelopDetail" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_develop_detail a
+	    <where>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="developUserId != null"> and a.Develop_User_Id = #{developUserId}</if>
+		<if test="rebateAmt != null"> and a.Rebate_Amt = #{rebateAmt}</if>
+		<if test="score != null"> and a.Score = #{score}</if>
+		</where>
+	</select>
+
+	<!-- 总的返利金额 -->
+	<select id="getTotalRebateAmt" resultType="java.math.BigDecimal" parameterType="java.util.HashMap">
+		SELECT SUM(Rebate_Amt)
+		FROM user_develop_detail
+		WHERE Create_Time >= #{startDate} AND Create_Time >= #{endDate}
+		AND User_Id = #{userId}
+	</select>
+	<!-- 总的返利积分 -->
+	<select id="getTotalScore" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+		SELECT SUM(Score)
+		FROM user_develop_detail
+		WHERE Create_Time >= #{startDate} AND Create_Time >= #{endDate}
+		AND User_Id = #{userId}
+	</select>
+	
+	<!-- 查询直接子节点 -->
+	<select id="findLowerUsers" resultType="UserDevelopDetail" parameterType="UserDevelopDetail">
+		select 
+		a.User_Id, 
+		a.Develop_User_Id, 
+		a.Rebate_Amt, 
+		a.Score, 
+		a.Create_Time,
+		b.User_Name,
+		b.phone,
+		b.Register_Time,
+		b.M_Store_Status_Cd,
+		c.User_Type_Name,
+		d.User_level_Name 
+		from user_develop_detail a 
+		left join user b on a.Develop_User_Id=b.User_Id 
+		left join user_type c on b.User_Type_Id=c.User_Type_Id 
+		left join user_level d on b.User_level_Id=d.User_level_Id
+	    <where>
+	    a.User_Id=#{userId} 
+	    <if test="startDate != null and startDate != ''"> and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') >=DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+	    <if test="endDate != null and endDate != ''">
+	    <![CDATA[
+	    and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') <=DATE_FORMAT(#{endDate},'%Y-%m-%d') 
+	    ]]>
+	    </if>
+	    </where>
+	</select>
+
+</mapper>

@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionCrowdFundDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+			p1.Promotion_Id,
+			p1.Crowd_Fund_per_Amt,
+			p1.Personal_Join_Limit,
+			p1.Create_Time,
+			p1.Last_Update_Time,
+			p1.Crowd_Fund_Product_Amt,
+			p1.Win_Code,
+			p1.Crowd_Fund_Status_Cd,
+			p1.Calc_Time,
+			p1.Calc_Time_millsec,
+			p1.Is_Taked
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="PromotionCrowdFund">
+	    INSERT INTO promotion_crowd_fund (
+	    	Promotion_Id,
+			Crowd_Fund_per_Amt, 
+			Personal_Join_Limit, 
+			Create_Time, 
+			Last_Update_Time, 
+			Crowd_Fund_Product_Amt, 
+			Win_Code,
+			Crowd_Fund_Status_Cd,
+			Calc_Time,
+			Calc_Time_millsec,
+			Is_Taked
+	    ) VALUES (
+			#{promotionId},
+			#{crowdFundPerAmt},
+			#{personalJoinLimit},
+			#{createTime}, 
+			#{lastUpdateTime}, 
+			#{crowdFundProductAmt}, 
+			#{winCode},
+			#{crowdFundStatusCd},
+			#{calcTime},
+			#{calcTimeMillsec},
+			#{isTaked}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="PromotionCrowdFund">
+	   UPDATE promotion_crowd_fund SET
+	   		Crowd_Fund_per_Amt = #{crowdFundPerAmt}, 
+	   		Personal_Join_Limit = #{personalJoinLimit}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}, 
+	   		Crowd_Fund_Product_Amt = #{crowdFundProductAmt}, 
+	   		Win_Code = #{winCode},
+	   		Crowd_Fund_Status_Cd = #{crowdFundStatusCd},
+	   		Calc_Time = #{calcTime},
+	   		Calc_Time_millsec = #{calcTimeMillsec},
+	   		Is_Taked = #{isTaked}
+	   WHERE 
+			Promotion_Id = #{promotionId}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM promotion_crowd_fund where Promotion_Id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionCrowdFund" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM promotion_crowd_fund p1
+        WHERE
+        p1.Promotion_Id=#{0}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="PromotionCrowdFund">
+        select
+        <include refid="allColumns"/>
+        from promotion_crowd_fund p1
+        <if test="order_col != null">order by p1.${order_col}</if>
+    </select>
+
+    <!-- 分页返回列表 -->
+    <select id="findList" resultType="PromotionCrowdFund" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from promotion_crowd_fund p1
+        where 1=1
+        <if test="promotionId != null">and p1.Promotion_Id = #{promotionId}</if>
+        <if test="crowdFundPerAmt != null">and p1.Crowd_Fund_per_Amt = #{crowdFundPerAmt}</if>
+        <if test="personalJoinLimit != null">and p1.Personal_Join_Limit = #{personalJoinLimit}</if>
+        <if test="createTime != null">and p1.Create_Time = #{createTime}</if>
+        <if test="crowdFundProductAmt != null">and p1.Crowd_Fund_Product_Amt = #{crowdFundProductAmt}</if>
+        <if test="winCode != null">and p1.Win_Code = #{winCode}</if>
+        <if test="crowdFundStatusCd != null">and p1.Crowd_Fund_Status_Cd = #{crowdFundStatusCd}</if>
+        <if test="calcTime != null">and p1.Calc_Time = #{calcTime}</if>
+        <if test="calcTimeMillsec != null">and p1.Calc_Time_millsec = #{calcTimeMillsec}</if>
+        <if test="isTaked != null">and p1.Is_Taked = #{isTaked}</if>
+        <if test="order_col != null">order by p1.${order_col}</if>
+    </select>
+
+    <!-- 查询众筹列表 -->
+    <select id="findPromotionCrowdFundDtoList" resultType="PromotionCrowdFundDTO" parameterType="java.util.HashMap">
+        select
+        p1.Crowd_Fund_per_Amt,
+        p1.Personal_Join_Limit,
+        p2.Promotion_Id,
+        p2.Promotion_Name,
+        p2.Promotion_Desc,
+        p2.Status_Cd,
+        p2.Enable_Start_Time,
+        p2.Enable_End_Time
+        from
+        promotion_crowd_fund p1
+        left join promotion p2 on p1.Promotion_Id = p2.Promotion_Id
+        where 1=1
+        <if test="promotionId != null">and p1.Promotion_Id = #{promotionId}</if>
+        <if test="crowdFundPerAmt != null">and p1.Crowd_Fund_per_Amt = #{crowdFundPerAmt}</if>
+        <if test="personalJoinLimit != null">and p1.Personal_Join_Limit = #{personalJoinLimit}</if>
+        <if test="createTime != null">and p1.Create_Time = #{createTime}</if>
+        <if test="crowdFundProductAmt != null">and p1.Crowd_Fund_Product_Amt = #{crowdFundProductAmt}</if>
+        <if test="winCode != null">and p1.Win_Code = #{winCode}</if>
+        <if test="crowdFundStatusCd != null">and p1.Crowd_Fund_Status_Cd = #{crowdFundStatusCd}</if>
+        <if test="calcTime != null">and p1.Calc_Time = #{calcTime}</if>
+        <if test="calcTimeMillsec != null">and p1.Calc_Time_millsec = #{calcTimeMillsec}</if>
+        <if test="isTaked != null">and p1.Is_Taked = #{isTaked}</if>
+        <if test="isEnableTime != null">
+            <![CDATA[
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d %H:%i:%s') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d %H:%i:%s') 
+    		]]>
+        </if>
+        <if test="notEnableTime!=null and notEnableTime!=''">
+            <![CDATA[
+    			and DATE_FORMAT(#{notEnableTime}, '%Y-%m-%d %H:%i:%s') >  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d %H:%i:%s')
+    		]]>
+        </if>
+        <if test="statusCd != null">and p2.Status_Cd = #{statusCd}</if>
+        <if test="promotionTypeCd != null">and p2.Promotion_Type_Cd = #{promotionTypeCd}</if>
+        <if test="like_name != null">and p2.Promotion_Name like CONCAT('%',#{like_name},'%')</if>
+        <if test="order_col != null">order by p1.${order_col}</if>
+    </select>
+
+    <!-- 获取 状态为可用的 && 有效期内的 && 处于众筹中的  众筹活动 -->
+    <select id="findAvailableCrowdFundForUserList" resultType="PromotionCrowdFundDTO" parameterType="java.util.HashMap">
+        SELECT
+            p1.Crowd_Fund_per_Amt,
+            p1.Crowd_Fund_Product_Amt,
+            p1.Personal_Join_Limit,
+            p2.Promotion_Id,
+            p2.Promotion_Name,
+            p2.Promotion_Desc,
+            p2.Status_Cd,
+            p2.Enable_Start_Time,
+            p2.Enable_End_Time,
+            ppi.`Pic_Url` AS productPicUrl
+        FROM
+            promotion_crowd_fund p1
+        LEFT JOIN promotion p2 ON p1.Promotion_Id = p2.Promotion_Id
+        LEFT JOIN `promotion_product_xref` ppx ON ppx.`Promotion_Id` = p1.`Promotion_Id`
+        LEFT JOIN `product` p ON p.`Product_Id` = ppx.`Product_Id`
+        LEFT JOIN `product_pic_info` ppi ON ppi.`Product_Id` = p.`Master_Product_ID` AND ppi.`Is_Default_Pic` = 1
+        WHERE 1=1
+        <if test="promotionId != null">and p1.Promotion_Id = #{promotionId}</if>
+        <if test="crowdFundPerAmt != null">and p1.Crowd_Fund_per_Amt = #{crowdFundPerAmt}</if>
+        <if test="personalJoinLimit != null">and p1.Personal_Join_Limit = #{personalJoinLimit}</if>
+        <if test="createTime != null">and p1.Create_Time = #{createTime}</if>
+        <if test="crowdFundProductAmt != null">and p1.Crowd_Fund_Product_Amt = #{crowdFundProductAmt}</if>
+        <if test="winCode != null">and p1.Win_Code = #{winCode}</if>
+        <if test="crowdFundStatusCd != null">and p1.Crowd_Fund_Status_Cd = #{crowdFundStatusCd}</if>
+        <if test="calcTime != null">and p1.Calc_Time = #{calcTime}</if>
+        <if test="calcTimeMillsec != null">and p1.Calc_Time_millsec = #{calcTimeMillsec}</if>
+        <if test="isTaked != null">
+            <if test="isTaked">
+                and p1.Is_Taked = true
+            </if>
+            <if test="!isTaked">
+                and (p1.Is_Taked IS NULL OR p1.Is_Taked = false)
+            </if>
+        </if>
+        <if test="currentTime != null">
+            <![CDATA[
+    			and DATE_FORMAT(#{currentTime}, '%Y-%m-%d %H:%i:%s') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d %H:%i:%s')
+    		]]>
+            <![CDATA[
+				and DATE_FORMAT(p2.Enable_Start_Time, '%Y-%m-%d %H:%i:%s') <= DATE_FORMAT(#{currentTime}, '%Y-%m-%d %H:%i:%s')
+			]]>
+        </if>
+        <if test="statusCd != null">and p2.Status_Cd = #{statusCd}</if>
+        <if test="promotionTypeCd != null">and p2.Promotion_Type_Cd = #{promotionTypeCd}</if>
+        <if test="like_name != null">and p2.Promotion_Name like CONCAT('%',#{like_name},'%')</if>
+        order by p1.Create_Time desc
+    </select>
+
+    <!-- 查询众筹 -->
+    <select id="findPromotionCrowdFundDTO" resultType="PromotionCrowdFundDTO" parameterType="Integer">
+		select
+		    p1.Win_Code,
+		    p1.Crowd_Fund_Status_Cd,
+		    p1.Is_Taked,
+			p1.Crowd_Fund_per_Amt,
+			p1.Personal_Join_Limit,
+			p1.Crowd_Fund_Product_Amt,
+			p2.Promotion_Id,
+			p2.Promotion_Name,
+			p2.Promotion_Desc,
+			p2.Status_Cd,
+			p2.Enable_Start_Time,
+			p2.Enable_End_Time,
+			p3.Product_Id,
+			pr.product_name,
+			pr.SKU_KEY_Json_Str,
+			pp.Pic_Url AS productPicUrl,
+			(SELECT COUNT(1) FROM promotion_crowd_fund_code WHERE promotion_Id = p1.promotion_Id) AS hasJoinTimes,
+			us.phone,
+			pc.Order_ID AS winedOrderId
+		from promotion_crowd_fund p1
+		left join promotion p2 on p1.Promotion_Id = p2.Promotion_Id
+		left join promotion_product_xref p3 on p1.Promotion_Id = p3.Promotion_Id
+		LEFT JOIN product pr ON p3.product_id = pr.product_id
+		LEFT JOIN product_pic_info pp ON p3.product_id = pp.product_id AND pp.Is_Default_Pic = 1
+		LEFT JOIN promotion_crowd_fund_code pc ON p1.promotion_Id = pc.promotion_Id AND pc.Is_Wined = 1
+		LEFT JOIN user us ON pc.User_Id = us.User_Id
+		WHERE p1.Promotion_Id = #{promotionId}
+		
+	</select>
+
+</mapper>

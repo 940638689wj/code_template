@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserConsultInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.Consult_ID, 
+        a.User_ID,
+        a.Product_ID,
+        a.Content,
+        a.Consult_Status_Cd, 
+        a.Create_Time, 
+        a.Reply_Admin_User_ID, 
+        a.Reply_Content, 
+        a.Reply_Time
+	</sql>
+
+    <insert id="insert" parameterType="UserConsultInfo" useGeneratedKeys="true" keyProperty="consultId">
+        INSERT INTO user_consult_info (
+        User_ID,
+        Product_ID,
+        Content,
+        Consult_Status_Cd,
+        Create_Time,
+        Reply_Content,
+        Reply_Time
+        ) VALUES (
+        #{userID},
+        #{productID},
+        #{content},
+        #{consultStatusCd},
+        #{createTime},
+        #{replyContent},
+        #{replyTime}
+        )
+    </insert>
+
+    <update id="update" parameterType="UserConsultInfo">
+      UPDATE user_consult_info SET
+      Content = #{content},
+      Consult_Status_Cd = #{consultStatusCd},
+      <if test="replyTime != null"> Reply_Time=#{replyTime},</if>
+      Reply_Content = #{replyContent},
+      Reply_Admin_User_ID = #{replyAdminUserID}
+      WHERE Consult_ID = #{consultID}
+    </update>
+
+    <select id="get" resultType="UserConsultInfo" parameterType="java.lang.Integer">
+      SELECT a.*,
+      p2.Login_Name,
+      p3.Product_Name
+      FROM user_consult_info a
+      LEFT JOIN user p2 on a.User_ID = p2.User_Id
+      LEFT JOIN product p3 on a.Product_ID = p3.Product_Id
+      WHERE a.Consult_ID = #{0}
+    </select>
+	
+   <!-- 查询咨询记录总数 -->	
+	<select id="getTotalCount" resultType="Integer">  
+	    SELECT 
+		count(*)
+	    FROM user_consult_info a 
+	</select>
+
+    <select id="findPage" parameterType="java.util.Map" resultType="UserConsultInfo">
+        SELECT a.*,
+        p2.Login_Name,
+        p2.Nick_Name as userName,
+        p3.Product_Name,
+        p3.Default_Price,
+		p4.Pic_Url,
+		p4.Is_Default_Pic
+        FROM user_consult_info a
+        LEFT JOIN user p2 on a.User_ID = p2.User_Id
+        LEFT JOIN product p3 on a.Product_ID = p3.Product_Id
+        LEFT JOIN product_pic_info p4 ON a.Product_ID=p4.Product_ID
+        WHERE 1=1
+        and p4.Is_Default_Pic=1
+        <if test="loginName != null and loginName != ''"> and p2.Login_Name LIKE CONCAT('%',#{loginName},'%')</if>
+        <if test="productId != null and productId != ''"> and a.Product_ID = #{productId}</if>
+        <if test="consultStatusCd != null and consultStatusCd != ''"> and a.Consult_Status_Cd = #{consultStatusCd}</if>
+        <if test="userID != null and userID != ''"> and a.User_ID = #{userID}</if>        
+        order by a.Create_Time DESC
+       	<if test="start != null and pageSize !=null"> LIMIT #{start},#{pageSize}</if>
+        
+    </select>
+    
+    
+	<select id="findListByLimitCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM user_consult_info
+		WHERE User_ID = #{userId}
+	</select>
+	
+	<select id="findListByLimit" resultType="UserConsultInfo" parameterType="cn.yr.chile.user.dto.UserLimitDTO">
+        SELECT a.*,
+        p2.Login_Name,
+        p2.Nick_Name as userName,
+        p3.Product_Name,
+        p3.Default_Price,
+		p4.Pic_Url,
+		p4.Is_Default_Pic
+        FROM user_consult_info a
+        LEFT JOIN user p2 on a.User_ID = p2.User_Id
+        LEFT JOIN product p3 on a.Product_ID = p3.Product_Id
+        LEFT JOIN product_pic_info p4 ON a.Product_ID=p4.Product_ID		
+        WHERE 1=1
+        and p4.Is_Default_Pic=1
+        and a.User_ID = #{userId}    
+        order by a.Create_Time DESC
+       	<if test="start != null and pageSize !=null"> LIMIT #{start},#{pageSize}</if>
+	</select>
+	
+	<!-- 获取pageCount -->
+	<select id="getPageCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT COUNT(*)
+		FROM user_consult_info
+		WHERE User_ID = #{userId}
+	</select>
+</mapper>

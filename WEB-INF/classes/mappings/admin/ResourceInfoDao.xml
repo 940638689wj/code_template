@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.admin.dao.ResourceInfoDao">
+    <sql id="allColumns">
+        a.Resource_ID,
+        a.Resource_Name,
+        a.Resource_Value,
+        a.Resource_Type,
+        a.Display_ID,
+        a.Parent_Res_ID,
+        a.Res_Route
+    </sql>
+
+    <select id="findAllList" resultType="ResourceInfo" parameterType="ResourceInfo">
+        SELECT
+        <include refid="allColumns"/>
+        FROM resource_info a
+        ORDER BY a.Display_ID ASC
+    </select>
+
+    <select id="findListByAdminUserId" resultType="ResourceInfo" parameterType="java.lang.Long">
+        SELECT
+        <include refid="allColumns"/>
+        FROM admin_user_role_xref p1
+        LEFT JOIN role_authorization p2 ON p2.Role_ID = p1.Role_ID
+        LEFT JOIN resource_info a ON a.Resource_ID = p2.Resource_ID
+        WHERE p1.Admin_User_ID = #{0}
+    </select>
+
+</mapper>

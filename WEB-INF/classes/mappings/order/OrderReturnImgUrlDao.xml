@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderReturnImgUrlDao">
+	<!--<resultMap id="orderReturnImgUrlMap" type="OrderReturnImgUrl">
+		<result property="id" column="id" />
+		<result property="orderId" column="Order_Id" />
+		<result property="returnImgUrl" column="Return_Img_Url" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        id,
+        Order_Item_Id,
+        Order_Return_Id,
+        Return_Img_Url
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderReturnImgUrl" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_return_img_url (
+	        Order_Return_Id,
+	         Order_Item_Id,
+	         Return_Img_Url,
+	         create_time
+	    ) VALUES (
+	        #{orderReturnId},
+	        #{orderItemId},
+	        #{returnImgUrl},
+	        #{createTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderReturnImgUrl">
+	   UPDATE order_return_img_url SET
+		   Order_Return_Id = #{orderReturnId}, 
+		   Order_Item_Id = #{orderItemId},
+		   Return_Img_Url = #{returnImgUrl}
+	   WHERE 
+		   id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_return_img_url where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderReturnImgUrl" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_return_img_url 
+	     WHERE id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderReturnImgUrl">  
+	    select 
+		<include refid="allColumns" />
+	    from order_return_img_url
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<insert id="insertImgUrls"  parameterType="java.util.List">
+		  INSERT INTO order_return_img_url (
+		        Order_Return_Id, Return_Img_Url
+		    ) VALUES (
+		        <foreach collection="list" item="item" index="index" separator="," >  
+	        	(#{item.orderReturnId},#{item.returnImgUrl})  
+	    		</foreach> 
+		    )
+	</insert>
+
+	<!-- 获取列表数据 -->
+	<select id="findList" resultType="OrderReturnImgUrl" parameterType="OrderReturnImgUrl">
+		SELECT
+		<include refid="allColumns"/>
+		FROM order_return_img_url a
+		WHERE 1=1
+		<if test="id != null">AND a.Id = #{id}</if>
+		<if test="orderReturnId != null">AND a.Order_Return_Id = #{orderReturnId}</if>
+		<if test="returnImgUrl != null and returnImgUrl != ''">AND a.Return_Img_Url = #{returnImgUrl}</if>
+		<if test="orderItemId != null">AND a.Order_Item_Id = #{orderItemId}</if>
+	</select>
+
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.common.dao.CmsArticleDao">
+	<sql id="allColumns">
+		a.Article_Id, a.Article_Author, a.Article_title, a.Article_Content, a.Is_Publication, 
+		a.Is_Top, a.Start_Date, a.End_Date, a.Hit_Count, a.Article_Type_Cd, a.Cover_Image_Url, 
+		a.Article_Url, a.Create_Time, a.Last_Update_Time 
+	</sql>
+	
+	<!-- 查询文章 -->
+	<select id="findArticle" resultType="cn.yr.chile.common.domain.CmsArticle" parameterType="java.lang.Integer">
+		SELECT <include refid="allColumns" />
+		FROM cms_article a LEFT JOIN system_code s 
+		ON (a.Article_Type_Cd=s.Code_Id and  s.Code_Type_Cd='ARTICLE_TYPE_CD')
+		<if test="_parameter != null ">
+		WHERE a.Article_Type_Cd = #{_parameter}
+		</if>
+	</select>
+</mapper>

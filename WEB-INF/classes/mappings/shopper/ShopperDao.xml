@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.shopper.dao.ShopperDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		Shopper_ID,
+		User_Name,
+		Password,
+		Shopper_Num,
+		Shopper_Name,
+		Sex_Cd,
+		Phone,
+		Identity_Num,
+		Photo_url,
+		Deduct_Commisson_Rate,
+		Status_Cd,
+		Create_Time,
+		Last_Login_Time,
+		Work_Status_Cd
+	</sql>
+	
+	<!-- 根据ID查询shopper -->
+	<select id="get" resultType="cn.yr.chile.shopper.domain.Shopper" parameterType="Integer">
+		SELECT
+		<include refid="allColumns"/>
+		FROM shopper
+		WHERE Shopper_ID = #{shopperId}
+	</select>
+	
+	<!-- 根据userNum查询shopper -->
+	<select id="getShopperByNameOrNum" resultType="cn.yr.chile.shopper.domain.Shopper" parameterType="java.util.HashMap">
+		SELECT
+		<include refid="allColumns"/>
+		FROM shopper
+		WHERE 1=1
+		<if test="userName !='' and userName !=null">
+			and User_Name=#{userName}
+		</if>
+		<if test="shopperNum !='' and shopperNum !=null">
+			and Shopper_Num=#{shopperNum}
+		</if>
+		<if test="identityNum !='' and identityNum !=null">
+			and Identity_Num=#{identityNum}
+		</if>
+		<if test="phone !='' and phone !=null">
+			and Phone=#{phone}
+		</if>
+	</select>
+	
+	<!-- 查询 -->
+	<select id="queryShopper" resultType="cn.yr.chile.shopper.dto.ShopperDTO" parameterType="java.util.HashMap">
+		SELECT
+		<include refid="allColumns"/>,
+		(	SELECT
+				count(order_id)
+			FROM
+				order_shopper_operation
+			WHERE
+				Send_shopper_Id = shopper.Shopper_ID
+			AND Deal_Status_Cd IN (12, 13, 14)
+		) AS countNo
+		FROM shopper
+		WHERE 1=1
+		<if test="shopperId !='' and shopperId !=null">
+			and shopper.Shopper_ID = #{shopperId}
+		</if>
+		<if test="shopperIds !='' and shopperIds !=null">
+			and shopper.Shopper_ID in (${shopperIds})
+		</if>
+		<if test="shopperName !='' and shopperName !=null">
+			and shopper.Shopper_Name LIKE ('%${shopperName}%')
+		</if>
+		<if test="phone !='' and phone !=null">
+			and shopper.Phone LIKE ('%${phone}%')
+		</if>
+		<if test="workStatusCd !='' and workStatusCd !=null">
+			and shopper.Work_Status_Cd = #{workStatusCd}
+		</if>
+		ORDER BY Create_Time DESC
+	</select>
+	
+	<!-- 根据ID删除shopper -->
+	<delete id="delete" parameterType="Integer">
+		DELETE 
+		FROM shopper
+		WHERE Shopper_ID = #{shopperId}
+	</delete>
+	
+	<!-- 添加 -->
+	<insert id="insert" parameterType="cn.yr.chile.shopper.domain.Shopper" useGeneratedKeys="true" keyProperty="shopperId">
+		INSERT INTO shopper(
+			User_Name,
+			Password,
+			Shopper_Num,
+			Shopper_Name,
+			Sex_Cd,
+			Phone,
+			Identity_Num,
+			Photo_url,
+			Deduct_Commisson_Rate,
+			Status_Cd,
+			Create_Time,
+			Last_Login_Time,
+			Work_Status_Cd
+		) VALUES (
+			#{userName},
+			#{password},
+			#{shopperNum},
+			#{shopperName},
+			#{sexCd},
+			#{phone},
+			#{identityNum},
+			#{photoUrl},
+			#{deductCommissonRate},
+			#{statusCd},
+			#{createTime},
+			#{lastLoginTime},
+			#{workStatusCd}
+		)
+	</insert>
+	
+	<!-- 编辑shopper信息 -->
+	<update id="update" parameterType="cn.yr.chile.shopper.domain.Shopper">
+		UPDATE shopper
+		SET Shopper_ID=#{shopperId},
+			User_Name=#{userName},
+			Password=#{password},
+			Shopper_Num=#{shopperNum},
+			Shopper_Name=#{shopperName},
+			Sex_Cd=#{sexCd},
+			Phone=#{phone},
+			Identity_Num=#{identityNum},
+			Photo_url=#{photoUrl},
+			Deduct_Commisson_Rate=#{deductCommissonRate},
+			Status_Cd=#{statusCd},
+			Create_Time=#{createTime},
+			Last_Login_Time=#{lastLoginTime},
+			Work_Status_Cd = #{workStatusCd}
+		WHERE Shopper_ID = #{shopperId}
+	</update>
+   <select id="findShopperList"  parameterType="java.util.Map" resultType="cn.yr.chile.shopper.dto.ShopperDTO">
+                                                   
+	  SELECT
+	  a.Shopper_ID,                             
+	  a.Shopper_Num,
+	  a.Shopper_Name,
+	  a.Phone,
+	  a.Work_Status_Cd,
+(select count(order_id) from order_shopper_operation where Send_shopper_Id = a.shopper_id and Deal_Status_Cd in(12,13,14)) as countNo
+		FROM shopper a
+		WHERE 1=1
+		and a.Work_Status_Cd != 0
+	<if test="shopperName !='' and shopperName !=null">
+			and a.Shopper_Name LIKE ('%${shopperName}%')
+	</if>
+	<if test="shopperNum !='' and shopperNum !=null">
+			and a.Shopper_Num LIKE ('%${shopperNum}%')
+	</if>
+	<if test="phone !='' and phone !=null">
+			and a.phone LIKE ('%${phone}%')
+	</if>
+	
+
+	</select>
+	
+	<!-- 添加配送员附加信息-->
+	<insert id="insertShopperInfo" parameterType="cn.yr.chile.order.domain.OrderShopperOperation" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO order_shopper_operation(
+		    Order_Id,
+			Send_Shopper_ID,
+			Deal_Status_Cd,
+			Last_Update_Time
+		) VALUES (
+		    #{orderId},
+			#{sendShopperId},
+			#{dealStatusCd},
+			#{lastUpdateTime}
+		)
+	</insert>
+	
+	
+
+	<select id="findLoginShopper" resultType="cn.yr.chile.shopper.domain.Shopper" parameterType="cn.yr.chile.shopper.domain.Shopper">
+		SELECT 
+		<include refid="allColumns"/>
+		FROM shopper a
+		WHERE a.User_Name=#{userName} AND a.password=#{password}
+	</select>
+	
+	<!-- 配送员的收接数的订单数 --> 
+	<select id="countOrdersByShopperId"  parameterType="Integer" resultType="Integer">
+     select count(order_id) from order_shopper_operation where Send_shopper_Id = #{sendShopperId} and Deal_Status_Cd in(12,13,14) 
+	</select>
+</mapper>

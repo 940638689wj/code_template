@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.store.dao.StoreDao">
+
+	<!-- 用于select查询列表公用抽取的列 -->
+	<sql id="listColumns">
+		a.Store_Id,
+		a.Store_Name,
+		a.Status_Cd,
+		a.Contacts,
+		a.Telephone,
+		a.Store_Description,
+		a.Detail_Address,
+		a.Delivery_Time_Am_Start,
+		a.Delivery_Time_Pm_Start,
+		a.Delivery_Time_Am_End,
+		a.Delivery_Time_Pm_End
+	</sql>
+
+	<!-- 根据Store_Id查询 -->
+	<select id="get" resultType="cn.yr.chile.store.domain.Store" parameterType="Integer">
+		SELECT
+		<include refid="listColumns"/>
+		FROM store a
+		WHERE a.Store_Id = #{storeId}
+	</select>
+
+	<!-- 添加门店 -->
+	<insert id="insert" parameterType="cn.yr.chile.store.domain.Store" useGeneratedKeys="true" keyProperty="storeId">
+		INSERT INTO store(
+		Store_Name,
+		Status_Cd,
+		Telephone,
+		Detail_Address,
+		Store_Description,
+		Create_Time,
+		Delivery_Time_Am_Start,
+		Delivery_Time_Pm_Start,
+		Delivery_Time_Am_End,
+		Delivery_Time_Pm_End
+		) VALUES (
+		#{storeName},
+		#{statusCd},
+		#{telephone},
+		#{detailAddress},
+		#{storeDescription},
+		#{createTime},
+		#{deliveryTimeAmStart},
+		#{deliveryTimePmStart},
+		#{deliveryTimeAmEnd},
+		#{deliveryTimePmEnd}
+		)
+	</insert>
+
+	<!-- 编辑门店信息 -->
+	<update id="update" parameterType="cn.yr.chile.store.domain.Store">
+		UPDATE store
+		SET Store_Name=#{storeName},
+		Status_Cd=#{statusCd},
+		Telephone=#{telephone},
+		Detail_Address=#{detailAddress},
+		Store_Description=#{storeDescription},
+		Update_Time=#{createTime},
+		Delivery_Time_Am_Start=#{deliveryTimeAmStart},
+		Delivery_Time_Pm_Start=#{deliveryTimePmStart},
+		Delivery_Time_Am_End=#{deliveryTimeAmEnd},
+		Delivery_Time_Pm_End=#{deliveryTimePmEnd}
+		WHERE Store_Id = #{storeId}
+	</update>
+
+	<!-- 查询 -->
+	<select id="findList" resultType="cn.yr.chile.store.domain.Store" parameterType="java.util.HashMap">
+		SELECT
+		<include refid="listColumns"/>
+		FROM store a
+		WHERE 1=1
+		<if test="statusCd != null">
+			AND a.Status_Cd in (${statusCd})
+		</if>
+		ORDER BY Store_Id DESC
+	</select>
+	<!-- 查询 -->
+	<select id="findActiveList" resultType="cn.yr.chile.store.domain.Store">
+		SELECT
+		<include refid="listColumns"/>
+		FROM store a
+		WHERE a.Status_Cd = 1
+		ORDER BY Store_Id DESC
+	</select>
+
+	<!-- 通过 pickupcoupon_list_store_xref.Pickup_Coupon_ID 获取 门店列表 -->
+	<select id="findListByPickupCouponId" resultType="cn.yr.chile.store.domain.Store" parameterType="java.lang.Integer">
+		SELECT
+		<include refid="listColumns"/>
+		FROM store a
+		LEFT JOIN pickupcoupon_list_store_xref p2 ON p2.Pickup_Store_ID = a.Store_Id
+		WHERE a.Status_Cd = 1
+		AND p2.Pickup_Coupon_ID = #{0}
+		ORDER BY Store_Id DESC
+	</select>
+	
+	<select id="getDTOById" resultType="StoreDTO" parameterType="java.lang.Integer">
+		SELECT
+		a.Store_Id,a.Store_Number,a.Store_Name,a.Contacts,a.Telephone,a.Spare_Telephone,a.Province_Id,a.City_Id,a.County_Id,a.Detail_Address,
+		s1.Area_Name as provinceName,s2.Area_Name as cityName,s3.Area_Name as countyName
+		FROM store a
+		LEFT JOIN area s1 on a.Province_Id = s1.Id
+		LEFT JOIN area s2 on a.City_Id = s2.Id
+		LEFT JOIN area s3 on a.County_Id = s3.Id
+		WHERE
+		a.Store_Id = #{0}
+		
+	</select>
+</mapper>

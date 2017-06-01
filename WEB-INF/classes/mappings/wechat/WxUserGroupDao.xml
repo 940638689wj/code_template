@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.wechat.dao.WxUserGroupDao">
+	<!--<resultMap id="wxUserGroupMap" type="WxUserGroup">
+		<result property="groupId" column="Group_Id" />
+		<result property="groupName" column="Group_Name" />
+		<result property="wxId" column="Wx_Id" />
+		<result property="groupTypeCd" column="Group_Type_Cd" />
+		<result property="createTime" column="Create_Time" />
+		<result property="lastUpdateTime" column="Last_Update_Time" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Group_Id,
+			p1.Group_Name,
+			p1.Wx_Id,
+			p1.Group_Type_Cd,
+			p1.Create_Time,
+			p1.Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="WxUserGroup" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO wx_user_group (
+			Group_Name, 
+			Wx_Id, 
+			Group_Type_Cd, 
+			Create_Time, 
+			Last_Update_Time
+	    ) VALUES (
+			#{groupName}, 
+			#{wxId}, 
+			#{groupTypeCd}, 
+			#{createTime}, 
+			#{lastUpdateTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="WxUserGroup">
+	   UPDATE wx_user_group SET
+	   		Group_Name = #{groupName}, 
+	   		Wx_Id = #{wxId}, 
+	   		Group_Type_Cd = #{groupTypeCd}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+			Group_Id = #{groupId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM wx_user_group where Group_Id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="WxUserGroup" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_user_group p1
+	     WHERE
+			p1.Group_Id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="WxUserGroup">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_user_group p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="WxUserGroup" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_user_group p1
+	    where a.deleted=0
+		<if test="groupId != null"> and p1.Group_Id = #{groupId}</if>
+		<if test="groupName != null"> and p1.Group_Name = #{groupName}</if>
+		<if test="wxId != null"> and p1.Wx_Id = #{wxId}</if>
+		<if test="groupTypeCd != null"> and p1.Group_Type_Cd = #{groupTypeCd}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+</mapper>

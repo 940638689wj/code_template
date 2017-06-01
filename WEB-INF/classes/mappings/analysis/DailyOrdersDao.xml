@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.DailyOrdersDao">
+	
+	<!-- 查询搜索范围内的订单日期、成交量、成交额，商品成交量 -->
+    <select id="findList" resultType="DailyOrders" parameterType="java.util.Map">
+        SELECT
+			DATE_FORMAT(o.Create_Time, '%Y-%m-%d') AS reportDate,
+			COUNT(*) AS orderTxCnt,
+			SUM(o.Order_Total_Amt) AS orderTxAmt,
+			SUM(oi.Quantity) AS productSalesCnt,
+		(SELECT
+		SUM(oi.Quantity)
+		FROM
+		order_header o
+		LEFT JOIN (
+		SELECT
+		o1.Order_Id orderId,
+		SUM(o1.Quantity) Quantity
+		FROM
+		order_item o1
+		GROUP BY
+		o1.Order_Id
+		) oi ON o.Order_Id = oi.orderId
+		LEFT JOIN order_extend oe ON o.Order_id = oe.Order_id
+		WHERE
+		o.Order_Pay_Status_Cd = 2
+		and
+		DATE_FORMAT(o.Create_Time, '%Y-%m-%d') = reportDate ) AS totalSalesCnt
+		FROM
+			order_header o
+		LEFT JOIN (
+			SELECT
+				o1.Order_Id orderId,
+				SUM(o1.Quantity) Quantity
+			FROM
+				order_item o1
+			GROUP BY
+				o1.Order_Id
+		) oi ON o.Order_Id = oi.orderId
+		LEFT JOIN order_extend oe ON o.Order_id = oe.Order_id
+        WHERE o.Order_Status_Cd = 5
+        <if test="beginTime != '' and beginTime != null">
+        	and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+       	</if>
+        <if test="endTime != '' and endTime != null">
+        	and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+			and oe.Origin_Platform_Cd = #{originPlatformCd}
+		</if>
+        GROUP BY
+			DATE_FORMAT(o.Create_Time, '%Y-%m-%d')
+    </select>
+    
+    <!-- 查询搜索范围内的商品退换量 -->
+    <select id="findReturnList" resultType="DailyOrders" parameterType="java.util.Map">
+        SELECT
+			DATE_FORMAT(o.Create_Time, '%Y-%m-%d') AS reportDate,
+			SUM(oi.Quantity) AS changeReturnCnt
+		FROM
+			order_return_info ori
+		LEFT JOIN order_item oi ON ori.Order_Item_Id = oi.Order_Item_Id
+		LEFT JOIN order_header o ON ori.Order_id = o.Order_id
+		LEFT JOIN order_extend oe ON ori.Order_id = oe.Order_id
+        WHERE ori.Apply_Status_Cd IN (2,4)
+        <if test="beginTime != '' and beginTime != null">
+        	and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+       	</if>
+        <if test="endTime != '' and endTime != null">
+        	and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(o.Create_Time,'%Y%m%d')
+        </if>
+        <if test="originPlatformCd !='' and originPlatformCd !=null">
+			and oe.Origin_Platform_Cd = #{originPlatformCd}
+		</if>
+        GROUP BY
+			DATE_FORMAT(o.Create_Time, '%Y-%m-%d')
+    </select>
+	
+
+</mapper>

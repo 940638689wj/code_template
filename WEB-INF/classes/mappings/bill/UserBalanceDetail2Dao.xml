@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.UserBalanceDetail2Dao">
+
+
+    <!-- 查询列表 -->
+    <select id="findAllList" resultType="UserBalanceDetailDTO" parameterType="java.util.Map">
+        SELECT T1.Balance_Id,
+        IFNULL(T1.Balance_Income,0) AS Balance_Income,
+        IFNULL(T1.Balance_Expend,0) AS Balance_Expend,
+        T1.Remark,
+        T1.Order_Number,
+        T1.User_Id,
+        T1.Admin_User_Id,
+        T1.Admin_User_Name,
+        T1.Create_Time,
+        T1.OPER_Event_Type_Cd,
+        T2.phone as phone,
+        T2.Login_Name,
+        T2.User_Name,
+        T3.code_Cn_Name as codeCnName
+        from user_balance_detail T1
+        LEFT JOIN user T2 ON T1.User_Id=T2.User_Id
+        LEFT JOIN system_code T3 ON T3.code_type_cd='OPER_Event_Type_Cd'  AND T3.code_id=T1.OPER_Event_Type_Cd
+        WHERE 1=1
+        <if test="beginTime != null and beginTime != ''">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> T1.Create_Time
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> T1.Create_Time
+        </if>
+        <if test="loginName !=null and loginName !=''">
+            and T2.phone like  CONCAT('%',#{loginName},'%')
+        </if>
+        <if test="type !=null and type !='' and type==0">
+            and IFNULL(T1.Balance_Expend,0) <![CDATA[ > ]]> 0
+        </if>
+        <if test="type !=null and type !='' and type==1">
+            and IFNULL(T1.Balance_Income,0) <![CDATA[ > ]]> 0
+        </if>
+        ORDER BY
+        T1.Create_Time DESC
+    </select>
+
+
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.PayCountDao">
+	
+	<!-- 查询所有收款 -->
+   	<select id="findAllPayCount" parameterType="map" resultType="cn.yr.chile.user.dto.PayCountDTO">
+   		select 
+   			t1.order_number as orderNumber,
+   			t1.order_pay_amt as orderPayAmt,
+   			t1.order_pay_time as orderPayTime,
+   			t1.phone as phone,
+   			t2.code_cn_name as codeCnName 
+   		from (	SELECT
+					a.Order_Number,
+					a.order_pay_time,
+					a.Order_Pay_Amt,
+					b.Phone
+				FROM
+					order_header a
+				LEFT JOIN USER b ON a.User_Id = b.User_Id
+				LEFT JOIN system_code c ON c.code_type_cd = 'Order_Pay_Status_Cd'
+				AND c.Code_Id = a.Order_Pay_Status_Cd
+				WHERE
+					a.Order_Pay_Status_Cd = 2) t1
+		LEFT JOIN (	SELECT
+						d.order_number,
+						e.Code_Cn_Name
+					FROM
+						order_header d
+					LEFT JOIN system_code e ON e.code_type_cd = 'order_pay_way_cd'
+					AND e.code_id = d.Order_Pay_Way_Cd) t2 
+					ON t1.order_number = t2.order_number 
+   	</select>
+
+	<!-- 统计收款总和 -->
+	<select id="getPayCountTotal" parameterType="map" resultType="double">
+		select 
+   			sum(Order_Pay_Amt)
+   		from (	SELECT
+					a.order_number,
+					a.Order_Pay_Amt					
+				FROM
+					order_header a
+				LEFT JOIN USER b ON a.User_Id = b.User_Id
+				LEFT JOIN system_code c ON c.code_type_cd = 'Order_Pay_Status_Cd'
+				AND c.Code_Id = a.Order_Pay_Status_Cd
+				WHERE
+					a.Order_Pay_Status_Cd = 2) t1
+		LEFT JOIN (	SELECT
+						d.order_number,
+						e.Code_Cn_Name
+					FROM
+						order_header d
+					LEFT JOIN system_code e ON e.code_type_cd = 'order_pay_way_cd'
+					AND e.code_id = d.Order_Pay_Way_Cd) t2 
+					ON t1.order_number = t2.order_number 
+	</select>
+</mapper>

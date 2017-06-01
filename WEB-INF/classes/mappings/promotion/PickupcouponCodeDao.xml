@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PickupcouponCodeDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+			p1.Pickup_Coupon_Code_ID,
+			p1.Pickup_Coupon_Code_Num,
+			p1.Pickup_Coupon_Password,
+			p1.User_ID,
+			p1.Phone,
+			p1.Pickup_Coupon_List_Id,
+			p1.Used_Status_Cd,
+			p1.Used_time,
+			p1.Is_Sms_Send_Status,
+			p1.Status_Cd,
+			p1.Create_Time,
+			p1.Pickup_Coupon_Package_ID,
+			p1.Order_ID,
+			p1.Is_Pickup_Package
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="PickupcouponList" useGeneratedKeys="true" keyProperty="pickupCouponId">
+	    INSERT INTO pickupcoupon_Code (
+			Pickup_Coupon_Code_Num,
+			Pickup_Coupon_Password,
+			User_ID,
+			Phone,
+			Pickup_Coupon_List_Id,
+			Used_Status_Cd,
+			Used_time,
+			Is_Sms_Send_Status,
+			Status_Cd,
+			Create_Time,
+			Pickup_Coupon_Package_ID,
+			Order_ID,
+			Is_Pickup_Package
+	    ) VALUES (
+			#{pickupCouponCodeNum},
+			#{pickupCouponPassword},
+			#{userId},
+			#{phone},
+			#{pickupCouponListId},
+			#{usedStatusCd},
+			#{usedTime},
+			#{isSmsSendStatus},
+			#{statusCd},
+			#{createTime},
+			#{pickupCouponPackageId},
+			#{orderId},
+			#{isPickupPackage}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="PickupcouponCode">
+        UPDATE pickupcoupon_code SET
+        <if test="userId != null">
+            User_ID= #{userId},
+        </if>
+        <if test="phone != null">
+            Phone= #{phone},
+        </if>
+        <if test="usedStatusCd != null">
+            Used_Status_Cd= #{usedStatusCd},
+        </if>
+        <if test="usedTime != null">
+            Used_time= #{usedTime},
+        </if>
+        <if test="isSmsSendStatus != null">
+            Is_Sms_Send_Status= #{isSmsSendStatus},
+        </if>
+        <if test="pickupCouponPackageId != null">
+            Pickup_Coupon_Package_ID= #{pickupCouponPackageId},
+        </if>
+        Order_ID= #{orderId},
+        Is_Pickup_Package= #{isPickupPackage}
+        WHERE
+        Pickup_Coupon_Code_ID = #{pickupCouponCodeId}
+    </update>
+
+    <!-- 更新 pickupcoupon_code.User_ID -->
+    <update id="updateUserId" parameterType="java.util.Map">
+        UPDATE pickupcoupon_code SET
+        User_ID= #{userId}
+        WHERE
+        User_ID IS NULL
+        <if test="pickupCouponCodeId != null and pickupCouponCodeId != ''">
+            AND Pickup_Coupon_Code_ID = #{pickupCouponCodeId}
+        </if>
+        <if test="phone != null and phone != ''">
+            AND Phone = #{phone}
+        </if>
+    </update>
+
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="PickupcouponCode" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pickupcoupon_code p1
+        WHERE
+        p1.Pickup_Coupon_Code_ID=#{id}
+    </select>
+
+    <!-- 根据codeNum、password 获取 -->
+    <select id="getByCodeNumAndPassword" resultType="PickupcouponCode" parameterType="java.util.Map">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pickupcoupon_code p1
+        WHERE
+        p1.Pickup_Coupon_Code_Num=#{codeNum}
+        AND p1.Pickup_Coupon_Password=#{password}
+    </select>
+
+    <!-- 根据codeNum 获取 -->
+    <select id="getByCodeNum" resultType="PickupcouponCode" parameterType="java.lang.String">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pickupcoupon_code p1
+        WHERE
+        p1.Pickup_Coupon_Code_Num=#{0}
+        limit 0,1
+    </select>
+
+    <!-- 分页查询提货券 -->
+    <select id="findPickupcouponCode" resultType="PickupcouponCodeDTO" parameterType="java.util.Map">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        p2.Allow_Use_Start_Time,
+        p2.Allow_Use_End_Time,
+        u.Nick_Name,
+        u.phone AS numOrPhone,
+        s1.Code_Cn_Name AS statusName,
+        s2.Code_Cn_Name AS usedStatusName
+        FROM
+        pickupcoupon_Code p1
+        LEFT JOIN pickupcoupon_list p2 ON p1.Pickup_Coupon_List_Id = p2.Pickup_Coupon_ID
+        LEFT JOIN user u ON p1.User_Id = u.User_Id
+        LEFT JOIN system_code s1 ON p1.Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Status_Cd'
+        LEFT JOIN system_code s2 ON p1.Used_Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'COUPON_STATUS_CD'
+        WHERE p1.Pickup_Coupon_List_Id = #{pickupCouponListId}
+        <if test="numOrPhone != null and numOrPhone != ''">
+            AND (p1.Pickup_Coupon_Code_Num LIKE CONCAT('%',#{numOrPhone},'%') OR p1.Phone LIKE
+            CONCAT('%',#{numOrPhone},'%'))
+        </if>
+        ORDER BY p1.Pickup_Coupon_Code_ID DESC
+    </select>
+
+    <!-- 获取会员可用的 PickupcouponCode -->
+    <select id="findAvailablePickupcouponCodeByUserId" resultType="PickupcouponCode" parameterType="java.util.Map">
+        SELECT
+        <include refid="allColumns"/>
+        FROM
+        pickupcoupon_Code p1
+        LEFT JOIN pickupcoupon_list p2 ON p2.Pickup_Coupon_ID = p1.Pickup_Coupon_List_Id
+        WHERE
+        p2.Status_Cd = '1'
+        <if test="pickupCouponId != null">
+            AND p2.Pickup_Coupon_ID = #{pickupCouponId}
+        </if>
+        <![CDATA[ AND DATE_FORMAT(p2.Allow_Use_Start_Time,'%Y-%m-%d') <= DATE_FORMAT(#{currentDateTime},'%Y-%m-%d') ]]>
+        <![CDATA[ AND DATE_FORMAT(#{currentDateTime},'%Y-%m-%d') <= DATE_FORMAT(p2.Allow_Use_End_Time,'%Y-%m-%d')]]>
+        AND p1.Used_Status_Cd = '1'
+        AND p1.Status_Cd = '1'
+        AND p1.User_ID=#{userId}
+        ORDER BY p1.Create_Time desc
+    </select>
+
+    <!-- 提货券状态更新为 已使用 -->
+    <update id="updatePickupCouponCodeForUse" parameterType="java.util.Map">
+        UPDATE pickupcoupon_code SET
+        Used_Status_Cd= 2,
+        Used_time= #{usedTime},
+        Pickup_Coupon_Package_ID= #{pickupPackageId},
+        Order_ID= #{orderId}
+        WHERE
+        Pickup_Coupon_Code_ID = #{pickupCouponCodeId}
+    </update>
+    
+         <!-- 移动端 后去分页信息  自定义分页-->
+    <select id="findListByLimitAndDTO" resultType="PickupCouponDTO" parameterType="cn.yr.chile.products.dto.PickupCouponLimitDTO">
+    	SELECT
+    	<include refid="allColumns" />,
+    	p2.Allow_Use_Start_Time,
+    	p2.Allow_Use_End_Time,
+    	p2.Pickup_Coupon_Name,
+    	u.Phone as userPhone
+    	FROM
+    	pickupcoupon_Code p1
+    	LEFT JOIN pickupcoupon_list p2 ON p2.Pickup_Coupon_ID = p1.Pickup_Coupon_List_Id
+    	LEFT JOIN user u ON p1.User_Id = u.User_Id
+    	WHERE p1.User_ID = #{userId}
+    	AND p2.Status_Cd = 1
+    	AND p1.Status_Cd = 1
+    	<if test="usedStatusCd != null">AND p1.Used_Status_Cd = #{usedStatusCd}</if>
+    	ORDER BY p1.Create_Time desc
+    	LIMIT #{start},#{pageSize}
+    </select>
+
+    <select id="findList" resultType="PickupcouponCode" parameterType="PickupcouponCode">
+        SELECT
+        <include refid="allColumns" />
+        FROM
+        pickupcoupon_Code p1
+        WHERE 1=1
+        <if test="pickupCouponCodeId != null">
+            AND p1.Pickup_Coupon_Code_ID = #{pickupCouponCodeId}
+        </if>
+        <if test="pickupCouponListId != null">
+            AND p1.Pickup_Coupon_List_Id = #{pickupCouponListId}
+        </if>
+        <if test="isSmsSendStatus != null">
+            AND p1.Is_Sms_Send_Status = #{isSmsSendStatus}
+        </if>
+    </select>
+    <!-- 根据userId 和OrderId 获取 pickupcouponcode对象 -->
+    <select id="getByMap" resultType="PickupcouponCode" parameterType="java.util.Map">
+    	SELECT
+    	<include refid="allColumns" />
+    	From
+    	 pickupcoupon_Code p1
+    	 WHERE
+    	 1=1
+    	 <if test="userId != null">AND p1.User_Id = #{userId}</if>
+    	 <if test="orderId != null">AND p1.Order_Id = #{orderId}</if>
+    </select>
+    
+    <select id="getPickupCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT count(*) 
+		FROM 
+		pickupcoupon_Code p1
+		WHERE 
+		p1.User_ID = #{userId}  AND p1.Status_Cd =1
+
+    </select>
+
+	<select id="getPageCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT count(*)
+		FROM
+		pickupcoupon_code p1
+		LEFT JOIN pickupcoupon_list p2 ON p2.Pickup_Coupon_ID = p1.Pickup_Coupon_List_Id
+		WHERE p1.User_ID = #{userId}
+		AND p2.Status_Cd = 1
+		AND P1.Status_Cd = 1
+		
+	</select>
+
+    <!--根据手机号，查询是否有未使用的提货券-->
+    <select id="getCountByPhone" resultType="Integer" parameterType="String">
+        SELECT count(*)
+        FROM pickupcoupon_code p1
+        WHERE
+            p1.Used_Status_Cd = 1
+        AND p1.Phone = #{phone}
+    </select>
+</mapper>

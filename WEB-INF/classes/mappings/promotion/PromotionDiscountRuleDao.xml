@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionDiscountRuleDao">
+	<!--<resultMap id="promotionDiscountRuleMap" type="PromotionDiscountRule">
+		<result property="id" column="Id" />
+		<result property="promotionId" column="Promotion_Id" />
+		<result property="ruleId" column="Rule_Id" />
+		<result property="promotionConditionId" column="Promotion_Condition_Id" />
+		<result property="discountTypeCd" column="Discount_Type_Cd" />
+		<result property="discountValue" column="Discount_Value" />
+		<result property="discountDesc" column="Discount_Desc" />
+		<result property="discountDisplayColorCd" column="Discount_Display_Color_Cd" />
+		<result property="createTime" column="Create_Time" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Id,
+			p1.Promotion_Id,
+			p1.Promotion_Condition_Id,
+			p1.Discount_Type_Cd,
+			p1.Discount_Value,
+			p1.Discount_Desc,
+			p1.Discount_Display_Color_Cd,
+			p1.Create_Time,
+			p1.promotion_coupon_num
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionDiscountRule" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO promotion_discount_rule (
+			Promotion_Id, 
+			Promotion_Condition_Id,
+			Discount_Type_Cd, 
+			Discount_Value, 
+			Discount_Desc, 
+			Discount_Display_Color_Cd, 
+			Create_Time,
+			promotion_coupon_num
+	    ) VALUES (
+			#{promotionId}, 
+			#{promotionConditionId},
+			#{discountTypeCd}, 
+			#{discountValue}, 
+			#{discountDesc}, 
+			#{discountDisplayColorCd}, 
+			#{createTime},
+			#{promotionCouponNum}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionDiscountRule">
+	   UPDATE promotion_discount_rule SET
+	   		Promotion_Id = #{promotionId}, 
+	   		Promotion_Condition_Id = #{promotionConditionId},
+	   		Discount_Type_Cd = #{discountTypeCd}, 
+	   		Discount_Value = #{discountValue}, 
+	   		Discount_Desc = #{discountDesc}, 
+	   		Discount_Display_Color_Cd = #{discountDisplayColorCd}, 
+	   		Create_Time = #{createTime}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion_discount_rule where Id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionDiscountRule" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_discount_rule p1
+	     WHERE
+			p1.Id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionDiscountRule">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_discount_rule p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionDiscountRule" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_discount_rule p1
+	    where a.deleted=0
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="promotionConditionId != null"> and p1.Promotion_Condition_Id = #{promotionConditionId}</if>
+		<if test="discountTypeCd != null"> and p1.Discount_Type_Cd = #{discountTypeCd}</if>
+		<if test="discountValue != null"> and p1.Discount_Value = #{discountValue}</if>
+		<if test="discountDesc != null"> and p1.Discount_Desc = #{discountDesc}</if>
+		<if test="discountDisplayColorCd != null"> and p1.Discount_Display_Color_Cd = #{discountDisplayColorCd}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<select id="findById" parameterType="java.lang.Integer" resultType="PromotionDiscountRule">
+		SELECT 
+			<include refid="allColumns"/>
+		FROM
+			promotion_discount_rule	p1
+		WHERE
+			promotion_id=#{promotionId}	
+	</select>
+
+	<!-- 根据 promotionId 查找 -->
+	<select id="findByPromotionId" resultType="PromotionDiscountRule" parameterType="java.lang.Integer">
+		select
+		<include refid="allColumns" />
+		from promotion_discount_rule p1
+		where
+		p1.Promotion_Id = #{0}
+	</select>
+	
+	<select id="getPromotionCouponNumTotalCountByPromotionId" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		select
+		SUM(p1.promotion_coupon_num)
+		from promotion_discount_rule p1
+		where
+		p1.Promotion_Id = #{0}
+	</select>
+	
+	<!-- 返回所有可用的优惠券的列表 -->
+	<select id="findAllUseList" resultType="PromotionDiscountRule" parameterType="Date">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion p 
+	    left join promotion_discount_rule p1 on p.Promotion_Id = p1.Promotion_Id 
+		where 
+		p.Status_Cd = 1 
+		and (p.Promotion_Type_Cd = 54 or p.Promotion_Type_Cd = 55) 
+		<![CDATA[   
+			and DATE_FORMAT(#{nowDate}, '%Y-%m-%d') >=  DATE_FORMAT(p2.Enable_Start_Time, '%Y-%m-%d')  
+			and DATE_FORMAT(#{nowDate}, '%Y-%m-%d') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d')  
+		]]>
+	</select>
+	
+	<!-- 根据优惠券折扣规则Id查询对应的优惠券条件 -->
+	<select id="getConditionByRuleId" resultType="String" parameterType="java.lang.Integer">
+		select
+			p2.Condition_Expression
+		from promotion_discount_rule p1
+			 left join promotion_condition p2 on p1.Promotion_Condition_Id = p2.Condition_Id
+		where 
+			p1.Id = #{Id}
+	</select>
+	
+	<!-- 根据活动Id查询对应的活动描述 -->
+	<select id="getDescByPromitionId" resultType="String" parameterType="java.lang.Integer">
+		select
+			p1.Discount_Desc
+		from 
+			promotion_discount_rule p1
+		where 
+			p1.Id = #{promotionDiscountRuleId}
+	</select>
+	
+	<!-- 2016.9.1 By caobr 根据预生成优惠码查询优惠折扣信息 -->
+	<select id="getPromotionDiscountRuleByCouponCode" resultType="PromotionDiscountRule" parameterType="java.lang.String">
+		SELECT a.Coupon_Code,a.Coupon_Code_Id,a.User_Id,a.Used_Time,
+			b.Id,
+			b.Promotion_Id,
+			b.Promotion_Condition_Id,
+			b.Discount_Type_Cd,
+			b.Discount_Value,
+			b.Discount_Desc,
+			b.Discount_Display_Color_Cd,
+			b.Create_Time,
+			b.promotion_coupon_num
+		FROM promotion_coupon_code a 
+		LEFT JOIN promotion_discount_rule b ON a.Promotion_Id=b.Promotion_Id AND a.promotion_dis_rule_id=b.Id
+		WHERE a.Coupon_Code=#{couponCode}
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 根据 promotionId 查找 -->
+	<select id="getByPromotionId" resultType="PromotionDiscountRule" parameterType="java.lang.Integer">
+		select
+		<include refid="allColumns" />
+		from promotion_discount_rule p1
+		where
+		p1.Promotion_Id = #{0}
+	</select>
+	
+	<!-- 获取用户能够使用的订单活动 -->
+	<select id="getUseOrderPromotion" resultType="UserCanPromotionDTO" >
+		select 
+			<include refid="allColumns" />
+			,p2.Is_All_User_Level_Join,
+			p2.Is_All_Product_Join,
+			p2.Is_All_Order_Join,
+			p2.Promotion_Type_Cd
+		from 
+			promotion_discount_rule p1
+		left join promotion p2 on p1.Promotion_Id = p2.promotion_id
+		where 
+			p2.Status_Cd = 1
+			and p2.Promotion_Type_Cd in(11,12,13)
+			<![CDATA[   
+   				and DATE_FORMAT(now(), '%Y-%m-%d') >=  DATE_FORMAT(p2.Enable_Start_Time, '%Y-%m-%d')  
+   				and DATE_FORMAT(now(), '%Y-%m-%d') <=  DATE_FORMAT(p2.Enable_End_Time, '%Y-%m-%d')  
+   			]]>
+	</select>
+	
+	<!-- 查询所有可用的商品活动 -->
+	<select id="getAllPromotionSales" resultType="PromotionDiscountRule" parameterType="java.util.Map">
+		select
+			<include refid="allColumns" />
+		from
+			promotion_discount_rule p1
+			left join promotion p2 on p1.Promotion_Id = p2.promotion_id
+		where
+			p2.Status_Cd = 1
+			and p2.Promotion_Type_Cd in (${types})
+			<![CDATA[   
+    			and p2.Enable_Start_Time <= now()
+    		    and p2.Enable_End_Time >= now()
+    		]]>
+	</select>
+	
+	<select id="getTotalConditionByPromotionId" parameterType="int" resultType="int">
+		SELECT count(*) FROM promotion_discount_rule WHERE Promotion_Id=#{promotionId}
+	</select>
+</mapper>

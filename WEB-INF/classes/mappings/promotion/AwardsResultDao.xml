@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.AwardsResultDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+			a.Id as id,
+			a.Awards_Item_Id as awardsItemId,
+			a.User_Id as userId,
+			a.Receiver_Name as receiverName,
+			a.Detail_Addr as address,
+			a.Mobile as mobile,
+			a.Post_Code as postCode,
+			a.Status_Cd as status,
+			a.Create_Time as createTime,
+			a.remark as remark,
+			a.Province_Id as provinceId, 
+        	a.City_Id as cityId,  
+        	a.County_Id as countyId,
+        	a.Progress as progress
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="AwardsResult" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO awards_result (
+			Awards_Item_Id, 
+			User_Id, 
+			Receiver_Name, 
+			Province_Id, 
+			City_Id, 
+			County_Id, 
+			Detail_Addr, 
+			Mobile, 
+			Post_Code, 
+			Status_Cd, 
+			Create_Time,
+			remark,
+			Progress
+	    ) VALUES (
+			#{awardsItemId}, 
+			#{userId}, 
+			#{receiverName}, 
+			#{provinceId}, 
+			#{cityId}, 
+			#{countyId}, 
+			#{address}, 
+			#{mobile}, 
+			#{postCode}, 
+			#{status}, 
+			#{createTime},
+			#{remark},
+			#{progress}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="AwardsResult">
+	   UPDATE awards_result SET
+	   		Awards_Item_Id = #{awardsItemId}, 
+	   		User_Id = #{userId}, 
+	   		Receiver_Name = #{receiverName}, 
+	   		Province_Id = #{provinceId}, 
+	   		City_Id = #{cityId}, 
+	   		County_Id = #{countyId}, 
+	   		Detail_Addr = #{address}, 
+	   		Mobile = #{mobile}, 
+	   		Post_Code = #{postCode}, 
+	   		Status_Cd = #{status}, 
+	   		Create_Time = #{createTime},
+	   		remark = #{remark},
+	   		Progress = #{progress}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+    <!-- 修改 -->
+    <update id="updateStatus" parameterType="int">
+	   UPDATE awards_result SET
+	   		Status_Cd = 1
+	   WHERE 
+			Id = #{id}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="long">
+		DELETE FROM awards where Id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="findAwardsResultById" resultType="AwardsResult" parameterType="long">
+        SELECT
+        <include refid="allColumns"/>,b.Nick_Name as userName,b.Phone as phone,
+        c.name as awardsItemName,c.item_pic_url as itemPicUrl,c.Winning_Type_Cd as winningType,d.id as
+        awardsId,d.Share_Limit as shareLimit,d.Award_Type_Cd as awardTypeCd
+        from awards_result a
+        left join user b on a.User_Id = b.User_Id
+        left join awards_item c on a.Awards_Item_Id = c.id
+        left join awards d on c.Awards_Id = d.id
+        WHERE
+        a.Id=#{id}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="AwardsResult">
+        select
+        <include refid="allColumns"/>,b.Nick_Name as userName,b.Phone as phone,
+        c.name as awardsItemName,c.item_pic_url as itemPicUrl,c.Winning_Type_Cd as winningType,d.id as
+        awardsId,d.Share_Limit as shareLimit,d.Award_Type_Cd as awardTypeCd
+        from awards_result a
+        left join user b on a.User_Id = b.User_Id
+        left join awards_item c on a.Awards_Item_Id = c.id
+        left join awards d on c.Awards_Id = d.id
+        where c.name != '谢谢参与'
+        <if test="order_col != null">order by a.${order_col}</if>
+    </select>
+
+    <!-- 返回奖品处理列表 -->
+    <select id="findAwardsResultList" resultType="AwardsResult" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>,b.Nick_Name as userName,b.Phone as phone,
+        c.name as awardsItemName,c.item_pic_url as itemPicUrl,c.Winning_Type_Cd as winningType,d.id as
+        awardsId,d.Share_Limit as shareLimit,d.Award_Type_Cd as awardTypeCd,s.Code_Cn_Name AS awardTypeName
+        from awards_result a
+        left join user b on a.User_Id = b.User_Id
+        left join awards_item c on a.Awards_Item_Id = c.id
+        left join awards d on c.Awards_Id = d.id
+		LEFT JOIN system_code s ON s.Code_Type_Cd = "AWARD_TYPE_CD" AND s.Code_Id = d.Award_Type_Cd
+        where c.name != '谢谢参与'
+        <if test="ids != null">
+            and a.id in
+            <foreach item="item" index="index" collection="ids" open="("
+                     separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="eq_status != null">and a.Status_Cd = #{eq_status}</if>
+        <if test="ge_createTime != null">and a.Create_Time &gt;= #{ge_createTime}</if>
+        <if test="le_createTime != null">and a.Create_Time &lt;= #{le_createTime}</if>
+        <if test="awardsId != null">and d.id=#{awardsId}</if>
+        <if test="awardsItemId != null">and a.Awards_Item_Id=#{awardsItemId}</if>
+        <if test="userId != null">and a.User_Id=#{userId}</if>
+        <if test="awardTypeCd != null">and d.Award_Type_Cd = #{awardTypeCd}</if>
+        <if test="null != like_username and '' != like_username">and b.Nick_Name LIKE CONCAT('%',#{like_username},'%')
+        </if>
+        <if test="null != like_emailAddress and '' != like_emailAddress">and b.Email_Address LIKE
+            CONCAT('%',#{like_emailAddress},'%')
+        </if>
+        <if test="null != like_phone and '' != like_phone">and b.phone LIKE CONCAT('%',#{like_phone},'%')</if>
+        <if test="null != like_awardsItemName and '' != like_awardsItemName">and c.name LIKE
+            CONCAT('%',#{like_awardsItemName},'%')
+        </if>
+        <if test="null != eq_awardsId and '' != eq_awardsId">and d.id = #{eq_awardsId}</if>
+
+        ORDER BY a.Id DESC
+        <if test="firstResult != null and pageSize != null">
+            LIMIT #{firstResult},#{pageSize}
+        </if>
+    </select>
+    
+    
+    
+    	<!-- 根据awardTypeCd 获取awardList -->
+  	<select id="findAwardByLimitList" resultType="AwardListDTO" parameterType="AwardLimitDTO">
+	    SELECT
+			a.Id,a.Awards_Item_Id,a.Create_Time,a.Status_Cd,
+			b.Nick_Name,b.Phone,
+			c.Awards_Id,c.Name,c.item_pic_url,c.Winning_Value,c.Winning_Type_Cd,
+			d.Title,
+			d.Share_Limit,
+			d.award_type_cd,
+			a.user_id,
+			a.Progress
+	    FROM awards_result a
+	    LEFT JOIN user b on a.User_Id = b.User_Id
+	    LEFT JOIN awards_item c on a.Awards_Item_Id = c.id
+	    LEFT JOIN awards d on c.Awards_Id = d.id
+	    where  c.Name != '谢谢参与' AND a.User_Id = #{userId}
+	    <if test="awardTypeCd != null">AND d.Award_Type_Cd = #{awardTypeCd}</if>
+	    <if test="statusCd != null and statusCd != '-1'">AND a.Status_Cd=#{statusCd}</if>
+	    ORDER BY a.Id DESC
+	    <if test="start !=null and pageSize != null">
+	    	LIMIT #{start},#{pageSize}
+	    </if>
+	</select>
+	
+	<select id="getLimitCount" parameterType="AwardLimitDTO" resultType="int">
+		  SELECT
+			count(*)
+	    FROM awards_result a
+	    LEFT JOIN user b on a.User_Id = b.User_Id
+	    LEFT JOIN awards_item c on a.Awards_Item_Id = c.id
+	    LEFT JOIN awards d on c.Awards_Id = d.id
+	    where  c.Name != '谢谢参与' AND a.User_Id = #{userId}
+	    <if test="awardTypeCd != null">AND d.Award_Type_Cd = #{awardTypeCd}</if>
+	    <if test="statusCd != null and statusCd != '-1'">AND a.Status_Cd=#{statusCd}</if>
+	</select>
+	
+	<select id="getAwardsDetailById" parameterType="int" resultType="AwardsDetailDTO">
+		SELECT 
+			a.Receiver_Name,
+			a.Mobile,
+			a.Detail_Addr,
+			a.Province_Id,
+			a.City_Id,	
+			a.County_Id,
+			a.remark,
+			a.Status_Cd,
+			a.post_code,
+			b.name,
+			c.Area_Name as provinceName,
+			d.Area_Name as cityName,
+			e.Area_Name as countyName
+		FROM awards_result a 
+		LEFT JOIN awards_item b ON a.Awards_Item_Id=b.Id
+		LEFT JOIN area c ON a.Province_Id=c.Id
+		LEFT JOIN area d ON a.City_Id=d.Id
+		LEFT JOIN area e ON a.County_Id=e.Id
+		WHERE a.Id=#{id} AND b.name != '谢谢参与'
+	</select>
+</mapper>

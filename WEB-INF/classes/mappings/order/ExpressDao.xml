@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.ExpressDao">
+
+    <sql id="allColumns">
+		a.Express_Id,
+		a.Express_Template_Id,
+		a.Express_Code,
+		a.Express_Name,
+		a.Create_Time,
+		a.Last_Update_Time,
+		a.Is_Support_Cod,
+		a.Is_Default_Express,
+		a.Express_Status_Cd,
+		a.Express_Type_Cd,
+		a.Out_Id
+	</sql>
+
+    <select id="findExpresses" resultType="cn.yr.chile.order.dto.ExpressDTO" parameterType="java.util.Map">
+      SELECT
+       a.Express_Id,
+       a.Express_Name,
+       a.Is_Default_Express,
+       a.Express_Status_Cd,
+       s1.Code_Cn_Name AS expressStatusName,
+       b.Template_Name,
+       b.First_value,
+       b.First_price,
+       b.Continue_value,
+       b.Continue_price
+       FROM express a
+       LEFT JOIN express_template b on a.Express_Template_Id = b.Template_Id
+       LEFT JOIN system_code s1 on a.Express_Status_Cd = s1.Code_Id AND s1.Code_Type_Cd
+       ORDER BY a.Express_Id DESC
+    </select>
+
+    <select id="findExpressesByStatus" resultType="cn.yr.chile.order.domain.Express">
+      select
+       <include refid="allColumns"/>
+       from express a
+       where a.Express_Status_Cd = 1
+    </select>
+
+    <!-- 获取启用中的 express -->
+    <select id="findAvailableExpresses" resultType="cn.yr.chile.order.dto.ExpressDTO">
+		SELECT
+			a.Express_Id,
+			a.Express_Code,
+			a.Express_Name,
+			a.Is_Support_Cod,
+			a.Is_Default_Express,
+			a.Express_Status_Cd,
+			a.Express_Type_Cd,
+			a.Out_Id,
+			b.Template_Name,
+			b.First_value,
+			b.First_price,
+			b.Continue_value,
+			b.Continue_price
+		FROM express a
+		LEFT JOIN express_template b ON a.Express_Template_Id = b.Template_Id
+		WHERE a.Express_Status_Cd = 1
+	</select>
+
+    <insert id="insert" parameterType="cn.yr.chile.order.domain.Express" useGeneratedKeys="true"
+            keyProperty="expressId">
+		INSERT INTO express(
+        Express_Template_Id,
+        Express_Code,
+        Express_Name,
+        Create_Time,
+        Is_Support_Cod,
+        Is_Default_Express,
+        Express_Status_Cd,
+        Express_Type_Cd,
+        Out_Id
+        ) VALUES (
+        #{expressTemplateId},
+        #{expressCode},
+        #{expressName},
+        #{createTime},
+        #{isSupportCod},
+        #{isDefaultExpress},
+        #{expressStatusCd},
+        #{expressTypeCd},
+        #{outId}
+        )
+	</insert>
+    <select id="get" parameterType="Integer" resultType="cn.yr.chile.order.domain.Express">
+        select
+        <include refid="allColumns"/>
+        from express a
+        where a.Express_Id = #{expressId}
+    </select>
+
+    <!-- 更新 -->
+    <update id="update" parameterType="cn.yr.chile.order.domain.Express">
+        UPDATE express SET
+        <if test="expressTemplateId != null">
+            Express_Template_Id = #{expressTemplateId},
+        </if>
+        <if test="expressCode != null and expressCode != ''">
+            Express_Code = #{expressCode},
+        </if>
+        <if test="expressName != null and expressName != ''">
+            Express_Name = #{expressName},
+        </if>
+        <if test="outId != null">
+            Out_Id = #{outId},
+        </if>
+        <if test="isSupportCod != null">
+            Is_Support_Cod = #{isSupportCod},
+        </if>
+        <if test="isDefaultExpress != null">
+            Is_Default_Express = #{isDefaultExpress},
+        </if>
+        <if test="expressStatusCd != null">
+            Express_Status_Cd = #{expressStatusCd},
+        </if>
+        <if test="expressTypeCd != null">
+            Express_Type_Cd = #{expressTypeCd},
+        </if>
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE
+        Express_Id = #{expressId}
+    </update>
+
+
+    <update id="setDefaultExpress">
+	 update  express  set 
+	 Is_Default_Express = 0
+	</update>
+
+    <select id="findAllExpresses" resultType="cn.yr.chile.order.domain.Express">
+		select 
+			Express_Id as expressId,
+			Express_Code as expressCode,
+			Express_Name as expressName,
+			Create_Time as createTime,
+			Last_Update_Time as lastUpdateTime,
+			Is_Support_Cod as isSupportCod,
+			Is_Default_Express as isDefaultExpress,
+			Express_Status_Cd as expressStatusCd,
+			Express_Type_Cd as expressTypeCd,
+			Out_Id as outId
+		from
+			express
+		
+	</select>
+	
+	<select id="findAvailableExpressesByReceiverCityId" parameterType="Long" resultType="Map">
+		SELECT
+			e.Express_Id expressId,
+			e.Express_Name AS expressName,
+			et.First_price AS defaultPrice,
+			eta.First_price AS price
+		FROM express e
+		LEFT JOIN express_template et ON e.Express_Template_Id = et.Template_Id
+		LEFT JOIN express_template_area eta ON e.Express_Template_Id = eta.Template_Id AND eta.Area_id = #{0}
+		WHERE 
+			e.Express_Status_Cd = 1
+	</select>
+
+</mapper>

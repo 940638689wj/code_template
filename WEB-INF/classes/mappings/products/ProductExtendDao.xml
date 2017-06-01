@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductExtendDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Id, Product_Detail_Desc, Product_Weight, Product_Weight_Unit_Cd, Product_Measure_Unit,
+        Product_Sub_Title,Blg_Store_ID,Template_Area_ID,Product_M_Detail_Desc
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductExtend" useGeneratedKeys="true" keyProperty="productId">
+	    INSERT INTO product_extend (
+	        Product_Id, Product_Detail_Desc, Product_Weight, Product_Weight_Unit_Cd, Product_Measure_Unit,
+	        Product_Sub_Title,Blg_Store_ID,Template_Area_ID,Product_M_Detail_Desc
+	    ) VALUES (
+	        #{productId}, #{productDetailDesc}, #{productWeight}, #{productWeightUnitCd}, #{productMeasureUnit},
+	        #{productSubTitle},#{blgStoreId}, #{templateAreaId},#{productMDetailDesc}    
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductExtend">
+	   UPDATE product_extend SET
+		   Product_Detail_Desc = #{productDetailDesc}, 
+		   Product_Weight = #{productWeight}, 
+		   Product_Weight_Unit_Cd = #{productWeightUnitCd}, 
+		   Product_Measure_Unit = #{productMeasureUnit},
+		   Product_Sub_Title = #{productSubTitle},
+		   Blg_Store_ID = #{blgStoreId},
+		   Template_Area_ID = #{templateAreaId},
+		   Product_M_Detail_Desc=#{productMDetailDesc}
+	   WHERE 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM product_extend where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductExtend" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_extend 
+	     WHERE 
+			  Product_Id=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductExtend">  
+	    select 
+		<include refid="allColumns" />
+	    from product_extend
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductExtend" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_extend
+	    where 1=1
+		<if test="productId != null"> and Product_Id = #{productId}</if>
+		<if test="productDetailDesc != null"> and Product_Detail_Desc = #{productDetailDesc}</if>
+		<if test="outsideId != null"> and Outside_Id = #{outsideId}</if>
+		<if test="productVideoUrl != null"> and Product_Video_Url = #{productVideoUrl}</if>
+		<if test="oldSkuIds != null"> and Old_Sku_Ids = #{oldSkuIds}</if>
+	</select>
+
+</mapper>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserBalanceDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Balance_Id, Balance_Income, Balance_Expend, Remark, Order_Number, User_Id, Admin_User_ID, Admin_User_Name, Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserBalanceDetail" useGeneratedKeys="true" keyProperty="Balance_Id">
+	    INSERT INTO user_balance_detail (
+	        Balance_Income, Balance_Expend, Remark, Order_Number, User_Id, Admin_User_ID, Admin_User_Name, Create_Time,Oper_Event_Type_Cd
+	    ) VALUES (
+	        #{balanceIncome}, #{balanceExpend}, #{remark}, #{orderNumber}, #{userId}, #{adminUserId}, #{adminUserName}, #{createTime},#{operEventTypeCd}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserBalanceDetail">
+	   UPDATE user_balance_detail SET
+		   Balance_Income = #{balanceIncome}, 
+		   Balance_Expend = #{balanceExpend}, 
+		   Remark = #{remark}, 
+		   Order_Number = #{orderNumber}, 
+		   User_Id = #{userId}, 
+		   Admin_User_ID = #{adminUserId}, 
+		   Admin_User_Name = #{adminUserName}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   Balance_Id = #{balanceId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM user_balance_detail where Balance_Id = #{balanceId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserBalanceDetail" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_balance_detail 
+	     WHERE 
+			  Balance_Id=#{balanceId}
+	</select>
+	<!-- 根据用户id获取信息 -->
+	<select id="findListByUserId" resultType="UserBalanceDetail" parameterType="UserBalanceDetail">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_balance_detail 
+	     WHERE user_id=#{userId}
+		 order by Balance_Id DESC	  
+	</select>
+	
+	<select id="findByUserId" resultType="UserBalanceDetail" parameterType="UserBalanceDetail">  
+		SELECT
+			a.Balance_Id,
+ 			a.Balance_Income,
+		 	a.Balance_Expend,
+ 			a.Remark,
+ 			a.Order_Number,
+ 			a.User_Id,
+ 			a.Admin_User_ID,
+ 			a.Admin_User_Name,
+ 			a.Create_Time ,
+			b.Code_Cn_Name
+	     FROM user_balance_detail a
+	     LEFT JOIN SYSTEM_CODE b ON b.Code_Type_Cd='oper_event_type_cd' AND b.Code_Id=a.OPER_Event_Type_Cd
+	     WHERE user_id=#{userId}
+		 order by Create_Time DESC	  
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserBalanceDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_balance_detail
+	</select>
+	
+	<!-- 返回列表 -->
+	<!--  <select id="findList" resultType="UserBalanceDetail" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_balance_detail a
+	    <where>
+			<if test="balanceId != null"> and a.Balance_Id = #{balanceId}</if>
+			<if test="balanceIncome != null"> and a.Balance_Income = #{balanceIncome}</if>
+			<if test="balanceExpend != null"> and a.Balance_Expend = #{balanceExpend}</if>
+			<if test="remark != null"> and a.Remark = #{remark}</if>
+			<if test="orderNumber != null"> and a.Order_Number = #{orderNumber}</if>
+			<if test="userId != null"> and a.User_Id = #{userId}</if>
+			<if test="adminUserId != null"> and a.Admin_User_ID = #{adminUserId}</if>
+			<if test="adminUserName != null"> and a.Admin_User_Name = #{adminUserName}</if>
+			<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		</where>
+		order by a.Create_Time DESC
+	</select>-->
+	
+	<!-- 分页获取信息 -->
+	<select id="findPageByUserId" resultType="UserBalanceDetail" parameterType="java.util.HashMap">  
+		SELECT
+		<include refid="allColumns" />
+	    FROM user_balance_detail 
+	    WHERE 
+	    	user_id=#{userId}
+	    <if test="type != null and type == 1">and Balance_Expend is null</if>
+		<if test="type != null and type == 2">and Balance_Income is null</if>
+		order by Balance_Id DESC	  
+	</select>
+
+	<!-- 分页获取余额记录 -->
+	<select id="findListByLimit" resultType="UserBalanceDetail" parameterType="cn.yr.chile.user.dto.UserLimitDTO">
+		SELECT
+		<include refid="allColumns" />
+		FROM user_balance_detail 
+		WHERE User_id=#{userId}
+		ORDER BY Balance_Id DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+
+	<!--获取余额记录总数-->
+	<select id="findListByLimitCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*) FROM (
+		SELECT
+		<include refid="allColumns"/>
+		FROM user_balance_detail
+		WHERE User_id=#{userId}
+		) as a
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findBalanceOfAccountList" resultType="BalanceOfAccountDTO" parameterType="java.util.Map">  
+	   select 
+	 	  a.Create_Time as createTime,
+	  	  a.Remark as remark,
+	 	  a.Balance_Expend as balanceExpend,
+	 	  a.balance_Income as balanceIncome,
+	 	  c.Code_Cn_Name as codeCnName,
+	      b.Phone as phone,
+	 	  b.User_Name as userName
+	   from 
+	   		user_balance_detail a 
+	   left join 
+	   		user b 
+	   on 
+	   		a.user_id=b.user_id 
+	   	left join
+	   		system_code c
+	   	on 
+	   		c.Code_Type_Cd='oper_event_type_cd'
+	   	and
+	   		c.Code_Id=a.oper_event_type_cd			
+	   	<where>
+			<if test="balanceId != null"> and a.Balance_Id = #{balanceId}</if>
+			<if test="balanceIncome != null"> and a.Balance_Income = #{balanceIncome}</if>
+			<if test="balanceExpend != null"> and a.Balance_Expend = #{balanceExpend}</if>
+			<if test="remark != null"> and a.Remark = #{remark}</if>
+			<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+			<if test="phone != null">and b.Phone=#{phone}</if>
+			<if test="userName != null">and b.User_Name=#{userName}</if>
+			<if test="codeCnName != null">and c.Code_Cn_Name=#{codeCnName}</if>
+			 <if test="beginTime != '' and beginTime != null">
+        	and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Create_Time,'%Y%m%d')
+       	</if>
+        <if test="endTime != '' and endTime != null">
+        	and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Create_Time,'%Y%m%d')
+        </if>
+		</where>
+		order by a.Create_Time DESC  
+	</select>
+	
+
+	
+	<!-- 会员消费及充值总数 -->
+	<select id="sumOfAllBalanceExpendOrBalanceIncome" parameterType="map" resultType="SumOfBalanceExpendOrBalanceIncome">
+		select 
+			sum(a.balance_Expend) as balanceExpend,
+			sum(a.balance_Income) as balanceIncome
+		from 
+			user_balance_detail a
+			 <where>
+			<if test="balanceId != null"> and a.Balance_Id = #{balanceId}</if>
+			<if test="balanceIncome != null"> and a.Balance_Income = #{balanceIncome}</if>
+			<if test="balanceExpend != null"> and a.Balance_Expend = #{balanceExpend}</if>
+			<if test="remark != null"> and a.Remark = #{remark}</if>
+			<if test="orderNumber != null"> and a.Order_Number = #{orderNumber}</if>
+			<if test="userId != null"> and a.User_Id = #{userId}</if>
+			<if test="adminUserId != null"> and a.Admin_User_ID = #{adminUserId}</if>
+			<if test="adminUserName != null"> and a.Admin_User_Name = #{adminUserName}</if>
+			<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+			<if test="beginTime != '' and beginTime != null">
+        		and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Create_Time,'%Y%m%d')
+       		</if>
+        	<if test="endTime != '' and endTime != null">
+        		and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Create_Time,'%Y%m%d')
+        	</if>
+		</where>			
+	</select>
+	
+	<!-- 现金卡充值记录  分页 -->
+	<select id="findRecordByLimit" resultType="UserBalanceDetail"  parameterType="cn.yr.chile.user.dto.CardRechargeRecordLimitDTO">
+		SELECT
+			<include refid="allColumns"/>
+			FROM user_balance_detail 
+			WHERE User_Id = #{userId}
+			AND  OPER_Event_Type_Cd = 7
+			ORDER BY Create_Time DESC
+			LIMIT #{start},#{pageSize} 
+			
+	</select>
+	
+	<select id="getPageCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		SELECT
+		COUNT(*)
+		FROM user_balance_detail
+		WHERE User_Id = #{userId}
+	</select>
+	
+</mapper>

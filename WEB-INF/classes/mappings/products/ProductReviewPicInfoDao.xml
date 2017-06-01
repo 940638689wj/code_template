@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductReviewPicInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Review_Pic_Id, Review_Id, Product_Id, Pic_Url, Display_Id, Create_Time, Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductReviewPicInfo" useGeneratedKeys="true" keyProperty="Review_Pic_Id">
+	    INSERT INTO product_review_pic_info (
+	        Review_Id, Product_Id, Pic_Url, Display_Id, Create_Time, Last_Update_Time
+	    ) VALUES (
+	        #{reviewId}, #{productId}, #{picUrl}, #{displayId}, #{createTime}, #{lastUpdateTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductReviewPicInfo">
+	   UPDATE product_review_pic_info SET
+		   Review_Id = #{reviewId}, 
+		   Product_Id = #{productId}, 
+		   Pic_Url = #{picUrl}, 
+		   Display_Id = #{displayId}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+		   Review_Pic_Id = #{reviewPicId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_review_pic_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductReviewPicInfo" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_review_pic_info 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductReviewPicInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from product_review_pic_info
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductReviewPicInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_review_pic_info a
+	    where 1=1
+		<if test="reviewPicId != null"> and a.Review_Pic_Id = #{reviewPicId}</if>
+		<if test="reviewId != null"> and a.Review_Id = #{reviewId}</if>
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="picUrl != null"> and a.Pic_Url = #{picUrl}</if>
+		<if test="displayId != null"> and a.Display_Id = #{displayId}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and a.Last_Update_Time = #{lastUpdateTime}</if>
+	</select>
+	
+	<select id="findByReviewId" parameterType="java.util.HashMap" resultType="ProductReviewPicInfo">
+		SELECT
+			<include refid="allColumns"/>
+		FROM
+			product_review_pic_info
+		WHERE 1=1
+		<if test="reviewId != null">AND Review_Id=#{reviewId}</if>
+	</select>
+</mapper>

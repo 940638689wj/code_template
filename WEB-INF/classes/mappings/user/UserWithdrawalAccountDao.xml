@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserWithdrawalAccountDao">
+	<!--<resultMap id="userWithdrawalAccountMap" type="UserWithdrawalAccount">
+		<result property="userId" column="User_Id" />
+		<result property="openingBankName" column="Opening_Bank_Name" />
+		<result property="openingAccountName" column="Opening_Account_Name" />
+		<result property="openingAccountNo" column="Opening_Account_No" />
+		<result property="identity" column="Identity" />
+		<result property="withdrawalType" column="Withdrawal_Type" />
+		<result property="bankTypeCd" column="Bank_Type_Cd" />
+		<result property="createTime" column="Create_Time" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        id,User_Id, Opening_Bank_Name, Opening_Account_Name, Opening_Account_No, Identity, Bank_Type_Cd, Create_Time
+	</sql>
+
+	<!-- 2016.06.17 By caobr 新增提现账户 -->
+	<insert id="addWithdrawalAccount"  parameterType="cn.yr.chile.user.domain.UserWithdrawalAccount" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_withdrawal_account (
+	        User_Id,Opening_Bank_Name, Opening_Account_Name, Opening_Account_No,Identity, Bank_Type_Cd, Create_Time
+	    ) VALUES (
+	        #{userId}, #{openingBankName}, #{openingAccountName},#{openingAccountNo}, #{identity}, #{bankTypeCd}, #{createTime}        
+	    )
+	</insert>
+
+	<!-- 2016.06.17 By caobr 编辑提现账户信息 -->
+	<update id="updateWithdrawalAccount" parameterType="UserWithdrawalAccount">
+	   UPDATE user_withdrawal_account SET
+		   Opening_Bank_Name = #{openingBankName}, 
+		   Opening_Account_Name = #{openingAccountName}, 
+		   Identity = #{identity}, 
+		   Bank_Type_Cd = #{bankTypeCd}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   User_Id = #{userId} AND Opening_Account_No = #{openingAccountNo}
+	</update>
+
+	<!-- 2016.06.17 By caobr 删除提现账户 -->
+	<delete id="deleteWithdrawalAccount" parameterType="UserWithdrawalAccount">
+		DELETE FROM user_withdrawal_account WHERE User_Id = #{userId} AND Opening_Account_No = #{openingAccountNo}
+	</delete>
+	<!-- 2016.06.17 By caobr 根据userId查询提现账户 -->
+	<select id="findAccountByUserId" resultType="UserWithdrawalAccount" parameterType="int">  
+		SELECT <include refid="allColumns" />
+	     FROM user_withdrawal_account 
+	     WHERE  User_Id=#{userId}
+	</select>
+	
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserWithdrawalAccount" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_withdrawal_account 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserWithdrawalAccount">  
+	    select 
+		<include refid="allColumns" />
+	    from user_withdrawal_account
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserWithdrawalAccount" parameterType="UserWithdrawalAccount">
+		select 
+		<include refid="allColumns" />
+		from user_withdrawal_account 
+		where 1=1
+		<if test="userId != null"> and User_Id = #{userId}</if>
+		<if test="openingBankName != null"> and Opening_Bank_Name = #{openingBankName}</if>
+		<if test="openingAccountName != null"> and Opening_Account_Name = #{openingAccountName}</if>
+		<if test="openingAccountNo != null"> and Opening_Account_No = #{openingAccountNo}</if>
+		<if test="identity != null"> and Identity = #{identity}</if>
+		<if test="bankTypeCd != null"> and Bank_Type_Cd = #{bankTypeCd}</if>
+		<if test="bankTypeCd == null">and Bank_Type_Cd not in (1,12)</if>
+		<if test="createTime != null"> and Create_Time = #{createTime}</if>
+		order by create_time desc
+	</select>
+	
+	<!-- 返回用户的提现银行账号 -->
+	<select id="findWithdrawalBankList" resultType="UserWithdrawalAccount" parameterType="int">
+		select <include refid="allColumns" />
+		from user_withdrawal_account 
+		where User_Id = #{userId} and Bank_Type_Cd != 1 and Bank_Type_Cd != 12
+		order by create_time desc
+	</select>
+
+</mapper>

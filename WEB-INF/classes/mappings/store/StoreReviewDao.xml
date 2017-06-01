@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cn.yr.chile.common.dao.StoreReviewDao">
+	 <sql id="allColumns">
+		Review_Id,
+		Store_Id,
+		Order_Id,
+		Review_Status_Cd,
+		Reviewer_User_Id,
+		Review_Name,
+		Reviewer_Phone,
+		Sale_Ship_Speed_Score,
+		Sale_Service_Attr_Score,
+		Review_Time 
+	 </sql>
+	<select id="findPage" resultType="cn.yr.chile.common.domain.StoreReview" parameterType="java.util.Map">
+		select 
+		<include refid="allColumns" />
+		from store_review
+		where Review_Status_Cd>0
+		<if test="storeId !='' and storeId != null ">
+			and Store_Id=#{storeId}
+		</if>
+	</select>
+	
+	<!-- id查询  -->
+	<select id="get" resultType="cn.yr.chile.common.domain.StoreReview" parameterType="Integer">  
+	    select 
+		<include refid="allColumns" />
+	    from store_review 
+	    where  Review_Id= #{reviewId}
+	</select>
+
+
+	<!-- 插入评价 -->
+    <insert id="insertReviewForm" useGeneratedKeys="true" keyProperty="reviewId" >
+        INSERT INTO store_review(
+            Store_Id,
+            Reviewer_User_Id,
+            order_id,
+            Review_Name,
+            Reviewer_Phone,
+            Sale_Ship_Speed_Score,
+            Sale_Service_Attr_Score,
+            Review_Time,
+            Review_Status_Cd
+        ) VALUES (
+            #{storeId},
+            #{reviewerUserId},
+            #{orderId},
+            #{reviewName},
+            #{reviewerPhone},
+            #{saleShipSpeedScore},
+            #{saleServiceAttrScore},
+            #{reviewTime},
+            #{reviewStatusCd}
+        ) 
+    </insert>
+
+	<update id="update" parameterType="cn.yr.chile.common.domain.StoreReview" >
+    update store_review
+    <set >
+          Store_Id = #{storeId},
+          Reviewer_User_Id = #{reviewerUserId},
+          Review_Name = #{reviewName},
+          Reviewer_Phone = #{reviewerPhone},
+          Sale_Ship_Speed_Score = #{saleShipSpeedScore},
+          Sale_Service_Attr_Score = #{saleServiceAttrScore},
+          Review_Time = #{reviewTime},
+          Order_id = #{orderId},
+          Review_Status_Cd = #{reviewStatusCd}
+    </set>
+    where Review_id = #{reviewId}
+  </update>
+
+ </mapper>

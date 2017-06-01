@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.DefinedModuleItemDao">
+	<sql id="allColumns">
+		id,
+		defined_module_id,
+		name,
+		seq
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="DefinedModuleItem" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO defined_module_item (
+	        id, 
+	        defined_module_id, 
+	        name, 
+	        seq
+	    ) VALUES (
+	        #{id},
+	        #{definedModuleId}, 
+	        #{name}, 
+	        #{seq}
+	    )
+	</insert>
+	
+	<!-- 更新 -->
+	<update id="update" parameterType="DefinedModuleItem" >
+	    UPDATE defined_module_item SET
+		   defined_module_id = #{definedModuleId}, 
+		   name = #{name}, 
+		   seq = #{seq}
+	   WHERE 
+		   id = #{id}
+	</update>
+   
+	<!-- 根据defined_module_id获取 -->
+    <select id="findModuleItemByModuleId" resultType="DefinedModuleItem" parameterType="string">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM defined_module_item
+	     WHERE 
+			  defined_module_id = #{definedModuleId}
+	</select>
+	
+	<!-- 根据id获取 -->
+    <select id="findById" resultType="DefinedModuleItem" parameterType="long">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM defined_module_item
+	     WHERE 
+			  id = #{id}
+	</select>
+	
+	<!-- 根据id删除 -->
+    <delete id="deleteById" parameterType="long">  
+		DELETE FROM defined_module_item where id = #{id}
+	</delete>
+	
+	<!-- 根据DefinedModuleItem删除 -->
+    <delete id="delete" parameterType="DefinedModuleItem">  
+		DELETE FROM defined_module_item where id = #{id}
+	</delete>
+
+</mapper>

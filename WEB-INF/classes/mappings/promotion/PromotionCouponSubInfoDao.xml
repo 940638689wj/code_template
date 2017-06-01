@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionCouponSubInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Sub_ID,
+			p1.Promotion_Id,
+			p1.First_Take_Coupon_Code_ID,
+			p1.First_Take_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionCouponSubInfo" useGeneratedKeys="true" keyProperty="subId">
+	    INSERT INTO promotion_coupon_sub_info (
+			Promotion_Id,
+			First_Take_Coupon_Code_ID,
+			First_Take_Time
+	    ) VALUES (
+			#{promotionId},
+			#{firstTakeCouponCodeId},
+			#{firstTakeTime}
+	    )
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionCouponSubInfo">
+	   UPDATE promotion_coupon_sub_info SET
+	   		Promotion_Id = #{promotionId}, 
+	   		First_Take_Coupon_Code_ID = #{firstTakeCouponCodeId}, 
+	   		First_Take_Time = #{firstTakeTime}
+	   WHERE 
+			Sub_ID = #{subId}
+	</update>
+	
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionCouponSubInfo" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_coupon_sub_info p1
+	     WHERE
+			p1.Sub_ID=#{subId}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionCouponSubInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon_sub_info p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionCouponSubInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_coupon_sub_info p1
+	    where 1=1
+		<if test="subId != null"> and p1.Sub_ID = #{subId}</if>
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="firstTakeCouponCodeId != null"> and p1.First_Take_Coupon_Code_ID = #{firstTakeCouponCodeId}</if>
+		<if test="firstTakeTime != null"> and p1.First_Take_Time = #{firstTakeTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+</mapper>

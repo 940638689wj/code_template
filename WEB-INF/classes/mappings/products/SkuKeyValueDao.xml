@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.SkuKeyValueDao">
+<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		a.SKU_KEY,
+		a.SKU_Type_ID,
+		a.SKU_VALUE,
+		a.Create_Time,
+		a.Display_ID,
+		a.Status_Cd
+	</sql>
+	<!-- 新增 -->
+	<insert id="insertSkuKeyKey" parameterType="SkuKeyValue" useGeneratedKeys="true" keyProperty="skuKey">
+	    INSERT INTO sku_key_value (
+	        SKU_KEY, 
+	        SKU_Type_ID,
+	        SKU_VALUE, 
+	        Display_ID,
+	        Create_Time,
+	        Status_Cd
+	    ) VALUES (
+	        #{skuKey},
+	        #{skuTypeId},
+	        #{skuValue},
+	        #{displayId},
+	        #{createTime},
+	        #{statusCd}    
+	    )
+	</insert>
+	<insert id="insert" parameterType="SkuKeyValue" useGeneratedKeys="true" keyProperty="SKU_KEY">
+		INSERT INTO sku_key_value (
+		SKU_KEY,
+		SKU_Type_ID,
+		SKU_VALUE,
+		Display_ID,
+		Create_Time,
+		Status_Cd
+		) VALUES (
+		#{skuKey},
+		#{skuTypeId},
+		#{skuValue},
+		#{displayId},
+		#{createTime},
+		#{statusCd}
+		)
+	</insert>
+	<!-- 修改 -->
+	<update id="update" parameterType="SkuKeyValue">
+	   UPDATE sku_key_value SET
+		   SKU_Type_ID = #{skuTypeId}, 
+		   SKU_VALUE=#{skuValue},
+		   Display_ID=#{displayId},
+		   Create_Time = #{createTime},
+		   Status_Cd=#{statusCd} 
+	   WHERE 
+		   SKU_KEY = #{skuKey}
+	</update>
+	<!-- 根据SKU_Type_ID获取 -->
+    <select id="findBySkuTypeId" resultType="SkuKeyValue" parameterType="java.util.Map">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM sku_key_value a
+	     WHERE 1=1
+	    <if test="skuTypeId != null">
+		and a.SKU_Type_ID = #{skuTypeId}
+		</if>
+		and a.Status_Cd=1
+		order by a.Display_ID asc
+	</select>
+	 <select id="get" resultType="SkuKeyValue" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM sku_key_value a
+	     WHERE 
+		a.SKU_KEY = #{skuKey}
+		
+	</select>
+
+	<select id="getByTypeId" resultType="SkuKeyValue" parameterType="int">
+		SELECT
+		<include refid="allColumns" />
+		FROM sku_key_value a
+		WHERE
+		a.SKU_Type_ID = #{0}
+
+	</select>
+
+	<!-- 根据skuValueId查询对应的描述 -->
+	<select id="getSkuValueDesc" resultType="String" parameterType="Integer">  
+		SELECT
+			SKU_VALUE
+	    FROM sku_key_value
+	    WHERE 
+			SKU_KEY = #{skuKey}
+		
+	</select>
+
+	<select id="getSkuTypeDesc" resultType="java.lang.String" parameterType="Integer">
+		SELECT SKU_Type_Desc FROM sku_type WHERE SKU_Type_ID = #{skuTypeId}
+	</select>
+	
+	<select id="getSkuValues" resultType="java.lang.String" parameterType="Map">
+		SELECT SKU_VALUE FROM sku_key_value WHERE SKU_KEY IN 
+		<foreach item="skuKey" index="index" collection="skuKeys" open="(" separator="," close=")">  
+		  #{skuKey}  
+		</foreach>  
+	</select>
+	
+	<select id="getSkuValue" resultType="java.lang.String" parameterType="Integer">
+		SELECT SKU_VALUE FROM sku_key_value WHERE SKU_KEY = #{skuKey}
+	</select>
+
+</mapper>

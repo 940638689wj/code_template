@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 import string
 from impl.controller import *
 from impl.service import *

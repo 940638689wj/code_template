@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-4.0.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+       default-lazy-init="true">
+
+    <description>Spring Configuration</description>
+
+    <context:annotation-config/>
+
+    <context:property-placeholder ignore-unresolvable="true" location="classpath*:*.properties" file-encoding="utf-8"/>
+
+    <util:properties id="redisProperties" location="classpath:redis.properties"/>
+
+    <!-- 扫描Bean -->
+    <context:component-scan base-package="cn.yr">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- 数据源 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName}"/>
+        <property name="initialSize" value="${jdbc.initialSize}"/>
+        <property name="maxWait" value="${jdbc.maxWait}"/>
+        <property name="maxIdle" value="${jdbc.maxIdle}"/>
+        <property name="minIdle" value="${jdbc.minIdle}"/>
+        <property name="maxActive" value="${jdbc.maxActive}"/>
+
+        <property name="timeBetweenEvictionRunsMillis" value="${jdbc.timeBetweenEvictionRunsMillis}"/>
+        <property name="minEvictableIdleTimeMillis" value="${jdbc.minEvictableIdleTimeMillis}"/>
+
+        <property name="removeAbandoned" value="${jdbc.removeAbandoned}"/>
+        <property name="removeAbandonedTimeout" value="${jdbc.removeAbandonedTimeout}"/>
+
+        <property name="validationQuery" value="${jdbc.validationQuery}"/>
+        <property name="testWhileIdle" value="${jdbc.testWhileIdle}"/>
+        <property name="testOnBorrow" value="${jdbc.testOnBorrow}"/>
+        <property name="testOnReturn" value="${jdbc.testOnReturn}"/>
+
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="typeAliasesPackage" value="cn.yr.chile"/>
+        <property name="typeAliasesSuperType" value="cn.yr.chile.common.persistence.BaseEntity"/>
+        <property name="mapperLocations" value="classpath:/mappings/**/*.xml"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"></property>
+    </bean>
+
+    <!-- 扫描以@MyBatisDao注解的接口 -->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="basePackage" value="cn.yr.chile"/>
+        <property name="annotationClass" value="cn.yr.chile.common.persistence.annotation.MyBatisDao"/>
+    </bean>
+
+    <!-- 定义事务 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 配置 Annotation 驱动，扫描@Transactional注解的类定义事务  -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <bean class="cn.yr.chile.common.utils.spring.SpringBeanHolder" lazy-init="false"/>
+    <bean id="passwordEncoder" class="cn.yr.chile.common.security.ShaPasswordEncoder"/>
+
+
+    <bean id="productTimingShiefScheduler" class="cn.yr.chile.common.quartz.SchedulerFactoryBeanWithShutdownDelay"
+          lazy-init="false">
+        <property name="triggers">
+            <list>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 定时 普通订单 自动确认收货 -->
+    <bean id="timingAutoConfirmReceiveOrderJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="orderService" />
+        <property name="targetMethod" value="timingAutoConfirmReceiveOrderJob" />
+        <property name="concurrent" value="false" />
+    </bean>
+    <bean id="timingAutoConfirmReceiveOrderJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="timingAutoConfirmReceiveOrderJobDetail" />
+        <property name="cronExpression" value="0 0/10  * * * ?"/>
+    </bean>
+
+    <!-- 定时 普通订单 自动评价-->
+    <bean id="timingAutoEvaluationOrderJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="orderService" />
+        <property name="targetMethod" value="timingAutoEvaluationOrderJob" />
+        <property name="concurrent" value="false" />
+    </bean>
+    <bean id="timingAutoEvaluationStoreOrderJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="timingAutoEvaluationOrderJobDetail" />
+        <property name="cronExpression" value="0 0/10 * * * ?"/>
+    </bean>
+
+    <!-- 定时更新同步商品销量 -->
+    <bean id="timingUpdateProductSaleCntJobDetail"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="productService"/>
+        <property name="targetMethod" value="timingUpdateProductSaleCnt"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="timingUpdateProductSaleCntTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="timingUpdateProductSaleCntJobDetail"/>
+        <property name="cronExpression" value="0 0/5 * * * ?"/>
+    </bean>
+
+    <!--众筹订单退款处理定时器-->
+    <bean id="dealExpireCrowdFundOrder"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="crowdFundOrderService"/>
+        <property name="targetMethod" value="dealExpireCrowdFundOrder"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <bean id="dealExpireCrowdFundOrderTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="jobDetail" ref="dealExpireCrowdFundOrder"/>
+        <property name="cronExpression" value="0 0 0/1 * * ? *"/>
+    </bean>
+
+    <bean id="solrIndexRebuildJobDetail"
+          class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="solrIndexServiceImpl"/>
+        <property name="targetMethod" value="rebuildIndex"/>
+    </bean>
+    <bean id="solrIndexRebuildTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+        <property name="jobDetail" ref="solrIndexRebuildJobDetail"/>
+        <property name="startDelay" value="20000"/>
+        <property name="repeatInterval" value="3600000"/>
+    </bean>
+
+    <!-- 线程池 -->
+    <!--<bean promotionId="executor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="10"/>
+        <property name="maxPoolSize" value="100"/>
+        <property name="queueCapacity" value="500"/>
+    </bean>-->
+
+    <!-- 调度器 -->
+    <bean id="globalScheduler" class="cn.yr.chile.common.quartz.SchedulerFactoryBeanWithShutdownDelay">
+        <property name="triggers">
+            <list>
+                <ref bean="solrIndexRebuildTrigger"/>
+                <ref bean="timingUpdateProductSaleCntTrigger"/>
+                <ref bean="timingAutoConfirmReceiveOrderJobTrigger"/>
+                <ref bean="timingAutoEvaluationStoreOrderJobTrigger"/>
+                <ref bean="dealExpireCrowdFundOrderTrigger"/>
+            </list>
+        </property>
+        <!--<property name="taskExecutor" ref="executor"/>-->
+        <!--<property name="startupDelay" value="2"/>-->
+    </bean>
+
+    <!--缓存管理器-->
+    <bean id="cacheManager" class="cn.yr.chile.common.cache.WebEhCacheManagerFactoryBean">
+        <property name="configLocation" value="classpath:ehcache-application.xml"/>
+        <property name="diskStoreLocation">
+            <value>/WEB-INF/cache/application</value>
+        </property>
+    </bean>
+    <!-- 使用EhCacheCacheManager，默认是cacheManager -->
+    <bean id="ehCacheManagerAdvice" class="cn.yr.chile.common.cache.EhCacheManagerAdvice">
+        <property name="cacheManager" ref="cacheManager"/>
+    </bean>
+
+    <bean id="artifactServiceImpl" class="cn.yr.chile.common.service.artifact.ArtifactServiceImpl">
+        <property name="artifactProcessors">
+            <list>
+                <bean class="cn.yr.chile.common.service.artifact.image.ArtifactProcessorCustomImageImpl"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="namedOperationManagerImpl"
+          class="cn.yr.chile.common.service.artifact.operation.NamedOperationManagerImpl">
+        <property name="namedOperationComponents">
+            <list>
+                <ref bean="staticMapNamedOperationComponent"/>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="staticMapNamedOperationComponent"
+          class="cn.yr.chile.common.service.artifact.operation.StaticMapNamedOperationComponent">
+        <property name="namedOperations">
+            <map>
+                <entry key="browse">
+                    <map>
+                        <entry key="resize-width-amount" value="800"/>
+                        <entry key="resize-height-amount" value="800"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+                <entry key="smallBrowse">
+                    <map>
+                        <entry key="resize-width-amount" value="300"/>
+                        <entry key="resize-height-amount" value="300"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+                <entry key="thumbnail">
+                    <map>
+                        <entry key="resize-width-amount" value="80"/>
+                        <entry key="resize-height-amount" value="80"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+                <entry key="smallThumbnail">
+                    <map>
+                        <entry key="resize-width-amount" value="36"/>
+                        <entry key="resize-height-amount" value="36"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+                <entry key="list">
+                    <map>
+                        <entry key="resize-width-amount" value="400"/>
+                        <entry key="resize-height-amount" value="400"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+                <entry key="listMobile">
+                    <map>
+                        <entry key="resize-width-amount" value="400"/>
+                        <entry key="resize-height-amount" value="400"/>
+                        <entry key="resize-high-quality" value="false"/>
+                        <entry key="resize-maintain-aspect-ratio" value="true"/>
+                        <entry key="resize-reduce-only" value="true"/>
+                    </map>
+                </entry>
+            </map>
+        </property>
+    </bean>
+</beans>

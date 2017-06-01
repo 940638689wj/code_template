@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderHeaderDao">
+
+    <!-- 个人中心-我的订单 -->
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		o.Order_Id, o.Order_Number, o.Create_Time, o.Order_Status_Cd,
+		o.Order_Property_Cd, o.Order_Type_Cd, o.User_Id, o.Order_Province_Id,
+		o.Order_City_Id, o.Order_Pay_Mode_Cd,
+		o.Order_Pay_Way_Cd, o.Order_Pay_Status_Cd, o.Order_Pay_Amt,
+		o.Order_Total_Amt, o.Order_Discount_Amt, o.Order_Express_Amt,
+		o.Invoice_Express_Amt, o.Order_Remark, o.Order_Hard_Cd,
+		o.Reported_Status_Cd,o.Admin_User_Id,o.Last_Update_Time,
+		o.Is_Send_Sms,o.Order_Complete_Time,o.Order_Distince,o.Order_Product_Amt,
+		o.Order_Review_Status_CD,
+		o.Order_Pay_Time,
+		o.Order_Ip_Addr,
+		o.User_Delete_Status_Cd,
+		o.Admin_Delete_Status_Cd
+	</sql>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="OrderHeader" parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_header o
+        WHERE
+        o.Order_Id=#{orderId}
+    </select>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="OrderHeader" useGeneratedKeys="true"
+            keyProperty="orderId">
+		INSERT INTO order_header (
+		Order_Number, Create_Time, Order_Status_Cd, Order_Property_Cd, Order_Type_Cd,
+		User_Id, Order_Province_Id, Order_City_Id,
+		Order_Pay_Mode_Cd, Order_Pay_Way_Cd, Order_Pay_Status_Cd,
+		Order_Pay_Amt, Order_Total_Amt, Order_Discount_Amt, Order_Express_Amt,
+		Invoice_Express_Amt, Order_Remark, Order_Hard_Cd, Order_Problem_Type_Cd,
+		Admin_User_Id,Last_Update_Time,Order_Product_Amt,
+		Is_Send_Sms,Order_Complete_Time,Order_Review_Status_CD,Order_Pay_Time,Order_Ip_Addr
+		) VALUES (
+		#{orderNumber}, #{createTime}, #{orderStatusCd}, #{orderPropertyCd}, #{orderTypeCd},
+		#{userId}, #{orderProvinceId}, #{orderCityId},
+		#{orderPayModeCd}, #{orderPayWayCd},
+		#{orderPayStatusCd}, #{orderPayAmt}, #{orderTotalAmt},
+		#{orderDiscountAmt}, #{orderExpressAmt}, #{invoiceExpressAmt},
+		#{orderRemark}, #{orderHardCd}, #{orderProblemTypeCd},
+		#{adminUserId},#{lastUpdateTime},#{orderProductAmt},
+		#{isSendSms},#{orderCompleteTime},#{orderReviewStatusCd},#{orderPayTime},#{orderIpAddr}
+		)
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="OrderHeader">
+        UPDATE order_header SET
+        <if test="orderPayTime != null">
+            Order_Pay_Time = #{orderPayTime},
+        </if>
+        <if test="orderNumber != null and orderNumber != ''">
+            Order_Number = #{orderNumber},
+        </if>
+        <if test="createTime != null">
+            Create_Time = #{createTime},
+        </if>
+        <if test="orderStatusCd != null">
+            Order_Status_Cd = #{orderStatusCd},
+        </if>
+        <if test="orderPropertyCd != null">
+            Order_Property_Cd = #{orderPropertyCd},
+        </if>
+        <if test="orderTypeCd != null">
+            Order_Type_Cd = #{orderTypeCd},
+        </if>
+        <if test="userId != null">
+            User_Id = #{userId},
+        </if>
+        <if test="orderProvinceId != null">
+            Order_Province_Id = #{orderProvinceId},
+        </if>
+        <if test="orderCityId != null">
+            Order_City_Id = #{orderCityId},
+        </if>
+        <if test="orderPayModeCd != null">
+            Order_Pay_Mode_Cd = #{orderPayModeCd},
+        </if>
+        <if test="orderPayWayCd != null">
+            Order_Pay_Way_Cd = #{orderPayWayCd},
+        </if>
+        <if test="orderPayStatusCd != null">
+            Order_Pay_Status_Cd = #{orderPayStatusCd},
+        </if>
+        <if test="orderPayAmt != null">
+            Order_Pay_Amt = #{orderPayAmt},
+        </if>
+        <if test="orderTotalAmt != null">
+            Order_Total_Amt = #{orderTotalAmt},
+        </if>
+        <if test="orderDiscountAmt != null">
+            Order_Discount_Amt = #{orderDiscountAmt},
+        </if>
+        <if test="orderExpressAmt != null">
+            Order_Express_Amt = #{orderExpressAmt},
+        </if>
+        <if test="invoiceExpressAmt != null">
+            Invoice_Express_Amt = #{invoiceExpressAmt},
+        </if>
+        <if test="orderRemark != null">
+            Order_Remark = #{orderRemark},
+        </if>
+        <if test="orderHardCd != null">
+            Order_Hard_Cd = #{orderHardCd},
+        </if>
+        <if test="orderProblemTypeCd != null">
+            Order_Problem_Type_Cd = #{orderProblemTypeCd},
+        </if>
+        <if test="reportedStatusCd != null">
+            Reported_Status_Cd = #{reportedStatusCd},
+        </if>
+        <if test="orderProductAmt != null">
+            Order_Product_Amt = #{orderProductAmt},
+        </if>
+        <if test="isSendSms != null">
+            Is_Send_Sms = #{isSendSms},
+        </if>
+        <if test="orderCompleteTime != null">
+            Order_Complete_Time = #{orderCompleteTime},
+        </if>
+        <if test="orderReviewStatusCd != null">
+            Order_Review_Status_Cd = #{orderReviewStatusCd},
+        </if>
+        <if test="orderReviewStatusCd != null">
+            Admin_Delete_Status_Cd = #{adminDeleteStatusCd},
+        </if>
+        <if test="orderReviewStatusCd != null">
+            User_Delete_Status_Cd = #{userDeleteStatusCd},
+        </if>
+        Last_Update_Time = NOW()
+        WHERE
+        Order_Id = #{orderId}
+    </update>
+
+    <!-- 分页获取指定类型订单数据 -->
+    <select id="findListByLimit" resultType="cn.yr.chile.order.dto.OrderHeaderDTO"
+            parameterType="cn.yr.chile.order.dto.OrderLimitDTO">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        ori.Order_Distrbute_Type_Cd,
+        s1.Code_Cn_Name AS orderStatusName,
+        (SELECT SUM(Quantity) FROM order_item oit WHERE o.Order_Id = oit.Order_Id ) AS productNum
+        FROM order_header o
+        LEFT JOIN order_receive_info ori ON o.Order_Id = ori.Order_Id
+        LEFT JOIN system_code s1 ON o.Order_Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Order_Status_Cd'
+        WHERE User_id=#{userId}
+        AND o.Order_Type_Cd = #{orderTypeCd}
+        AND User_Delete_Status_Cd = 1
+        <if test="orderStatusCd != null">AND o.Order_Status_Cd IN (${orderStatusCd})</if>
+        <if test="orderPropertyCd != null">AND o.Order_Property_Cd &lt;&gt; 0</if>
+        <if test="orderReviewStatusCd != null">AND o.Order_Review_Status_CD IN (${orderReviewStatusCd})</if>
+        ORDER BY o.Order_Id DESC
+        LIMIT #{start},#{pageSize}
+    </select>
+
+    <!-- 获取指定类型订单数据总数 -->
+    <select id="findListByLimitCount" resultType="java.lang.Integer"
+            parameterType="cn.yr.chile.order.dto.OrderLimitDTO">
+        SELECT COUNT(*) FROM(
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_header o
+        WHERE User_id=#{userId}
+        AND o.Order_Type_Cd = #{orderTypeCd}
+        AND User_Delete_Status_Cd = 1
+        <if test="orderStatusCd != null">AND o.Order_Status_Cd IN (${orderStatusCd})</if>
+        <if test="orderPropertyCd != null">AND o.Order_Property_Cd &lt;&gt; 0</if>
+        <if test="orderReviewStatusCd != null">AND o.Order_Review_Status_Cd IN(${orderReviewStatusCd})</if>
+        ) AS a
+    </select>
+
+    <!--根据订单号获取订单和商品信息 映射-->
+    <resultMap id="getOrderHeaderDTOByOrderIdMapping" type="cn.yr.chile.order.dto.OrderHeaderDTO">
+        <id property="orderId" column="Order_Id"/>
+        <result property="orderNumber" column="Order_Number"/>
+        <result property="orderTypeCd" column="Order_Type_Cd"/>
+        <result property="orderStatusCd" column="Order_Status_Cd"/>
+        <result property="orderExpressAmt" column="Order_Express_Amt"/>
+        <result property="orderPayAmt" column="Order_Pay_Amt"/>
+        <result property="orderTotalAmt" column="Order_Total_Amt"/>
+        <result property="orderDiscountAmt" column="Order_Discount_Amt"/>
+        <result property="orderProductAmt" column="Order_Product_Amt"/>
+        <result property="orderReviewStatusCd" column="Order_Review_Status_CD"/>
+        <result property="createTime" column="Create_Time"/>
+        <result property="orderPayTime" column="Order_Pay_Time"/>
+        <result property="orderRemark" column="Order_Remark"/>
+        <result property="userId" column="User_Id"/>
+        <!--其他表关联字段-->
+        <result property="productNum" column="productNum"/>
+        <result property="expressName" column="Express_Name"/>
+        <result property="orderExpressNum" column="Order_Express_Num"/>
+        <result property="promotionName" column="promotionName"/>
+        <result property="promotionDiscount" column="promotionDiscount"/>
+        <result property="redPacketDiscount" column="redPacketDiscount"/>
+        <result property="activityDiscount" column="activityDiscount"/>
+        <result property="orderDistrbuteTypeCd" column="Order_Distrbute_Type_Cd"/>
+        <result property="storeName" column="Store_Name"/>
+        <result property="detailAddress" column="Detail_Address"/>
+        <result property="payBalance" column="payBalance"/>
+        <result property="payScore" column="payScore"/>
+        <result property="productReturnScore" column="productReturnScore"/>
+        <result property="masterOrderId" column="Master_Order_ID"/>
+        <result property="expectSendTime" column="Expect_Send_Time"/>
+        <result property="pickupCouponName" column="Pickup_Coupon_Name"/>
+        <result property="pickupAmt" column="Pickup_Amt"/>
+        <result property="packageName" column="Package_Name"/>
+        <result property="earnest" column="earnest"/>
+        <!--字典关联字段-->
+        <result property="orderStatusName" column="orderStatusName"/>
+        <result property="orderPayModeName" column="orderPayModeName"/>
+        <result property="orderPayWayName" column="orderPayWayName"/>
+        <result property="originPlatformName" column="originPlatformName"/>
+
+        <collection property="orderItemList" column="Order_Id" ofType="OrderItem">
+            <id property="orderItemId" column="Order_Item_Id"/>
+            <result property="productId" column="Product_Id"/>
+            <result property="productName" column="Product_Name"/>
+            <result property="productPicUrl" column="Product_Pic_Url"/>
+            <result property="salePrice" column="Sale_Price"/>
+            <result property="quantity" column="Quantity"/>
+            <result property="productDiscountAmt" column="Product_Discount_Amt"/>
+            <result property="productTotal" column="Product_Total"/>
+            <result property="applyStatusCd" column="Apply_Status_Cd"/>
+            <result property="applyTypeCd" column="Apply_Type_Cd"/>
+            <result property="applyStatusName" column="applyStatusName"/>
+            <result property="payCashAmt" column="Pay_Cash_Amt"/>
+            <result property="payScoreAmt" column="Pay_Score_Amt"/>
+            <result property="payXmairCardAmt" column="Pay_XMAIR_Card_Amt"/>
+        </collection>
+    </resultMap>
+    <!--根据订单号获取订单和商品信息-->
+    <select id="getOrderHeaderDTOByOrderId" resultMap="getOrderHeaderDTOByOrderIdMapping" parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        (SELECT SUM(Quantity) FROM order_item oit WHERE o.Order_Id = oit.Order_Id ) AS productNum,
+        (SELECT SUM(Product_Return_Score * Quantity) FROM order_item oit WHERE o.Order_Id = oit.Order_Id ) AS productReturnScore,
+        oi.Order_Item_Id,
+        oi.Product_Id,
+        oi.Product_Name,
+        oi.Order_Item_Id,
+        oi.Product_Pic_Url,
+        oi.Sale_Price,
+        oi.quantity,
+        oi.Product_Discount_Amt,
+        oi.Product_Total,
+        oi.Pay_Cash_Amt,
+        oi.Pay_Score_Amt,
+        oi.Pay_XMAIR_Card_Amt,
+        ore.Apply_Status_Cd,
+        ore.Apply_Type_Cd,
+        ori.Order_Distrbute_Type_Cd,
+        st.Store_Name,
+        st.Detail_Address,
+        ex.Express_Name,
+        ori.Order_Express_Num,
+        (SELECT GROUP_CONCAT(Promotion_Name) FROM order_promotion_info WHERE Order_Id = o.Order_Id AND PROMOTION_TYPE_CD IN(54,55)) AS promotionName,
+        (SELECT SUM(Discount) FROM order_promotion_info WHERE Order_Id = o.Order_Id AND PROMOTION_TYPE_CD IN(54,55)) AS promotionDiscount,
+        (SELECT Discount FROM order_promotion_info WHERE Order_Id = o.Order_Id AND PROMOTION_TYPE_CD = 56) AS redPacketDiscount,
+        (SELECT SUM(Discount) FROM order_promotion_info WHERE Order_Id = o.Order_Id AND PROMOTION_TYPE_CD IN(11,12,13)) AS activityDiscount,
+        op1.Consume AS payBalance,
+        op2.Consume AS payScore,
+        op3.Consume AS egretScore,
+        oe.Master_Order_ID,
+        oe.Expect_Send_Time,
+        pl.Pickup_Coupon_Name,
+        pl.Pickup_Amt,
+        pp.Package_Name,
+        o2.Order_Pay_Amt AS earnest,
+        s1.Code_Cn_Name AS orderStatusName,
+        s2.Code_Cn_Name AS orderPayModeName,
+        s3.Code_Cn_Name AS orderPayWayName,
+        s4.Code_Cn_Name AS orderPayStatusName,
+        s5.Code_Cn_Name AS originPlatformName,
+        s6.Code_Cn_Name AS invoiceTypeName,
+        s7.Code_Cn_Name AS applyStatusName
+        FROM order_header o
+        LEFT JOIN order_item oi ON o.Order_Id = oi.Order_Id
+        LEFT JOIN order_return_info ore ON oi.Order_Item_Id = ore.Order_Item_Id
+        LEFT JOIN order_receive_info ori ON o.Order_Id = ori.Order_Id
+        LEFT JOIN store st ON ori.Distrbute_Store_Id = st.Store_Id
+        LEFT JOIN express ex ON ori.Express_Id = ex.Express_Id
+        LEFT JOIN order_pay_info op1 ON o.Order_Id = op1.Order_Id AND op1.Pay_Type_Code = 2
+        LEFT JOIN order_pay_info op2 ON o.Order_Id = op2.Order_Id AND op2.Pay_Type_Code = 3
+        LEFT JOIN order_pay_info op3 ON o.Order_Id = op3.Order_Id AND op3.Pay_Type_Code = 7
+        LEFT JOIN order_extend oe ON o.Order_Id = oe.Order_Id
+        LEFT JOIN pickupcoupon_code pc ON o.Order_Id = pc.Order_Id
+        LEFT JOIN pickupcoupon_list pl ON pc.Pickup_Coupon_List_Id = pl.Pickup_Coupon_ID
+        LEFT JOIN pickupcoupon_package pp ON pc.Pickup_Coupon_Package_ID = pp.Pickup_Coupon_Package_ID
+        LEFT JOIN order_header o2 ON oe.Master_Order_ID = o2.Order_Id
+        LEFT JOIN system_code s1 ON o.Order_Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Order_Status_Cd'
+        LEFT JOIN system_code s2 ON o.Order_Pay_Mode_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Order_Pay_Mode_Cd'
+        LEFT JOIN system_code s3 ON o.Order_Pay_Way_Cd = s3.Code_Id AND s3.Code_Type_Cd = 'Order_Pay_Way_Cd'
+        LEFT JOIN system_code s4 ON o.Order_Pay_Status_Cd = s4.Code_Id AND s4.Code_Type_Cd = 'Order_Pay_Status_Cd'
+        LEFT JOIN system_code s5 ON oe.Origin_Platform_Cd = s5.Code_Id AND s5.Code_Type_Cd = 'Origin_Platform_Cd'
+        LEFT JOIN system_code s6 ON ori.Invoice_Type_Cd = s6.Code_Id AND s6.Code_Type_Cd = 'Invoice_Type_Cd'
+        LEFT JOIN system_code s7 ON ore.Apply_Status_Cd = s7.Code_Id AND s7.Code_Type_Cd = 'Apply_Status_Cd'
+        WHERE o.Order_Id = #{orderId}
+    </select>
+
+    <!--会员删除订单-->
+    <update id="delOrderHeader" parameterType="Integer">
+        UPDATE order_header set
+        User_Delete_Status_Cd = 2
+        WHERE order_id = #{orderId}
+    </update>
+
+    <sql id="findItemByOrderSql">
+		o.Order_Item_Id,
+		o.Product_Id,
+		o.Product_Name,
+		o.Product_Pic_Url,
+		o.Quantity,
+		o.Product_Total,
+		sc_at.code_cn_name AS applyType,
+		sc_as.code_cn_name AS applyStatus,
+		p.SKU_KEY_Json_Str,
+		p.Master_Product_ID
+	</sql>
+    <!-- 查询指定订单下的商品或菜品列表 -->
+    <select id="findItemByOrder" resultType="cn.yr.chile.order.dto.ItemByOrderDTO">
+        SELECT
+        <include refid="findItemByOrderSql"/>
+        FROM order_item o
+        LEFT JOIN product p ON o.Product_Id = p.Product_Id
+        LEFT JOIN order_return_info r ON o.Order_Item_Id = r.Order_Item_Id
+        LEFT JOIN system_code sc_at ON r.Apply_Type_Cd = sc_at.Code_Id AND sc_at.Code_Type_Cd='Apply_Type_Cd'
+        LEFT JOIN system_code sc_as ON r.Apply_Status_Cd = sc_as.Code_Id AND sc_as.Code_Type_Cd='Apply_Status_Cd'
+        WHERE o.Order_Id = #{0}
+        AND p.Product_Type_Cd=#{1}
+    </select>
+
+    <!-- 查询指定订单下的商品或菜品列表 -->
+    <select id="findReturnItemByOrder" resultType="cn.yr.chile.order.dto.ItemByOrderDTO" parameterType="java.util.Map">
+        SELECT
+        <include refid="findItemByOrderSql"/>
+        ,
+        re.Return_Amt
+        FROM order_item o
+        LEFT JOIN product p ON o.Product_Id = p.Product_Id
+        LEFT JOIN order_return_info r ON o.Order_Item_Id = r.Order_Item_Id
+        LEFT JOIN system_code sc_at ON r.Apply_Type_Cd = sc_at.Code_Id AND sc_at.Code_Type_Cd='Apply_Type_Cd'
+        LEFT JOIN system_code sc_as ON r.Apply_Status_Cd = sc_as.Code_Id AND sc_as.Code_Type_Cd='Apply_Status_Cd'
+        INNER JOIN order_return_info re ON o.Order_Item_ID = re.Order_Item_ID
+        WHERE o.Order_Id = #{orderId}
+        AND p.Product_Type_Cd = #{productType}
+        AND re.apply_status_Cd IN (${applyStatus})
+    </select>
+
+    <select id="findOrderCountByUserId" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM order_header
+		WHERE User_Id = #{userId}
+	</select>
+
+    <select id="countReceive" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM order_header
+		where User_Id = #{userId} and Order_Review_Status_CD = 1
+	</select>
+
+    <!-- 获取团购分页信息 -->
+    <select id="findGroupListByLimit" resultType="cn.yr.chile.order.dto.OrderHeaderDTO"
+            parameterType="cn.yr.chile.order.dto.OrderLimitDTO">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_header o
+        LEFT JOIN promotion_coupon_code p ON o.Order_Id = p.Order_Id
+        LEFT JOIN promotion_groupon p1 ON p.Promotion_Id = p1.Promotion_Id
+        WHERE o.User_id=#{userId} AND o.User_Delete_Status_Cd = 1
+        <if test="orderStatusCd != null">AND o.Order_Status_Cd IN (#{orderStatusCd})</if>
+        <if test="orderPropertyCd != null">AND o.Order_Property_Cd IN (#{orderPropertyCd})</if>
+        <if test="orderTypeCd != null">AND o.Order_Type_Cd IN (#{orderTypeCd})</if>
+        <if test="orderReviewStatusCd != null">AND o.Order_Review_Status_Cd IN (#{orderReviewStatusCd})</if>
+        <if test="couponStatusCd != null">AND p1.Allow_Use_End_Time &gt; now()</if>
+        ORDER BY o.Order_Id DESC
+        LIMIT #{start},#{pageSize}
+    </select>
+
+    <!-- 获取预售订单分页数据 -->
+    <select id="findPreSaleOrder" resultType="cn.yr.chile.order.dto.PreSaleOrderDTO"
+            parameterType="java.util.Map">
+        SELECT
+        o.Order_Id AS orderId,
+        o.Order_Number AS orderNumber,
+        o.Order_Total_Amt AS orderTotalAmt,
+        o.Order_Status_Cd AS orderStatusCd,
+        o.Create_time AS createTime,
+        oi.Product_Id AS productId,
+        oi.Product_Pic_Url AS productPicUrl,
+        oi.Quantity AS quantity,
+        oi.Product_Name AS productName,
+        oe.Order_Id AS extendOrderId,
+        oe.Master_Order_ID AS orderMasterId,
+        oh2.Order_Number AS masterOrderNumber
+        FROM order_header o
+        LEFT JOIN order_item oi ON oi.Order_Id = o.Order_Id
+        LEFT JOIN order_extend oe ON oe.Order_Id = o.Order_Id
+        LEFT JOIN (SELECT oh.Order_Id,oh.Order_Number FROM order_header oh) oh2 ON oh2.Order_Id = oe.Master_Order_ID
+        WHERE o.User_id=#{userId}
+        AND o.Order_Type_Cd =2 AND o.Order_Status_Cd !=2
+        <if test="orderStatusCd != null">AND o.Order_Status_Cd = #{orderStatusCd}</if>
+        <if test="orderPropertyCd != null">AND o.Order_Property_Cd = #{orderPropertyCd}</if>
+        <if test="orderReviewStatusCd != null">AND o.Order_Review_Status_Cd = {orderReviewStatusCd}</if>
+        <if test="isForDeposit !=null">AND oe.Order_id = oe.Master_Order_ID</if>
+        <if test="isForRemain !=null">AND oe.Order_id != oe.Master_Order_ID</if>
+        ORDER BY o.Order_Id DESC
+    </select>
+    <!-- 根据orderId获取预售订单详情 -->
+    <select id="getPreSaleOrderDetail" resultType="cn.yr.chile.order.dto.PreSaleOrderDTO"
+            parameterType="java.lang.Integer">
+    SELECT
+    	oh.Order_Id AS orderId,
+        oh.Order_Number AS orderNumber,
+        oh.Order_Total_Amt AS orderTotalAmt,
+        oh.Order_Pay_Amt AS orderPayAmt,
+        oh.Order_Status_Cd AS orderStatusCd,
+        oh.Create_time AS createTime,
+        oh.Order_Pay_Mode_Cd AS orderPayModeCd,
+        oh.Order_Pay_Status_Cd AS orderPayStatusCd,
+        oh.Order_Remark AS remark,
+        oh.Order_Express_Amt AS orderExpressAmt,
+        ori.Express_ID AS expressId,
+        oi.Product_Id AS productId,
+        oi.Product_Pic_Url AS productPicUrl,
+        oi.Quantity AS quantity,
+        oi.Product_Name AS productName,
+        oi.Sale_Price AS salePrice,
+        oe.Order_Id AS extendOrderId,
+        oe.Master_Order_ID AS orderMasterId,
+        pps.Allow_Pay_Remainder_Start_Time AS allowPayRemainderStartTime,
+        pps.Allow_Pay_Remainder_End_Time AS allowPayRemainderEndTime,
+        pro.Master_Product_ID AS masterProductId,
+        p.Enable_Start_Time AS depositPayTime,
+        pe.Product_Weight AS productWeight,
+        pe.Product_Weight_Unit_Cd AS productWeightUnitCd,
+        oh2.Order_Number AS masterOrderNumber,
+        oh2.Order_Total_Amt AS payForDpositAmt
+    FROM order_header oh
+    LEFT JOIN order_item oi ON oi.Order_Id = Oh.Order_Id
+    LEFT JOIN order_extend oe ON oe.Order_Id = oh.Order_Id
+    LEFT JOIN pre_sale_order_info psoi ON psoi.Order_Id = oe.Master_Order_ID
+    LEFT JOIN promotion p ON p.Promotion_Id = psoi.Promotion_Id
+    LEFT JOIN promotion_pre_sale pps ON pps.Promotion_Id = psoi.Promotion_Id 
+    LEFT JOIN product pro ON oi.Product_Id=pro.Product_Id
+    LEFT JOIN product_extend pe ON pe.Product_Id = pro.Master_Product_ID
+    LEFT JOIN (SELECT oh1.Order_Id,oh1.Order_Number,oh1.Order_Total_Amt FROM order_header oh1) oh2 ON oh2.Order_Id = oe.Master_Order_ID
+    LEFT JOIN order_receive_info ori ON ori.Order_Id = oh.Order_Id
+    WHERE oh.Order_Id = #{orderId}
+    </select>
+
+	<!-- 获取预售订单分页数据 -->
+    <select id="findPreSaleListByLimt" resultType="cn.yr.chile.order.dto.PreSaleOrderDTO"
+            parameterType="cn.yr.chile.order.dto.OrderLimitDTO">
+        SELECT
+    	oh.Order_Id AS orderId,
+        oh.Order_Number AS orderNumber,
+        oh.Order_Total_Amt AS orderTotalAmt,
+        oh.Order_Pay_Amt AS orderPayAmt,
+        oh.Order_Status_Cd AS orderStatusCd,
+        oh.Create_time AS createTime,
+        oh.Order_Pay_Mode_Cd AS orderPayModeCd,
+        oh.Order_Pay_Status_Cd AS orderPayStatusCd,
+        oh.Order_Remark AS remark,
+        oi.Product_Id AS productId,
+        oi.Product_Pic_Url AS productPicUrl,
+        oi.Quantity AS quantity,
+        oi.Product_Name AS productName,
+        oi.Sale_Price AS salePrice,
+        oe.Order_Id AS extendOrderId,
+        oe.Master_Order_ID AS orderMasterId,
+        pps.Allow_Pay_Remainder_Start_Time AS allowPayRemainderStartTime,
+        pps.Allow_Pay_Remainder_End_Time AS allowPayRemainderEndTime,
+        ppx.Price AS price,
+        pro.Master_Product_ID AS masterProductId,
+        oh2.Order_Number AS masterOrderNumber
+	    FROM order_header oh
+	    LEFT JOIN order_item oi ON oi.Order_Id = Oh.Order_Id
+	    LEFT JOIN product pro ON pro.Product_Id = oi.Product_Id
+	    LEFT JOIN order_extend oe ON oe.Order_Id = oh.Order_Id
+	    LEFT JOIN pre_sale_order_info psoi ON psoi.Order_Id = oe.Master_Order_ID
+	    LEFT JOIN promotion_pre_sale pps ON pps.Promotion_Id = psoi.Promotion_Id 
+	    LEFT JOIN promotion_product_xref ppx ON ppx.Promotion_Id = psoi.Promotion_Id
+	    LEFT JOIN (SELECT oh1.Order_Id,oh1.Order_Number,oh1.Order_Total_Amt FROM order_header oh1) oh2 ON oh2.Order_Id = oe.Master_Order_ID
+	    WHERE oh.User_id=#{userId}
+		AND oh.Order_Type_Cd =2 AND oh.Order_Status_Cd!= 2
+		<if test="orderStatusCd != null">AND oh.Order_Status_Cd = #{orderStatusCd}</if>
+        <if test="orderPropertyCd != null">AND oh.Order_Property_Cd = #{orderPropertyCd}</if>
+        <if test="orderReviewStatusCd != null">AND oh.Order_Review_Status_Cd = {orderReviewStatusCd}</if>
+        <if test="isForDeposit !=null">AND oe.Order_id = oe.Master_Order_ID</if>
+        <if test="isForRemain !=null">AND oe.Order_id != oe.Master_Order_ID</if>
+        ORDER BY oh.Order_Id DESC
+        LIMIT #{start},#{pageSize}
+    </select>
+    <select id="findOrderItemData" resultType="Map" parameterType="Integer">
+		SELECT 
+			oi.Sale_Price AS salePrice,
+			oi.Quantity AS quantity,
+			oi.Product_Name AS productName,
+			ppi.Pic_Url AS picUrl
+		FROM `order_item` oi
+		LEFT JOIN `product` p ON oi.Product_Id = p.Product_Id
+		LEFT JOIN `product_pic_info` ppi ON ppi.Product_Id = p.Master_Product_ID AND ppi.Is_Default_Pic = 1
+		WHERE oi.Order_Id = #{0}
+    </select>
+
+    <!-- 获取需要 自动确认收货 的普通订单 -->
+    <select id="findNeedAutoConfirmReceiveOrder" resultType="OrderHeader" parameterType="java.util.Date">
+        SELECT <include refid="allColumns"/>
+        FROM order_header o
+        LEFT JOIN order_receive_info p2 ON p2.Order_Id=o.Order_Id
+        WHERE o.Order_Type_Cd=1
+        AND o.Order_Status_Cd=3
+        <![CDATA[ AND DATE_FORMAT(p2.Send_Time,'%Y-%m-%d %H:%i:%s') <= DATE_FORMAT(#{0},'%Y-%m-%d %H:%i:%s') ]]>
+    </select>
+
+    <!-- 获取需要 进行自动评价 的普通订单 -->
+    <select id="findNeedAutoEvaluationOrder" resultType="OrderHeader" parameterType="java.util.Date">
+        SELECT <include refid="allColumns"/>
+        FROM order_header o
+        WHERE o.Order_Type_Cd=1
+        AND o.Order_Status_Cd=5
+        AND o.Order_Review_Status_CD=1
+        <![CDATA[ AND DATE_FORMAT(o.Order_Complete_Time,'%Y-%m-%d %H:%i:%s') <= DATE_FORMAT(#{0},'%Y-%m-%d %H:%i:%s') ]]>
+    </select>
+
+    <select id="getByOrderNumber" parameterType="String" resultType="OrderHeader">
+        SELECT <include refid="allColumns"/>
+        FROM order_header o
+        WHERE o.Order_Number = #{0}
+    </select>
+
+    <select id="findPickOrderListByLimit" resultType="cn.yr.chile.order.dto.OrderHeaderDTO"
+            parameterType="cn.yr.chile.order.dto.OrderLimitDTO">
+        SELECT
+        <include refid="allColumns"/>,
+        pp.Package_Name,
+        ori.Receive_Name,
+        ori.Order_Distrbute_Type_Cd
+        FROM order_header o
+        LEFT JOIN pickupcoupon_code p1 ON p1.Order_Id = o.Order_Id
+        LEFT JOIN pickupcoupon_package pp ON  pp.Pickup_Coupon_Id = p1.Pickup_Coupon_List_Id
+        LEFT JOIN order_receive_info ori ON ori.Order_id = o.Order_Id
+        LEFT JOIN order_extend oe ON oe.Order_Id = o.Order_Id
+        WHERE o.User_id=#{userId} AND o.User_Delete_Status_Cd = 1
+        <if test="orderStatusCd != null">AND o.Order_Status_Cd IN(#{orderStatusCd})</if>
+        <if test="orderPropertyCd != null">AND o.Order_Property_Cd IN (#{orderPropertyCd})</if>
+        <if test="orderTypeCd != null">AND o.Order_Type_Cd IN (#{orderTypeCd})</if>
+        <if test="orderReviewStatusCd != null">AND o.Order_Review_Status_Cd IN (#{orderReviewStatusCd})</if>
+        GROUP BY o.Order_Id
+        ORDER BY o.Order_Id DESC
+        LIMIT #{start},#{pageSize}
+    </select>
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreLevelDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        M_Store_Level_Id, M_Store_Level_Name, Rank_Cd, Status_Cd,Buy_User_Num_Min, Buy_User_Num_Max, Sale_Amt, Commission_Coefficient, Is_Autoupdate, Is_Default
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstoreLevel" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_m_store_level (
+	        M_Store_Level_Name, Rank_Cd, Status_Cd, Buy_User_Num_Min, Buy_User_Num_Max, Sale_Amt, Commission_Coefficient, Is_Autoupdate, Is_Default
+	    ) VALUES (
+	        #{mstoreLevelName}, #{rankCd}, #{statusCd}, #{buyUserNumMin}, #{buyUserNumMax}, #{saleAmt}, #{commissionCoefficient}, #{isAutoupdate}, #{isDefault}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstoreLevel">
+	   UPDATE user_m_store_level SET
+		   M_Store_Level_Name = #{mstoreLevelName}, 
+		   Rank_Cd = #{rankCd}, 
+		   Status_Cd = #{statusCd}, 
+		   Buy_User_Num_Min = #{buyUserNumMin}, 
+		   Buy_User_Num_Max = #{buyUserNumMax}, 
+		   Sale_Amt = #{saleAmt}, 
+		   Commission_Coefficient = #{commissionCoefficient}, 
+		   Is_Autoupdate = #{isAutoupdate}, 
+		   Is_Default = #{isDefault} 
+	   WHERE 
+		   M_Store_Level_Id = #{mstoreLevelId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store_level where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstoreLevel" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_m_store_level 
+	     WHERE 
+			  M_Store_Level_Id = #{mstoreLevelId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstoreLevel">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_level where Status_Cd=1
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserMstoreLevel" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_level a
+	    where a.deleted=0
+		<if test="mstoreLevelId != null"> and a.M_Store_Level_Id = #{mstoreLevelId}</if>
+		<if test="mstoreLevelName != null"> and a.M_Store_Level_Name = #{mstoreLevelName}</if>
+		<if test="rankCd != null"> and a.Rank_Cd = #{rankCd}</if>
+		<if test="statusCd != null"> and a.Status_Cd = #{statusCd}</if>
+		<if test="buyUserNumMin != null"> and a.Buy_User_Num_Min = #{buyUserNumMin}</if>
+		<if test="buyUserNumMax != null"> and a.Buy_User_Num_Max = #{buyUserNumMax}</if>
+		<if test="saleAmt != null"> and a.Sale_Amt = #{saleAmt}</if>
+		<if test="commissionCoefficient != null"> and a.Commission_Coefficient = #{commissionCoefficient}</if>
+		<if test="isAutoupdate != null"> and a.Is_Autoupdate = #{isAutoupdate}</if>
+		<if test="isDefault != null"> and a.Is_Default = #{isDefault}</if>
+	</select>
+
+</mapper>

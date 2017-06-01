@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserLabelXrefDao">
+<!-- 用于select查询公用抽取的列 -->
+<sql id="allColumns">
+	a.User_Id,a.User_Label_Id
+
+</sql>
+<!-- 新增 -->
+<insert id="insert" parameterType="UserLabelXref" useGeneratedKeys="true" keyProperty="User_Id">
+	INSERT INTO user_user_label_xref (
+	User_Id,User_Label_Id
+	) Values(
+		#{userId},#{userLabelId}
+	)
+
+</insert>
+<!-- 更新 -->
+<update id="update" parameterType="UserLabelXref">
+	Update user_label
+	<set>
+		<if test="null!=userId and ''!=userId">
+			User_Id = #{usreId},
+		</if>
+		<if test="null!=userLabelId and ''!=userLabelId">
+			User_Label_Id = #{userLabelId}
+		</if>
+	</set>
+	<where>
+		<if test="null!=userId and ''!=userId">Id = #{userId}</if>
+	</where>
+</update>
+
+<delete id="deleteUserLabel" parameterType="java.lang.Integer">
+		DELETE FROM user_label where Id = #{id}
+</delete>
+
+<!-- 查询最大ID -->
+<select id="getId" resultType="java.lang.Integer">
+	SELECT MAX(Id) from user_label
+</select>
+<!-- 根据主键查询对象 -->	
+<select id="findListById" resultType="UserLabelXref" parameterType="java.lang.Integer">
+	SELECT 
+	<include refid="allColumns"/>
+	FROM user_user_label_xref
+	WHERE a.User_Id = #{id}
+</select>
+
+<!-- 根据userId获取一个对象集合 -->
+<select id="getByUserId" resultType="UserLabelXref" parameterType="java.lang.Integer">
+	SELECT
+	<include refid="allColumns"/>
+	FROM user_user_label_xref a
+	WHERE a.User_Id = #{userId}
+</select>
+<!-- 根据userId和labelsId删除对象 -->
+<delete id="deleteLabelXref" parameterType="UserLabelXref">
+	DELETE FROM user_user_label_xref
+	WHERE 
+	1=1
+	<if test="userId !=null and ''!=userId">and User_Id=#{userId}</if>
+	<if test="userLabelId !=null and ''!=userLabelId">and User_Label_Id=#{userLabelId}</if>
+</delete>
+</mapper>

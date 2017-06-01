@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.PromotionProductXrefDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Promotion_Id, Product_Id, Create_Time, Display_Id, User_Limit_Num, Price
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionProductXref" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO promotion_product_xref (
+	        Create_Time, Display_Id, User_Limit_Num, Price
+	    ) VALUES (
+	        #{createTime}, #{displayId}, #{userLimitNum}, #{price}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionProductXref">
+	   UPDATE promotion_product_xref SET
+		   Create_Time = #{createTime}, 
+		   Display_Id = #{displayId}, 
+		   User_Limit_Num = #{userLimitNum}, 
+		   Price = #{price}
+	   WHERE 
+		   Promotion_Id = #{promotionId}, 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion_product_xref where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionProductXref" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_product_xref 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionProductXref">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_product_xref
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="PromotionProductXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_product_xref a
+	    where 1=1
+		<if test="promotionId != null"> and a.Promotion_Id = #{promotionId}</if>
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="displayId != null"> and a.Display_Id = #{displayId}</if>
+		<if test="userLimitNum != null"> and a.User_Limit_Num = #{userLimitNum}</if>
+		<if test="price != null"> and a.Price = #{price}</if>
+	</select>
+
+</mapper>

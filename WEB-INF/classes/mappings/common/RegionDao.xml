@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.common.dao.RegionDao">
+	<sql id="allColumns">
+		a.ID,
+		a.REGION_NAME,
+		a.IS_VISIT,
+		a.SUCCESS_TIP,
+		a.FAIL_TIP,
+		a.REGION_TYPE
+	</sql>
+
+	<sql id="allAreaColumns">
+		b.id,
+		b.area_name,
+		b.parent_area_id,
+		b.level,
+		b.post_code,
+		b.active,
+		b.sort
+	</sql>
+
+	<select id="findAllRegion" resultType="Region">
+		SELECT
+		<include refid="allColumns" />
+		FROM region a
+	</select>
+
+	<select id="findById" resultType="Region" parameterType="java.lang.Long">
+		SELECT
+			<include refid="allColumns" />
+		FROM region a WHERE a.ID = #{0}
+	</select>
+
+	<select id="findByRegionType" resultType="Region" parameterType="java.lang.String">
+		SELECT
+			<include refid="allColumns" />
+		FROM region a WHERE a.REGION_TYPE = #{0}
+	</select>
+
+	<select id="findAllRegionIds" resultType="java.lang.Long">
+		SELECT
+			a.ID
+		FROM region a WHERE a.IS_VISIT = 1
+	</select>
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO region(
+            REGION_NAME,
+            IS_VISIT,
+            SUCCESS_TIP,
+            FAIL_TIP,
+            REGION_TYPE
+        ) VALUES (
+            #{regionName},
+            #{isVisit},
+            #{successTip},
+            #{failTip},
+            #{regionType}
+        )
+	</insert>
+
+	<update id="update">
+		UPDATE region SET
+		REGION_NAME = #{regionName},
+		IS_VISIT = #{isVisit},
+		SUCCESS_TIP = #{successTip},
+		FAIL_TIP = #{failTip},
+		REGION_TYPE = #{regionType}
+		WHERE ID = #{id}
+	</update>
+	
+	<delete id="deleteById" parameterType="java.lang.Long">
+		DELETE FROM region WHERE ID = #{0}
+	</delete>
+
+	<!-- 删除region和area关联表数据 -->
+	<delete id="deleteRegionAreaXref" parameterType="java.lang.Long">
+		DELETE FROM region_area_xref WHERE REGION_ID = #{0}
+	</delete>
+	<!-- 插入region和area关联表数据 -->
+	<insert id="insertRegionAreaXref">
+		INSERT INTO region_area_xref(REGION_ID, AREA_ID)
+		<foreach collection="areaList" item="area" separator=" union all ">
+			SELECT #{regionId}, #{area.id} FROM dual
+		</foreach>
+	</insert>
+
+	<!--根据 regionId查找 area-->
+	<select id="findAreaFromRegionAreaXrefByRegionId" resultType="cn.yr.chile.common.domain.Area" parameterType="java.lang.Long">
+		select
+			<include refid="allAreaColumns" />
+		from region_area_xref a left join area b on a.AREA_ID = b.id
+		where a.REGION_ID = #{0}
+	</select>
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserRechargeDetailDao">
+
+	<!-- 公共查询列 -->
+	<sql id="allColumns">
+		a.ID,
+		a.User_ID,
+		a.Recharge_Amt,
+		a.Create_Time,
+		a.Pay_Time,
+		a.Recharge_Status_Cd,
+		a.Recharge_Desc,
+		a.Local_Serial_Num,
+		a.Recharge_Serial_Num
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserRechargeDetail" useGeneratedKeys="true" keyProperty="Id">
+	    INSERT INTO user_recharge_detail (
+			User_ID,
+			Recharge_Amt,
+			Create_Time,
+			Pay_Time,
+			Recharge_Status_Cd,
+			Recharge_Desc,
+			Local_Serial_Num,
+			Recharge_Serial_Num
+	    ) VALUES (
+	        #{userId}, 
+	        #{rechargeAmt}, 
+	        #{createTime}, 
+	        #{payTime}, 
+	        #{rechargeStatusCd}, 
+	        #{rechargeDesc}, 
+	        #{localSerialNum}, 
+	        #{rechargeSerialNum}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserRechargeDetail">
+	   UPDATE user_recharge_detail SET
+		   User_ID = #{userId}, 
+		   Recharge_Amt = #{rechargeAmt}, 
+		   Create_Time = #{createTime}, 
+		   Pay_Time = #{payTime}, 
+		   Recharge_Status_Cd = #{rechargeStatusCd}, 
+		   Recharge_Desc = #{rechargeDesc}, 
+		   Local_Serial_Num = #{localSerialNum}, 
+		   Recharge_Serial_Num = #{rechargeSerialNum}
+	   WHERE 
+		   ID = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM user_recharge_detail WHERE ID = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserRechargeDetail" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_recharge_detail 
+	     WHERE 
+			  ID = #{id}
+	</select>
+
+	<select id="getByLocalSerialNum" parameterType="java.lang.String" resultType="UserRechargeDetail">
+		SELECT
+		<include refid="allColumns" />
+		FROM user_recharge_detail a
+		WHERE
+		a.Local_Serial_Num = #{localSerialNum}
+	</select>
+
+</mapper>

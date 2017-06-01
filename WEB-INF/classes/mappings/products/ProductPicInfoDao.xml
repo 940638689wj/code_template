@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductPicInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Pic_Id, Product_Id, Pic_Url, Is_Default_Pic, Display_Id, Create_Time, Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductPicInfo" useGeneratedKeys="true" keyProperty="productPicId">
+	    INSERT INTO product_pic_info (
+	        Product_Id, Pic_Url, Is_Default_Pic, Display_Id, Create_Time, Last_Update_Time
+	    ) VALUES (
+	        #{productId}, #{picUrl}, #{isDefaultPic}, #{displayId}, #{createTime}, #{lastUpdateTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductPicInfo">
+	   UPDATE product_pic_info SET
+		   Product_Id = #{productId}, 
+		   Pic_Url = #{picUrl}, 
+		   Is_Default_Pic = #{isDefaultPic}, 
+		   Display_Id = #{displayId}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+		   Product_Pic_Id = #{productPicId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_pic_info where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductPicInfo" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_pic_info 
+	     WHERE 
+			  Product_Pic_Id=#{productPicId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductPicInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from product_pic_info
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductPicInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_pic_info
+	    where 1=1
+		<if test="productPicId != null"> and Product_Pic_Id = #{productPicId}</if>
+		<if test="productId != null"> and Product_Id = #{productId}</if>
+		<if test="picUrl != null"> and Pic_Url = #{picUrl}</if>
+		<if test="isDefaultPic != null"> and Is_Default_Pic = #{isDefaultPic}</if>
+		<if test="displayId != null"> and Display_Id = #{displayId}</if>
+		<if test="createTime != null"> and Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and Last_Update_Time = #{lastUpdateTime}</if>
+	</select>
+	
+	<!-- 查询商品图片信息 -->
+	<select id="findProductPicInfoList" resultType="ProductPicInfo" parameterType="java.util.Map">
+	    select 
+		<include refid="allColumns" />
+	    from product_pic_info
+	    where 1=1
+		<if test="productId != null"> and Product_Id = #{productId}</if>
+		order by Is_Default_Pic desc
+	</select>
+	
+	<!-- 查询默认图片 -->
+	<select id="getDefaultPic" resultType="ProductPicInfo" parameterType="java.lang.Integer">
+	    select 
+		<include refid="allColumns" />
+	    from product_pic_info
+	    where 1=1
+		and Product_Id = #{productId}
+		and Is_Default_Pic = '1'
+	</select>
+	
+</mapper>

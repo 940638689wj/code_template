@@ -1,0 +1,353 @@
+package cn.yr.chile.order.dto;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import cn.yr.chile.common.persistence.BaseEntity;
+
+/**
+ * 预售订单
+ * Created by Administrator on 2017/1/23.
+ */
+public class PreSaleOrderDTO extends BaseEntity<PreSaleOrderDTO> {
+
+    private static final long serialVersionUID = 1L;
+
+    private Integer orderId;
+    private String orderNumber;
+    private Integer originPlatformCd; //操作平台
+    private String loginName;   //会员名
+    private Integer quantity;    //商品数量
+    private BigDecimal price;  //定金
+    private Date depositPayTime; //订金支付时间
+    private Date restPayTime; //尾款支付时间
+    private BigDecimal orderPayAmt;  //订单支付金额
+    private Integer orderPayModeCd; //订单支付类型
+    private Integer depositPayStatusCd; //订金支付状态
+    private Integer restPayStatusCd; //尾款支付状态
+    private Integer orderStatusCd;  //订单状态
+    private String remark;            //订单备注
+    private Integer orderPayStatusCd;    //支付状态
+
+    private BigDecimal orderTotalAmt; //订单总额
+
+    private Integer ProductId;        //商品Id
+    private String productPicUrl;    //商品显示图片
+    private String productName;    //商品名
+    private BigDecimal salePrice;    //商品销售价
+
+    private Date createTime;        //订单创建时间
+
+    private String orderStatusDesc; //订单状态描述
+    private String orderPayModelDesc; //支付类型描述
+    private String orderPayStatusDesc; //支付状态描述
+
+    private Integer orderMasterId;    //订单主Id
+    private Integer extendOrderId;    //扩展表OrderId
+
+    private Integer orderType;        //订单类型 1：定金订单；2：尾款订单
+    private String phone;
+
+    private Date allowPayRemainderStartTime; //允许支付尾款的开始时间
+    private Date allowPayRemainderEndTime;     //允许支付尾款的结束时间
+
+    //字典关联字段
+    private String originPlatformName; // 订单来源
+    private String orderStatusName; // 订单状态
+
+    public Integer getOrderType() {
+        if (this.getExtendOrderId().equals(this.orderMasterId)) {
+            orderType = 1;
+        } else if (!this.getExtendOrderId().equals(this.orderMasterId)) {
+            orderType = 2;
+        }
+        return orderType;
+    }
+
+    public void setOrderType(Integer orderType) {
+        this.orderType = orderType;
+    }
+
+    public Integer getOrderMasterId() {
+        return orderMasterId;
+    }
+
+    public Integer getExtendOrderId() {
+        return extendOrderId;
+    }
+
+    public void setExtendOrderId(Integer extendOrderId) {
+        this.extendOrderId = extendOrderId;
+    }
+
+    public void setOrderMasterId(Integer orderMasterId) {
+        this.orderMasterId = orderMasterId;
+    }
+
+    public Integer getOrderPayStatusCd() {
+        return orderPayStatusCd;
+    }
+
+    public void setOrderPayStatusCd(Integer orderPayStatusCd) {
+        this.orderPayStatusCd = orderPayStatusCd;
+    }
+
+    public String getOrderStatusDesc() {
+        if (this.getOrderStatusCd() != null) {
+            if (this.getOrderStatusCd() == 1 && this.getExtendOrderId().equals(this.orderMasterId)) {
+                orderStatusDesc = "待付定金";
+            } else if (this.getOrderStatusCd() == 2 && this.getExtendOrderId().equals(this.orderMasterId)) {
+                orderStatusDesc = "已付定金";
+            } else if (this.getOrderStatusCd() == 1 && !this.getExtendOrderId().equals(this.orderMasterId)) {
+                orderStatusDesc = "待付尾款";
+            } else if (this.getOrderStatusCd() == 20 && !this.getExtendOrderId().equals(this.orderMasterId)) {
+                orderStatusDesc = "待发货";
+            } else if (this.getOrderStatusCd() == 3 && !this.getExtendOrderId().equals(this.orderMasterId)) {
+                orderStatusDesc = "待收货";
+            } else if (this.getOrderStatusCd() == 5 && !this.getExtendOrderId().equals(this.orderMasterId)) {
+                orderStatusDesc = "已完成";
+            } else if (this.getOrderStatusCd() == 6) {
+                orderStatusDesc = "已取消";
+            }
+        }
+        return orderStatusDesc;
+    }
+
+    public void setOrderStatusDesc(String orderStatusDesc) {
+        this.orderStatusDesc = orderStatusDesc;
+    }
+
+    public String getOrderPayModelDesc() {
+        if (this.getOrderPayModeCd() != null) {
+            if (this.getOrderPayModeCd() == 1) {
+                orderPayModelDesc = "在线支付";
+            } else if (this.getOrderPayModeCd() == 2) {
+                orderPayModelDesc = "线下支付";
+            }
+        }
+        return orderPayModelDesc;
+    }
+
+    public String getOrderPayStatusDesc() {
+        if (this.getOrderPayStatusCd() != null) {
+            if (this.getOrderPayStatusCd() == 1) {
+                orderPayStatusDesc = "未支付";
+            } else if (this.getOrderPayStatusCd() == 2) {
+                orderPayStatusDesc = "已支付";
+            }
+        }
+        return orderPayStatusDesc;
+    }
+
+    public void setOrderPayStatusDesc(String orderPayStatusDesc) {
+        this.orderPayStatusDesc = orderPayStatusDesc;
+    }
+
+    public void setOrderPayModelDesc(String orderPayModelDesc) {
+        this.orderPayModelDesc = orderPayModelDesc;
+    }
+
+    public BigDecimal getSalePrice() {
+        return salePrice;
+    }
+
+    public void setSalePrice(BigDecimal salePrice) {
+        this.salePrice = salePrice;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public BigDecimal getOrderTotalAmt() {
+        return orderTotalAmt;
+    }
+
+    public void setOrderTotalAmt(BigDecimal orderTotalAmt) {
+        this.orderTotalAmt = orderTotalAmt;
+    }
+
+    public Integer getProductId() {
+        return ProductId;
+    }
+
+    public void setProductId(Integer productId) {
+        ProductId = productId;
+    }
+
+    public String getProductPicUrl() {
+        return productPicUrl;
+    }
+
+    public void setProductPicUrl(String productPicUrl) {
+        this.productPicUrl = productPicUrl;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this.productName = productName;
+    }
+
+    public Date getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public Integer getOrderStatusCd() {
+        return orderStatusCd;
+    }
+
+    public void setOrderStatusCd(Integer orderStatusCd) {
+        this.orderStatusCd = orderStatusCd;
+    }
+
+    public Integer getOriginPlatformCd() {
+        return originPlatformCd;
+    }
+
+    public void setOriginPlatformCd(Integer originPlatformCd) {
+        this.originPlatformCd = originPlatformCd;
+    }
+
+    public Integer getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Integer orderId) {
+        this.orderId = orderId;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public String getLoginName() {
+        return loginName;
+    }
+
+    public void setLoginName(String loginName) {
+        this.loginName = loginName;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public Date getDepositPayTime() {
+        return depositPayTime;
+    }
+
+    public void setDepositPayTime(Date depositPayTime) {
+        this.depositPayTime = depositPayTime;
+    }
+
+    public Date getRestPayTime() {
+        return restPayTime;
+    }
+
+    public void setRestPayTime(Date restPayTime) {
+        this.restPayTime = restPayTime;
+    }
+
+    public BigDecimal getOrderPayAmt() {
+        return orderPayAmt;
+    }
+
+    public void setOrderPayAmt(BigDecimal orderPayAmt) {
+        this.orderPayAmt = orderPayAmt;
+    }
+
+    public Integer getOrderPayModeCd() {
+        return orderPayModeCd;
+    }
+
+    public void setOrderPayModeCd(Integer orderPayModeCd) {
+        this.orderPayModeCd = orderPayModeCd;
+    }
+
+    public Integer getDepositPayStatusCd() {
+        return depositPayStatusCd;
+    }
+
+    public void setDepositPayStatusCd(Integer depositPayStatusCd) {
+        this.depositPayStatusCd = depositPayStatusCd;
+    }
+
+    public Integer getRestPayStatusCd() {
+        return restPayStatusCd;
+    }
+
+    public void setRestPayStatusCd(Integer restPayStatusCd) {
+        this.restPayStatusCd = restPayStatusCd;
+    }
+
+    public Date getAllowPayRemainderStartTime() {
+        return allowPayRemainderStartTime;
+    }
+
+    public void setAllowPayRemainderStartTime(Date allowPayRemainderStartTime) {
+        this.allowPayRemainderStartTime = allowPayRemainderStartTime;
+    }
+
+    public Date getAllowPayRemainderEndTime() {
+        return allowPayRemainderEndTime;
+    }
+
+    public void setAllowPayRemainderEndTime(Date allowPayRemainderEndTime) {
+        this.allowPayRemainderEndTime = allowPayRemainderEndTime;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public String getOriginPlatformName() {
+        return originPlatformName;
+    }
+
+    public void setOriginPlatformName(String originPlatformName) {
+        this.originPlatformName = originPlatformName;
+    }
+
+    public String getOrderStatusName() {
+        return orderStatusName;
+    }
+
+    public void setOrderStatusName(String orderStatusName) {
+        this.orderStatusName = orderStatusName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+}

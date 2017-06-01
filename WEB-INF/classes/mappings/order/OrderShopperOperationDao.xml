@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderShopperOperationDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Order_Id, Send_Shopper_ID, Deal_Status_Cd, Last_Update_Time
+	</sql>
+
+	<sql id="systemcode">
+		s.Code_Cn_Name as oper_Type_Desc
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderShopperOperation" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_shopper_operation (
+	        Order_Id, Send_Shopper_ID, Deal_Status_Cd, Last_Update_Time
+	    ) VALUES (
+	        #{orderId}, #{sendShopperId}, #{dealStatusCd}, now()      
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderShopperOperation">
+	   UPDATE order_shopper_operation SET
+		   Order_Id = #{orderId}, 
+		   Send_Shopper_ID = #{sendShopperId}, 
+		   Deal_Status_Cd = #{dealStatusCd}, 
+		   Last_Update_Time = now() 
+	   WHERE 
+		   Order_Id = #{orderId}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_shopper_operation where Order_Id = #{orderId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderShopperOperation" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_shopper_operation 
+	     WHERE 
+			  Order_Id=#{orderId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderShopperOperation">  
+	    select 
+		<include refid="allColumns" />
+	    from order_shopper_operation
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderShopperOperation" parameterType="OrderShopperOperation">  
+	    select 
+		<include refid="allColumns" />
+	    from order_shopper_operation a
+	    where 1=1
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="sendShopperId != null"> and a.Send_Shopper_ID = #{sendShopperId}</if>
+		<if test="dealStatusCd != null"> and a.Deal_Status_Cd = #{dealStatusCd}</if>
+	</select>
+	
+	<select id="findOrderShopperOperationsByOrderId"  resultType="OrderShopperOperation">
+		 select 
+		<include refid="allColumns" />,
+		<include refid="systemcode"/>
+	    from order_shopper_operation o
+	    left join system_code s 
+	    on o.Deal_Status_Cd = s.Code_Id 
+	    where o.Order_Id = #{orderId}
+	    and s.Code_Type_Cd = #{dealStatusCd}
+	    order by o.Last_Update_Time asc
+	</select>
+	
+	<select id="getOrderShopperOperationByOrderIdAndsendShopperId" resultType="OrderShopperOperation">
+		select * from order_shopper_operation where Order_Id = #{orderId} and Send_Shopper_ID = #{sendShopperId} limit 0 ,1 
+	</select>
+	
+	
+	<select id="findOrderShopperOperationList" parameterType="java.util.Map" resultType="OrderShopperOperation">
+   select
+    a.order_Id,
+    SUM(IFNULL(d.Order_Express_Amt,0)) as orderExpressTotal,
+    c.Receive_Name,c.Receive_Tel,
+    d.order_number,
+    d.Order_Status_Cd,
+    d.Create_Time,
+    d.Order_Remark,
+    d.Order_Complete_Time,
+    d.Order_Express_Amt
+    from order_shopper_operation a
+    left join  shopper b on a.Send_Shopper_ID = b.Shopper_ID
+    left join  order_receive_info c on a.order_id = c.order_id
+    left join  order_header d on a.order_id = d.order_id
+    WHERE 1=1 and d.Order_Status_Cd=5
+    and a.Send_Shopper_ID = #{shopperId}  and c.Distribute_Shopper_ID = #{shopperId}
+    <if test="beginTime != null and beginTime != ''"> 
+    <![CDATA[ 
+    and d.Order_Complete_Time >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d')
+    ]]>
+    </if>
+    <if test="endTime != null and endTime != ''"> 
+    <![CDATA[ 
+    and d.Order_Complete_Time <= DATE_FORMAT(#{endTime}, '%Y-%m-%d')
+    ]]>
+    </if>
+    GROUP BY a.Order_id
+    ORDER BY
+    d.Create_Time DESC
+   </select>
+
+  
+   
+
+</mapper>

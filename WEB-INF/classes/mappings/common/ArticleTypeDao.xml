@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        
+<mapper namespace="cn.yr.chile.common.dao.ArticleTypeDao">
+	<sql id="allColumns">
+		a.cms_article_Type_ID AS articleTypeID,
+		a.Type_Name AS typeName,
+		a.Display_ID AS displayID,
+		a.Create_Time AS createTime,
+		a.Status_Cd AS statusCd,
+		a.Is_Display_In_Home AS isDisplayInHome,
+		a.Type_Desc AS typeDesc,
+		a.Article_Model_Type_Cd as articleModelTypeCd
+	</sql>
+	
+	<!-- 查询全部文章类型 -->
+	<select id="findAllList" resultType="cn.yr.chile.common.domain.ArticleType">
+		SELECT
+			<include refid="allColumns" />
+		FROM 
+			cms_article_type a 
+		ORDER BY a.display_Id
+					
+	</select>
+	
+	<!-- 根据Id查询文章类型 -->
+	<select id="get" parameterType="java.lang.Long" resultType="cn.yr.chile.common.domain.ArticleType">
+		SELECT 
+			<include refid="allColumns" />
+		FROM cms_article_type a 
+		WHERE a.cms_article_Type_ID=#{articleTypeId} 
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="atricleTypeId">
+		INSERT INTO cms_article_Type(
+			Type_Name,
+			Display_ID,
+			Create_Time,
+			Status_Cd,
+			Is_Display_In_Home,
+			Type_Desc,
+			Article_Model_Type_Cd
+		) VALUES(
+			#{typeName},
+			#{displayID},
+			#{createTime},
+			#{statusCd},
+			#{isDisplayInHome},
+			#{typeDesc},
+			#{articleModelTypeCd}
+			)
+	</insert>
+	
+	<delete id="delete" parameterType="java.lang.Long">
+		DELETE FROM cms_article_type WHERE cms_ARTICLE_TYPE_ID = #{articleTypeId}
+	</delete>
+	
+	<update id="update">
+		UPDATE cms_article_Type SET
+			Type_Name=#{typeName},
+			Display_ID=#{displayID},
+			Is_Display_In_Home=#{isDisplayInHome},
+			Type_Desc=#{typeDesc},
+			Article_Model_Type_Cd=#{articleModelTypeCd}
+		 WHERE 
+		 	cms_ARTICLE_Type_ID=#{articleTypeId}
+	</update>
+	
+</mapper>

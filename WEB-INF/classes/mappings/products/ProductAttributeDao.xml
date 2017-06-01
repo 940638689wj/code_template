@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductAttributeDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Id, Display_Id, Attr_Name, Attr_Value, Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductAttribute" useGeneratedKeys="true" keyProperty="productId">
+	    INSERT INTO product_attribute (
+	        Product_Id, Display_Id, Attr_Name, Attr_Value, Create_Time
+	    ) VALUES (
+	        #{productId}, #{displayId}, #{attrName}, #{attrValue}, #{createTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductAttribute">
+	   UPDATE product_attribute SET
+		   Attr_Name = #{attrName}, 
+		   Attr_Value = #{attrValue}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   Product_Id = #{productId}, 
+		   Display_Id = #{displayId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM product_attribute where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductAttribute" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_attribute 
+	     WHERE 
+			  Product_Id=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductAttribute">  
+	    select 
+		<include refid="allColumns" />
+	    from product_attribute
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductAttribute" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_attribute
+	    where 1=1
+		<if test="productId != null"> and Product_Id = #{productId}</if>
+		<if test="displayId != null"> and Display_Id = #{displayId}</if>
+		<if test="attrName != null"> and Attr_Name = #{attrName}</if>
+		<if test="attrValue != null"> and Attr_Value = #{attrValue}</if>
+		<if test="createTime != null"> and Create_Time = #{createTime}</if>
+	</select>
+	
+	<!-- 查询商品属性信息 -->
+	<select id="findProductAttributeList" resultType="ProductAttribute" parameterType="java.lang.Integer">  
+	    select 
+		<include refid="allColumns" />
+	    from product_attribute
+	    where 1=1
+		<if test="productId != null"> and Product_Id = #{productId}</if>
+	</select>
+	
+</mapper>

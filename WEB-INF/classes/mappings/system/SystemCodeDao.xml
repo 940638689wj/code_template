@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.system.dao.SystemCodeDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+       Code_Type_Cd,Code_Id,Code_Cn_Name,Display_ID,Code_Type_Desc,STATE,Remark
+	</sql>
+
+    <!-- 返回列表  -->
+    <select id="findStoreAttr" resultType="cn.yr.chile.system.domain.SystemCode" parameterType="java.lang.String">
+        select
+        <include refid="allColumns"/>
+        from system_code
+        where Code_Type_Cd = #{codeTypeCd}
+        order by Display_ID
+    </select>
+    <update id="updateSystemCodeByCodeCdAndCodeId" parameterType="SystemCode">
+      update system_code set
+      Code_Id = #{codeId},
+      Code_Cn_Name = #{codeCnName},
+      Display_ID = #{displayID},
+      Code_Type_Desc = #{codeTypeDesc},
+      STATE = #{state},
+      Remark = #{remark}
+      where Code_Type_Cd = #{codeTypeCd} and  Code_Id = #{codeId}
+    </update>
+
+    <insert id="insert" parameterType="SystemCode">
+    insert into system_code(
+     Code_Type_Cd,Code_Id,Code_Cn_Name,Display_ID,Code_Type_Desc,STATE,Remark
+    ) values(
+   #{codeTypeCd},#{codeId},#{codeCnName},#{displayID},#{codeTypeDesc},#{state},#{remark}
+    )
+    
+    
+    </insert>
+
+    <select id="get" resultType="SystemCode" parameterType="SystemCode">
+        select
+        <include refid="allColumns"/>
+        from system_code
+        where Code_Type_Cd = #{codeTypeCd} and Code_Id=#{codeId}
+    </select>
+
+    <!-- 返回银行账号 -->
+    <select id="findBankList" resultType="SystemCode">
+        select
+        <include refid="allColumns"/>
+        from system_code
+        where Code_Type_Cd = 'BANK_TYPE_CD' and Code_Id != 1 and Code_Id != 12
+        order by Display_ID desc
+    </select>
+
+    <select id="getSystemCodeByCodeCdAndCodeId" parameterType="String" resultType="SystemCode">
+        select
+        <include refid="allColumns"/>
+        from system_code
+        where Code_Type_Cd = #{codeCd}
+        and Code_Id = #{codeId}
+    </select>
+
+    <delete id="deleteSystemCodeByCodeCdAndCodeId" parameterType="String">
+	   delete from system_code
+	   where Code_Type_Cd = #{codeCd}
+	   and Code_Id = #{codeId}
+	</delete>
+
+</mapper>

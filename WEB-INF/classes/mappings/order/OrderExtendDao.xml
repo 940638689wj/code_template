@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderExtendDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		o.Order_Id,
+		o.Origin_Platform_Cd,
+		o.Is_Shopper_Checked,
+		o.Is_User_Checked,
+		o.Last_Update_Time,
+		o.Order_Extend_Days,
+		o.Master_Order_ID,
+		o.Is_Self_Pickup,
+		o.Expect_Send_Time
+		
+	</sql>
+
+	<insert id="insert" parameterType="OrderExtend">
+		INSERT INTO order_extend (
+			Order_Id,
+			Origin_Platform_Cd,
+			Is_Shopper_Checked,
+			Is_User_Checked,
+			Last_Update_Time,
+			Order_Extend_Days,
+			Master_Order_ID,
+			Is_Self_Pickup,
+			Expect_Send_Time
+		) VALUES (
+			#{orderId},
+			#{originPlatformCd},
+			#{isShopperChecked},
+			#{isUserChecked},
+			#{lastUpdateTime},
+			#{orderExtendDays},
+			#{masterOrderId},
+			#{isSelfPickup},
+			#{expectSendTime}
+		)
+	</insert>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="OrderExtend" parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_extend o
+        WHERE
+        o.Order_Id=#{orderId}
+    </select>
+
+	 <!-- 根据主键获取 -->
+    <select id="getByMasterId" resultType="OrderExtend" parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_extend o
+        WHERE
+        o.Master_Order_ID=#{masterOrderId}
+    </select>
+    
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderExtend">
+		UPDATE order_extend SET
+		<if test="originPlatformCd != null">
+			Origin_Platform_Cd = #{originPlatformCd},
+		</if>
+		<if test="isShopperChecked != null">
+			Is_Shopper_Checked = #{isShopperChecked},
+		</if>
+		<if test="isUserChecked != null">
+			Is_User_Checked = #{isUserChecked},
+		</if>
+		<if test="orderExtendDays != null">
+			Order_Extend_Days = #{orderExtendDays},
+		</if>
+		<if test="masterOrderId != null">
+			Master_Order_ID = #{masterOrderId},
+		</if>
+		<if test="isSelfPickup != null">
+			Is_Self_Pickup = #{isSelfPickup},
+		</if>
+		<if test="expectSendTimeCd != null">
+			Expect_Send_Time = #{expectSendTime},
+		</if>
+		Last_Update_Time = #{lastUpdateTime}
+		WHERE
+		Order_Id = #{orderId}
+	</update>
+
+</mapper>

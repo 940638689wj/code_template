@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.admin.dao.AdminPermissionDao">
+    <sql id="allColumns">
+        b.ADMIN_PERMISSION_ID,
+        b.DESCRIPTION,
+        b.NAME,
+        b.PERMISSION_TYPE,
+        b.PID,
+        b.CLASSIFIED,
+        b.SORT
+    </sql>
+
+    <!-- 获取 adminUserId 的权限 -->
+    <select id="findPermissionByAdminUserId" resultType="AdminPermission" parameterType="java.util.HashMap">
+        SELECT
+          <include refid="allColumns"/>
+        FROM admin_user_permission_xref a
+        LEFT JOIN admin_permission b ON b.ADMIN_PERMISSION_ID = a.ADMIN_PERMISSION_ID
+        WHERE a.ADMIN_USER_ID = #{adminUserId}
+    </select>
+
+    <!-- 通过 classified 获取 菜单 -->
+    <select id="findPermissionByClassified" resultType="AdminPermission" parameterType="java.lang.String">
+        SELECT
+        <include refid="allColumns"/>
+        FROM admin_permission b
+        WHERE b.CLASSIFIED = #{0}
+    </select>
+
+    <!-- 通过 classified 获取 一级菜单 -->
+    <select id="findRootPermissionByClassified" resultType="AdminPermission" parameterType="java.util.HashMap">
+        SELECT
+          <include refid="allColumns"/>
+        FROM admin_permission b
+        WHERE b.CLASSIFIED = #{classified} AND b.PID IS NULL AND b.ADMIN_PERMISSION_ID > 1000
+        ORDER BY b.SORT desc
+    </select>
+
+    <!-- 通过 pid 获取子权限 -->
+    <select id="findPermissionByPid" resultType="AdminPermission" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>
+        FROM admin_permission b
+        WHERE b.PID = #{pid} AND b.PID ORDER BY b.SORT desc
+    </select>
+</mapper>

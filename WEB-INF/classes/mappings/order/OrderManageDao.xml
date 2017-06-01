@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderManageDao">
+
+    <sql id="whereForAllOrder">
+        WHERE 1=1
+        <if test="adminDeleteStatusCd != null and adminDeleteStatusCd != ''">
+            AND oh.Admin_Delete_Status_Cd = #{adminDeleteStatusCd}
+        </if>
+        <if test="orderTypeCd != null and orderTypeCd != ''">
+            AND oh.order_Type_Cd = #{orderTypeCd}
+        </if>
+        <if test="orderStatusCd != null and orderStatusCd != ''">
+            AND oh.Order_Status_Cd = #{orderStatusCd}
+        </if>
+        <if test="orderReviewStatusCd != null and orderReviewStatusCd != ''">
+            AND oh.Order_Review_Status_Cd = #{orderReviewStatusCd}
+        </if>
+        <if test="orderDistrbuteTypeCd != null">
+                AND ori.Order_Distrbute_Type_Cd = #{orderDistrbuteTypeCd}
+        </if>
+    </sql>
+
+    <!--普通或白鹭卡订单的各类型数量-->
+    <select id="findAllOrderCount" resultType="Integer" parameterType="java.util.Map">
+        select COUNT(1)
+        FROM order_header oh
+        LEFT JOIN order_receive_info ori ON oh.order_id = ori.order_id
+        <include refid="whereForAllOrder"/>
+    </select>
+
+    <!--普通或白鹭卡订单的列表数据-->
+    <select id="findAllOrderPage" resultType="AllOrderDTO" parameterType="java.util.Map">
+        SELECT
+        oh.Order_Id,
+        oh.Order_Number,
+        oe.Origin_Platform_Cd,
+        s1.Code_Cn_Name AS originPlatformName,
+        ori.Receive_Name,
+        ori.Receive_Tel,
+        ori.Receive_Addr_Combo,
+        us.User_Name,
+        us.Nick_Name,
+        us.Login_Name,
+        us.phone,
+        (SELECT group_concat(product_name) FROM order_item WHERE order_id = oh.order_id ) AS productConcatName,
+        (SELECT SUM(Quantity) FROM order_item WHERE order_id = oh.order_id) AS productNum,
+        oh.Order_Total_Amt,
+        oh.Order_Pay_Amt,
+        oh.Order_Discount_Amt,
+        ex.Express_Name,
+        st.Store_Name,
+        oh.Order_Status_Cd,
+        s2.Code_Cn_Name AS orderStatusName,
+        oh.Order_Review_Status_Cd,
+        oh.Order_Pay_Mode_Cd,
+        s3.Code_Cn_Name AS orderPayModeName,
+        oh.Order_Pay_Way_Cd,
+        s4.Code_Cn_Name AS orderPayWayName,
+        oh.Create_Time,
+        oh.Order_Pay_Time,
+        ori.Send_Time,
+        ori.Invoice_Title,
+        ori.Company_Name,
+        ori.Order_Distrbute_Type_Cd,
+        s5.Code_Cn_Name AS orderDistrbuteTypeName,
+        oh.Order_Remark,
+        pp.Package_Name,
+        pr.Promotion_Name,
+        pg.Groupon_Price
+        FROM order_header oh
+        LEFT JOIN order_extend oe ON oh.order_Id = oe.Order_Id
+        LEFT JOIN order_receive_info ori ON oh.order_Id = ori.Order_Id
+        LEFT JOIN express ex ON ori.Express_Id = ex.Express_Id
+        LEFT JOIN store st ON ori.Distrbute_Store_Id = st.Store_Id
+        LEFT JOIN user us ON oh.User_Id = us.User_Id
+        LEFT JOIN pickupcoupon_code pc ON oh.Order_Id = pc.Order_Id
+        LEFT JOIN pickupcoupon_package pp ON pc.Pickup_Coupon_Package_ID = pp.Pickup_Coupon_Package_ID
+        LEFT JOIN order_promotion_info opi ON oh.Order_Id = opi.Order_Id AND opi.Promotion_Type_Cd = 70
+        LEFT JOIN promotion pr ON opi.Promotion_Id = pr.Promotion_Id
+        LEFT JOIN promotion_groupon pg ON opi.Promotion_Id = pg.Promotion_Id
+        LEFT JOIN system_code s1 on oe.Origin_Platform_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Origin_Platform_Cd'
+        LEFT JOIN system_code s2 on oh.Order_Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Order_Status_Cd'
+        LEFT JOIN system_code s3 on oh.Order_Pay_Mode_Cd = s3.Code_Id AND s3.Code_Type_Cd = 'Order_Pay_Mode_Cd'
+        LEFT JOIN system_code s4 on oh.Order_Pay_Way_Cd = s4.Code_Id AND s4.Code_Type_Cd = 'Order_Pay_Way_Cd'
+        LEFT JOIN system_code s5 on ori.Order_Distrbute_Type_Cd = s5.Code_Id AND s5.Code_Type_Cd =
+        'Order_Distrbute_Type_Cd'
+        <include refid="whereForAllOrder"/>
+        <if test="orderNumber != null and orderNumber != ''">
+            AND oh.Order_Number LIKE CONCAT('%',#{orderNumber},'%')
+        </if>
+        <if test="createStart != null and createStart != ''">
+            AND DATE_FORMAT(#{createStart},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(oh.Create_Time,'%Y%m%d')
+        </if>
+        <if test="createEnd != null and createEnd != ''">
+            AND DATE_FORMAT(#{createEnd},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(oh.Create_Time,'%Y%m%d')
+        </if>
+        <if test="orderDistrbuteTypeCd != null and orderDistrbuteTypeCd != ''">
+            AND ori.Order_Distrbute_Type_Cd = #{orderDistrbuteTypeCd}
+        </if>
+        <if test="productName != null and productName != ''">
+            AND (SELECT group_concat(product_name) FROM order_item WHERE order_id = oh.order_id )
+            LIKE CONCAT('%',#{productName},'%')
+        </if>
+        <if test="originPlatformCd != null and originPlatformCd != ''">
+            AND oe.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="orderPayWayCd != null and orderPayWayCd != ''">
+            AND oh.Order_Pay_Way_Cd = #{orderPayWayCd}
+        </if>
+        <if test="receiveName != null and receiveName != ''">
+            AND ori.Receive_Name LIKE CONCAT('%',#{receiveName},'%')
+        </if>
+        <if test="receiveAddrCombo != null and receiveAddrCombo != ''">
+            AND ori.Receive_Addr_Combo LIKE CONCAT('%',#{receiveAddrCombo},'%')
+        </if>
+        <if test="receiveTel != null and receiveTel != ''">
+            AND ori.Receive_Tel LIKE CONCAT('%',#{receiveTel},'%')
+        </if>
+        <if test="userName != null and userName != ''">
+            AND (us.Login_Name LIKE CONCAT('%',#{userName},'%') OR us.Nick_Name LIKE CONCAT('%',#{userName},'%'))
+        </if>
+        ORDER BY oh.Order_Id DESC
+    </select>
+
+    <!--后台删除订单-->
+    <update id="delOrder" parameterType="Integer">
+        UPDATE order_header SET
+        Admin_Delete_Status_Cd = 2,
+        User_Delete_Status_Cd = 2
+        WHERE order_id = #{orderId}
+    </update>
+
+    <!--修改收货人信息-->
+    <update id="saveEditReceive" parameterType="orderReceiveInfo">
+        UPDATE order_receive_info SET
+        receive_name = #{receiveName},
+        receive_tel = #{receiveTel},
+        receive_addr_combo = #{receiveAddrCombo},
+        order_express_num = #{orderExpressNum}
+        WHERE order_id = #{orderId}
+    </update>
+
+    <!--后台支付订单-->
+    <update id="payOrder" parameterType="orderHeader">
+        UPDATE order_header SET
+        order_status_cd = #{orderStatusCd},
+        order_pay_way_cd = #{orderPayWayCd},
+        order_pay_time = #{orderPayTime}
+        WHERE order_id = #{orderId}
+    </update>
+
+    <sql id="whereForPreSaleOrder">
+        where a.order_type_cd = 2
+        AND ori.Order_Distrbute_Type_Cd = #{orderDistrbuteTypeCd}
+        <if test="type != null">
+            <choose>
+                <when test="type == 0 ">
+                    AND a.Order_Status_Cd != 2
+                </when>
+                <when test="type == 1 ">
+                    AND a.Order_Status_Cd = 1 AND oe.Order_ID = oe.Master_Order_ID
+                </when>
+                <when test="type == 2 ">
+                    AND a.Order_Status_Cd = 1 AND oe.Order_ID != oe.Master_Order_ID
+                </when>
+                <when test="type == 3 ">
+                    AND a.Order_Status_Cd = 20
+                </when>
+                <when test="type == 4 ">
+                    AND a.Order_Status_Cd = 3
+                </when>
+                <when test="type == 5 ">
+                    AND a.Order_Status_Cd = 5
+                </when>
+                <when test="type == 6 ">
+                    AND a.Order_Status_Cd = 6
+                </when>
+            </choose>
+        </if>
+        <if test="orderNumber != null and orderNumber != ''">
+            AND a.Order_Number LIKE CONCAT('%',#{orderNumber},'%')
+        </if>
+        <if test="originPlatformCd != null and originPlatformCd != ''">
+            AND oe.Origin_Platform_Cd = #{originPlatformCd}
+        </if>
+        <if test="phone != null and phone != ''">
+            AND us.phone LIKE CONCAT('%',#{phone},'%')
+        </if>
+        <if test="adminDeleteStatusCd != null and adminDeleteStatusCd != ''">
+            AND a.Admin_Delete_Status_Cd = #{adminDeleteStatusCd}
+        </if>
+    </sql>
+
+    <!--预售订单的各类型数量-->
+    <select id="findPreSaleOrderCount" resultType="Integer" parameterType="Integer">
+        SELECT COUNT(1)
+        FROM order_header a
+        LEFT JOIN order_extend oe ON a.order_id = oe.order_id
+        LEFT JOIN order_receive_info ori ON a.order_id = ori.order_id
+        LEFT JOIN user us ON a.user_id = us.user_id
+        <include refid="whereForPreSaleOrder"/>
+    </select>
+
+    <!--预售订单的列表数据-->
+    <select id="findPreSaleOrderPage" resultType="cn.yr.chile.order.dto.PreSaleOrderDTO" parameterType="java.util.Map">
+        SELECT
+        a.order_id,
+        a.order_number,
+        oe.Origin_Platform_Cd,
+        s1.Code_Cn_Name AS originPlatformName,
+        us.phone,
+        (select sum(quantity) from order_item where order_id = a.order_id) as quantity,
+        moh.Order_Pay_Amt AS price,
+        moh.Order_Pay_Time AS depositPayTime,
+        s3.Code_Cn_Name as depositOrderPayModelName,
+        roh.Order_Pay_Amt AS restPrice,
+        roh.Order_Pay_Time AS restPayTime,
+        a.Order_Status_Cd,
+        s2.Code_Cn_Name AS orderStatusName,
+        oe.Master_Order_Id
+        FROM order_header a
+        LEFT JOIN order_extend oe ON a.order_id = oe.order_id
+        LEFT JOIN order_receive_info ori ON a.order_id = ori.order_id
+        LEFT JOIN user us ON a.user_id = us.user_id
+        LEFT JOIN order_header moh ON oe.Master_Order_ID = moh.Order_Id
+        LEFT JOIN order_header roh ON a.Order_Id = roh.Order_Id AND moh.Order_Id &lt;&gt; roh.Order_Id
+        LEFT JOIN system_code s1 on oe.Origin_Platform_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Origin_Platform_Cd'
+        LEFT JOIN system_code s2 on a.Order_Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Order_Status_Cd'
+        LEFT JOIN system_code s3 on moh.Order_Pay_Mode_Cd = s3.Code_Id AND s3.Code_Type_Cd = 'Order_Pay_Mode_Cd'
+        <include refid="whereForPreSaleOrder"/>
+        ORDER BY a.Order_Id DESC
+    </select>
+
+    <!--众筹订单的where条件-->
+    <sql id="whereForCrowdFundOrder">
+        <if test="productName != null and productName !=''">
+            and pr.product_name LIKE CONCAT('%',#{productName},'%')
+        </if>
+    </sql>
+
+    <!--众筹订单的case条件-->
+    <sql id="caseForCrowdFundOrder">
+        (CASE WHEN p2.Enable_Start_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 1
+        WHEN p2.Enable_Start_Time &lt; NOW() AND p2.Enable_End_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND
+        Is_Taked = 0
+        THEN 2
+        WHEN p2.Enable_End_Time &lt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 3
+        <if test="type != null and type >= 4">
+            WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 0
+            THEN 4
+            WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 20
+            THEN 5
+            WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 3
+            THEN 6
+            WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 5 AND
+            oh.Order_Review_Status_CD = 1
+            THEN 7
+            WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 5 AND
+            oh.Order_Review_Status_CD = 2
+            THEN 8
+        </if>
+        END)
+    </sql>
+
+    <!--众筹订单的各类型数量-->
+    <select id="findCrowdFundOrderCount" resultType="Integer" parameterType="java.util.Map">
+        SELECT count(1)
+        FROM promotion_crowd_fund p1
+        LEFT JOIN promotion p2 ON p1.promotion_id = p2.promotion_id
+        <if test="type != null and type >= 4">
+            LEFT JOIN promotion_crowd_fund_code p3 ON p1.promotion_id = p3.promotion_id
+            LEFT JOIN order_header oh ON p3.Order_ID = oh.Order_ID
+        </if>
+        WHERE 1=1
+        <if test="type != null and type != 0">
+            AND
+            <include refid="caseForCrowdFundOrder"/>
+            = #{type}
+        </if>
+        <if test="type != null and type >= 4">
+            AND p3.Is_Wined = 1
+        </if>
+    </select>
+
+    <!--众筹订单列表数据 -->
+    <select id="findCrowdFundOrderPage" parameterType="java.util.Map"
+            resultType="cn.yr.chile.order.dto.CrowdFoundingOrderDTO">
+        SELECT
+        p1.Promotion_Id,
+        pr.Product_Name,
+        pr.Bar_Code,
+        pr.SKU_KEY_Json_Str,
+        p1.Crowd_Fund_Product_Amt,
+        (p1.Crowd_Fund_Product_Amt / p1.Crowd_Fund_per_Amt) AS totalBuy,
+        <if test="type != null and type >= 4">
+            oh.Order_Id,
+            oh.Order_Number,
+            oh.Order_Pay_Time,
+            ex.Express_Name,
+            us.Phone,
+            s1.Code_Cn_Name AS orderDistrbuteTypeName,
+        </if>
+        (SELECT count(1) FROM promotion_crowd_fund_code pc WHERE pc.promotion_id = p1.promotion_id) AS alreadyBuy,
+        <include refid="caseForCrowdFundOrder"/>
+        AS type
+        FROM promotion_crowd_fund p1
+        LEFT JOIN promotion p2 ON p1.promotion_id = p2.promotion_id
+        LEFT JOIN promotion_product_xref p4 ON p1.promotion_id = p4.promotion_id
+        LEFT JOIN product pr ON p4.product_id = pr.product_id
+        <if test="type != null and type >= 4">
+            LEFT JOIN promotion_crowd_fund_code p3 ON p1.promotion_id = p3.promotion_id
+            LEFT JOIN order_header oh ON p3.Order_ID = oh.Order_ID
+            LEFT JOIN order_receive_info ori ON oh.Order_Id = ori.Order_Id
+            LEFT JOIN express ex ON ori.Express_ID = ex.Express_ID
+            LEFT JOIN user us ON p3.User_ID = us.User_ID
+            LEFT JOIN system_code s1 ON ori.Order_Distrbute_Type_Cd = s1.Code_Id
+            AND s1.Code_Type_Cd = 'Order_Distrbute_Type_Cd'
+        </if>
+        WHERE 1=1
+        <if test="type != null and type != 0">
+            AND
+            <include refid="caseForCrowdFundOrder"/>
+            = #{type}
+        </if>
+        <if test="type != null and type >= 4">
+            AND p3.Is_Wined = 1
+        </if>
+        <include refid="whereForCrowdFundOrder"/>
+        ORDER BY p1.Promotion_Id DESC
+    </select>
+
+
+    <!--众筹订单（全部）的case条件-->
+    <sql id="caseForCrowdFundOrderForAll">
+        (CASE WHEN p2.Enable_Start_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 1
+        WHEN p2.Enable_Start_Time &lt; NOW() AND p2.Enable_End_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND
+        Is_Taked = 0
+        THEN 2
+        WHEN p2.Enable_End_Time &lt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 3
+        WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 0
+        THEN 4
+        WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 20
+        THEN 5
+        WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 3
+        THEN 6
+        WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 5 AND
+        oh.Order_Review_Status_CD = 1
+        THEN 7
+        WHEN p1.Crowd_Fund_Status_Cd = 1 AND p1.Is_Taked = 1 AND oh.Order_Status_Cd = 5 AND
+        oh.Order_Review_Status_CD = 2
+        THEN 8
+        END)
+    </sql>
+
+    <sql id="mainForCrowdFundOrderForAll">
+        -- 未开始、众筹中、已失效的订单
+        (SELECT
+        p1.Promotion_Id,
+        pr.Product_Name,
+        pr.Bar_Code,
+        pr.SKU_KEY_Json_Str,
+        p1.Crowd_Fund_Product_Amt,
+        (p1.Crowd_Fund_Product_Amt / p1.Crowd_Fund_per_Amt) AS totalBuy,
+        null AS orderId,
+        null AS orderNumber,
+        null AS orderPayTime,
+        null AS expressName,
+        null AS phone,
+        null AS orderDistrbuteTypeName,
+        (SELECT COUNT(1) FROM promotion_crowd_fund_code pc WHERE pc.promotion_id = p1.promotion_id) AS alreadyBuy,
+        (CASE WHEN p2.Enable_Start_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 1
+        WHEN p2.Enable_Start_Time &lt; NOW() AND p2.Enable_End_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND
+        Is_Taked = 0
+        THEN 2
+        WHEN p2.Enable_End_Time &lt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 3
+        END) AS type
+        FROM promotion_crowd_fund p1
+        LEFT JOIN promotion p2 ON p1.promotion_id = p2.promotion_id
+        LEFT JOIN promotion_product_xref p4 ON p1.promotion_id = p4.promotion_id
+        LEFT JOIN product pr ON p4.product_id = pr.product_id
+        WHERE 1=1
+        AND (CASE WHEN p2.Enable_Start_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 1
+        WHEN p2.Enable_Start_Time &lt; NOW() AND p2.Enable_End_Time &gt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND
+        Is_Taked = 0
+        THEN 2
+        WHEN p2.Enable_End_Time &lt; NOW() AND p1.Crowd_Fund_Status_Cd = 0 AND Is_Taked = 0
+        THEN 3
+        END) IN (1,2,3)
+        <include refid="whereForCrowdFundOrder"/>
+        ) UNION (
+        -- 剩余订单
+        SELECT
+        p1.Promotion_Id,
+        pr.Product_Name,
+        pr.Bar_Code,
+        pr.SKU_KEY_Json_Str,
+        p1.Crowd_Fund_Product_Amt,
+        (p1.Crowd_Fund_Product_Amt / p1.Crowd_Fund_per_Amt) AS totalBuy,
+        oh.Order_Id,
+        oh.Order_Number,
+        oh.Order_Pay_Time,
+        ex.Express_Name,
+        us.Phone,
+        s1.Code_Cn_Name AS orderDistrbuteTypeName,
+        (SELECT count(1) FROM promotion_crowd_fund_code pc WHERE pc.promotion_id = p1.promotion_id) AS alreadyBuy,
+        <include refid="caseForCrowdFundOrderForAll"/>AS type
+        FROM promotion_crowd_fund p1
+        LEFT JOIN promotion p2 ON p1.promotion_id = p2.promotion_id
+        LEFT JOIN promotion_product_xref p4 ON p1.promotion_id = p4.promotion_id
+        LEFT JOIN product pr ON p4.product_id = pr.product_id
+        LEFT JOIN promotion_crowd_fund_code p3 ON p1.promotion_id = p3.promotion_id
+        LEFT JOIN order_header oh ON p3.Order_ID = oh.Order_ID
+        LEFT JOIN order_receive_info ori ON oh.Order_Id = ori.Order_Id
+        LEFT JOIN express ex ON ori.Express_ID = ex.Express_ID
+        LEFT JOIN user us ON p3.User_ID = us.User_ID
+        LEFT JOIN system_code s1 ON ori.Order_Distrbute_Type_Cd = s1.Code_Id
+        AND s1.Code_Type_Cd = 'Order_Distrbute_Type_Cd'
+        WHERE 1=1
+        AND
+        <include refid="caseForCrowdFundOrderForAll"/>
+        IN (4,5,6,7,8)
+        AND p3.Is_Wined = 1
+        <include refid="whereForCrowdFundOrder"/>
+        )
+    </sql>
+
+    <!--众筹订单（全部）列表数据 -->
+    <select id="findCrowdFundOrderPageForAll" resultType="cn.yr.chile.order.dto.CrowdFoundingOrderDTO"
+            parameterType="Map">
+        select * from (
+        <include refid="mainForCrowdFundOrderForAll"/>
+        ) rs
+        ORDER BY rs.Promotion_Id DESC
+        <if test="start != null and limit != null">
+            LIMIT ${start},${limit}
+        </if>
+    </select>
+
+    <select id="findCrowdFundOrderPageForAllCount" resultType="Integer">
+        SELECT COUNT(1) FROM (
+        <include refid="mainForCrowdFundOrderForAll"/>
+        ) rs
+    </select>
+
+    <!-- 获取发票列表数据 -->
+    <select id="findInvoicePage" resultType="InvoiceDTO" parameterType="InvoiceDTO">
+        SELECT
+        a.Order_Id,
+        a.Invoice_Type_Cd,
+        s1.Code_Cn_Name AS invoiceTypeName,
+        oh.Order_Number,
+        oh.Create_Time,
+        a.Invoice_Billing_Time,
+        a.Send_Time,
+        a.Order_Express_Num,
+        a.Company_Name,
+        a.Invoice_Receive_Name,
+        a.Invoice_For_Cd,
+        oh.Order_Pay_Amt,
+        oh.order_type_cd
+        FROM order_receive_info a
+        LEFT JOIN system_code s1 ON a.Invoice_Type_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Invoice_Type_Cd'
+        LEFT JOIN order_header oh ON a.Order_Id = oh.Order_Id
+        LEFT JOIN user us ON oh.User_Id = us.User_Id
+        WHERE a.Invoice_Delete_Status_Cd = 0
+        AND (oh.order_type_cd = 1 or oh.order_type_cd = 3)
+        <if test="orderNumber !=null and orderNumber!=''">AND oh.Order_Number LIKE CONCAT("%",#{orderNumber},"%")</if>
+        <if test="orderExpressNum !=null and orderExpressNum!=''">AND a.Order_Express_Num = #{orderExpressNum}</if>
+        <!-- 额外查询字段 -->
+        <if test="nickName !=null">AND (us.Nick_Name LIKE CONCAT("%",#{nickName},"%") OR us.Login_Name LIKE CONCAT("%",#{loginName},"%"))</if>
+        <if test="invoiceReceiveName !=null and invoiceReceiveName != ''">
+            AND a.Company_Name LIKE CONCAT("%",#{invoiceReceiveName},"%")
+            AND a.Invoice_For_Cd = 1
+        </if>
+        <if test="companyName !=null and companyName != ''">
+            AND a.Company_Name LIKE CONCAT("%",#{companyName},"%")
+            AND a.Invoice_For_Cd = 2
+        </if>
+        <if test="invoiceBillingStatus !=null">
+            <if test="invoiceBillingStatus == 0">
+                AND a.Invoice_Billing_Time IS NULL
+            </if>
+            <if test="invoiceBillingStatus == 1">
+                AND a.Invoice_Billing_Time IS NOT NULL
+            </if>
+        </if>
+        <if test="createStart !=null and createStart != ''">AND DATE_FORMAT(oh.Create_Time, '%Y-%m-%d') &gt;=
+            #{createStart}
+        </if>
+        <if test="createEnd !=null and createEnd != ''">AND DATE_FORMAT(oh.Create_Time, '%Y-%m-%d') &lt;= #{createEnd}
+        </if>
+        <if test="invoiceBillingStart !=null and invoiceBillingStart != ''">AND DATE_FORMAT(a.Invoice_Billing_Time,
+            '%Y-%m-%d') &gt;= #{invoiceBillingStart}
+        </if>
+        <if test="invoiceBillingEnd !=null and invoiceBillingEnd != ''">AND DATE_FORMAT(a.Invoice_Billing_Time,
+            '%Y-%m-%d') &lt;= #{invoiceBillingEnd}
+        </if>
+        <if test="sendStart !=null and sendStart != ''">AND DATE_FORMAT(a.Send_Time, '%Y-%m-%d') &gt;= #{sendStart}</if>
+        <if test="sendEnd !=null and sendEnd != ''">AND DATE_FORMAT(a.Send_Time, '%Y-%m-%d') &lt;= #{sendEnd}</if>
+        ORDER BY a.Order_Id DESC
+    </select>
+
+    <!--开票-->
+    <update id="invoiceBilling" parameterType="cn.yr.chile.order.dto.InvoiceBilling">
+        UPDATE order_receive_info SET
+        Invoice_Type_Cd = #{invoiceTypeCd},
+        Invoice_For_Cd = #{invoiceForCd},
+        Invoice_Receive_Name = #{invoiceReceiveName},
+        Company_Taxpayer_identify_code = #{companyTaxpayerIdentifyCode},
+        Company_Register_Addr = #{companyRegisterAddr},
+        Company_Register_Tel = #{companyRegisterTel},
+        Company_Bank_Account = #{companyBankAccount},
+        Company_Opening_Bank_Name = #{companyOpeningBankName},
+        Invoice_Title = #{invoiceTitle},
+        Invoice_Province_Id = #{invoiceProvinceId},
+        Invoice_City_Id = #{invoiceCityId},
+        Invoice_County_Id = #{invoiceCountyId},
+        Invoice_Receive_Addr = #{invoiceReceiveAddr},
+        Invoice_Billing_Time = #{invoiceBillingTime},
+        Company_Name = #{companyName}
+        WHERE order_id IN (${orderIdList})
+    </update>
+</mapper>

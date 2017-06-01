@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cn.yr.chile.common.dao.NoticeDao">
+ 
+ 	<!-- 分页查询物流 -->
+    <select id="findList" parameterType="cn.yr.chile.common.domain.Notice"  resultType="cn.yr.chile.common.domain.Notice">
+         SELECT a.notice_id as id,a.notice_title as title,a.notice_content as content
+         ,a.notice_author as author,a.notice_flag as flag,a.notice_time as time,a.notice_received as received,
+         a.notice_view_times as viewTimes
+		FROM `notice` as a 
+		<where>
+		 <if test="title!=null and title!=''">
+	 			   		and a.notice_title like '%${title}%'
+	 	  </if>
+	 	  <if test="received!=null and received!=''">
+	 			   		and a.notice_received like '%${received}%'
+	 	  </if>
+		</where>  
+		order by a.notice_time
+    </select>
+    
+     <select id="get" parameterType="cn.yr.chile.common.domain.Notice"  resultType="cn.yr.chile.common.domain.Notice">
+         SELECT a.notice_id as id,a.notice_title as title,a.notice_content as content
+         ,a.notice_author as author,a.notice_flag as flag,a.notice_time as time,a.notice_received as received,
+         a.notice_view_times as viewTimes
+		FROM `notice` as a 
+		<where>
+			<if test="id != null">
+				and a.notice_id = #{id}
+			</if>
+		
+		</where>
+		  
+		
+    </select>
+    
+     <!-- 插入系统通知-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notice(
+            notice_title,
+            notice_flag,
+            notice_received,
+            notice_content,
+            notice_time,
+            notice_view_times
+        ) VALUES (
+            #{title},
+            #{flag},
+            #{received},
+            #{content},
+            #{time},
+             #{viewTimes}
+          
+        )
+    </insert>
+
+    <!-- 更新系统通知 -->
+    <update id="update">
+        UPDATE notice SET
+        notice_title = #{title},
+        notice_flag = #{flag},
+        notice_received = #{received},
+        notice_content = #{content},
+      notice_view_times = #{viewTimes}
+        WHERE notice_id = #{id}
+    </update>
+    
+    <delete id="delete">
+		DELETE FROM notice WHERE notice_id = #{id}
+	</delete>
+ 
+ </mapper>

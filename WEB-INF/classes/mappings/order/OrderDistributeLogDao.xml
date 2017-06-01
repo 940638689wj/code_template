@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderDistributeLogDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        id, Order_Id, Admin_User_Id, User_Name, Store_Id, Store_Name, Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderDistributeLog" >
+	    INSERT INTO order_distribute_log (
+	        Order_Id, Admin_User_Id, User_Name, Store_Id, Store_Name, Create_Time
+	    ) VALUES (
+	        #{orderId}, #{adminUserId}, #{userName}, #{storeId}, #{storeName}, now()        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderDistributeLog">
+	   UPDATE order_distribute_log SET
+		   Order_Id = #{orderId}, 
+		   Admin_User_Id = #{adminUserId}, 
+		   User_Name = #{userName}, 
+		   Store_Id = #{storeId}, 
+		   Store_Name = #{storeName}, 
+		   Create_Time = #{createTime}
+	   WHERE 
+		   id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_distribute_log where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderDistributeLog" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_distribute_log 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderDistributeLog">  
+	    select 
+		<include refid="allColumns" />
+	    from order_distribute_log
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderDistributeLog" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from order_distribute_log a
+	    where 1=1
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="adminUserId != null"> and a.Admin_User_Id = #{adminUserId}</if>
+		<if test="userName != null"> and a.User_Name = #{userName}</if>
+		<if test="storeId != null"> and a.Store_Id = #{storeId}</if>
+		<if test="storeName != null"> and a.Store_Name = #{storeName}</if>
+		order by Create_Time asc
+	</select>
+
+</mapper>

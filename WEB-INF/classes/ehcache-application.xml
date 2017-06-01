@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache updateCheck="false" name="applicationCache">
+		
+	<!--<diskStore path="java.io.tmpdir/website/application"/>-->
+	
+	<defaultCache
+        maxEntriesLocalHeap="100"
+        maxEntriesLocalDisk="100000"
+		maxElementsInMemory="1000"
+        maxElementsOnDisk="10000000"
+        eternal="false"
+		timeToIdleSeconds="120" 
+		timeToLiveSeconds="120"
+		overflowToDisk="true" 
+		diskSpoolBufferSizeMB="30" 
+		diskPersistent="false"
+		diskExpiryThreadIntervalSeconds="120"/>
+
+
+	<!-- 系统默认的缓存 -->
+	<cache
+			name="sysCache"
+			maxElementsInMemory="150"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+
+	<!-- 全局参数缓存 -->
+	<cache
+			name="siteConfigElements"
+			maxElementsInMemory="150"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+
+	<!-- BusinessConfig缓存-->
+	<cache
+			name="businessConfigElements"
+			maxElementsInMemory="10000"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+
+	<!-- 装修模块缓存-->
+	<cache
+			name="decorateCache"
+			maxElementsInMemory="10000"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+
+	<!-- area模块缓存-->
+	<cache
+			name="areaCache"
+			maxElementsInMemory="10000"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+
+	<!-- 自定义文章 -->
+	<cache
+			name="definedPageCache"
+			maxElementsInMemory="10000"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+
+	<cache
+			name="cacheElements"
+			maxElementsInMemory="100000"
+			eternal="true"
+			overflowToDisk="false">
+	</cache>
+</ehcache>

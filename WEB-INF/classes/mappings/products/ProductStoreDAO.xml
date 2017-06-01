@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductStoreDAO">
+
+	<insert id="insert" parameterType="StoreUnshelveProductXref">
+		INSERT INTO store_unshelve_product_xref (Store_Id, Product_Id, Create_Time) 
+		VALUES
+		  (
+		    #{storeId,jdbcType=NUMERIC},
+		    #{productId,jdbcType=NUMERIC},
+		    #{createTime,jdbcType=DATE}
+		  )
+	</insert>
+
+	<select id="findStoreProduct" parameterType="java.util.Map"
+		resultType="cn.yr.chile.store.dto.StoreProductDTO">
+		SELECT 
+		  a.Product_Id,
+		  a.Product_Name,
+		  a.brand_Id,
+		  a.Category_Id,
+		  b.pic_url,
+		  a.Tag_Price,
+		  a.Default_Price 
+		FROM
+		  Product a 
+		  LEFT JOIN product_setting p 
+		    ON a.product_Id = p.product_Id 
+		  LEFT JOIN 
+		    (SELECT 
+		      pic_url,
+		      product_Id 
+		    FROM
+		      product_pic_info 
+		    WHERE is_default_pic = '1') b 
+		    ON a.product_Id = b.product_Id 
+		WHERE a.Product_Id IN 
+		  (SELECT 
+		    Product_id 
+		  FROM
+		    store_unshelve_product_xref 
+		  WHERE store_id = #{storeId}
+		  )
+		<if test="brandId != null and brandId !=''">and a.brand_Id = #{brandId} </if>
+		<if test="categoryId != null and categoryId !=''">
+			or a.Product_Id in (
+			select Product_id from
+			store_unshelve_product_xref
+			where store_id = #{storeId}
+			) and
+			a.Category_Id = #{categoryId}
+		</if>
+		<if test="isGift !=null and isGift !=''">
+			and p.Is_Gift=#{isGift}
+		</if>
+		<if test="isSaledEnable !=null and isSaledEnable !=''">
+			and p.Is_Saled_Enable=#{isSaledEnable}
+		</if>
+	</select>
+
+	<delete id="addProduct" parameterType="StoreUnshelveProductXref">
+		Delete from store_unshelve_product_xref
+		where 1 = 1
+		<if test="storeId != null and storeId !=''">and store_id = #{storeId}</if>
+		<if test="productId != null and productId != ''">and product_id = #{productId}</if>
+	</delete>
+
+	<select id="getStoreByProductId" parameterType="Integer" resultType="Map">
+		SELECT 
+		  psx.Store_Id AS storeId,
+		  s.Store_Name AS storeName,
+		  s.Detail_Address AS detailAddress,
+		  s.Delivery_Time_Am_Start AS amStart,
+		  s.Delivery_Time_Am_End AS amEnd,
+		  s.Delivery_Time_Pm_Start AS pmStart,
+		  s.Delivery_Time_Pm_End AS pmEnd 
+		FROM
+		  product_store_xref psx 
+		  LEFT JOIN store s ON s.Store_Id = psx.Store_Id 
+		WHERE psx.Product_ID = #{0} 
+	</select>
+</mapper>

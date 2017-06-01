@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserDefinedFieldDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        a.ID,
+        a.FIELD_NAME,
+        a.SORT_VALUE,
+        a.Status_Cd,
+        a.IS_REQUIRED,
+      	a.CREATE_TIME,
+      	a.FIELD_TYPE_CD
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="UserDefinedField" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_defined_field (
+	        FIELD_NAME,
+	        SORT_VALUE,
+	        Status_Cd,
+	        IS_REQUIRED,
+	        CREATE_TIME,
+	        FIELD_TYPE_CD
+	    ) VALUES (
+	        #{fieldName},
+	        #{sortValue},
+	        #{statusCd},
+	        #{isRequired},
+	        #{createTime},
+	        #{fieldTypeCd}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="UserDefinedField">
+	   UPDATE user_defined_field SET
+	  	  FIELD_NAME = #{fieldName},
+	  	  SORT_VALUE = #{sortValue},
+	  	  Status_Cd = #{statusCd},
+	  	  IS_REQUIRED = #{isRequired},
+	  	  FIELD_TYPE_CD = #{fieldTypeCd}
+	   WHERE
+		   id = #{id}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM user_defined_field where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="UserDefinedField" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        s.Code_Cn_Name AS fieldTypeName
+        FROM user_defined_field a
+        LEFT JOIN system_code s ON a.FIELD_TYPE_CD = s.Code_Id AND s.Code_Type_Cd = 'FIELD_TYPE_CD'
+        WHERE
+        id=#{id}
+    </select>
+
+    <!--查询列表-->
+    <select id="findList" resultType="UserDefinedField" parameterType="UserDefinedField">
+        SELECT
+        <include refid="allColumns"/>
+        ,
+        s1.Code_Cn_Name AS fieldTypeName,
+        s2.Code_Cn_Name AS statusName
+        FROM user_defined_field a
+        LEFT JOIN system_code s1 ON a.FIELD_TYPE_CD = s1.Code_Id AND s1.Code_Type_Cd = 'FIELD_TYPE_CD'
+        LEFT JOIN system_code s2 ON a.Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Status_Cd'
+        ORDER BY id DESC
+    </select>
+
+</mapper>

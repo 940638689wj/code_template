@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.TemplateCustomDao">
+	<sql id="allColumns">
+		p.template_custom_id,
+		p.template_id,
+		p.item_key,
+		p.item_value,
+		p.item_seq,
+		p.updated_time,
+		p.type
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="TemplateCustom" useGeneratedKeys="true" keyProperty="templateCustomId">
+	    INSERT INTO template_custom (
+	        template_id, 
+	        item_key, 
+	        item_value, 
+	        item_seq, 
+	        updated_time,
+	        type
+	    ) VALUES (
+	        #{templateId},
+	        #{itemKey}, 
+	        #{itemValue}, 
+	        #{itemSeq}, 
+	        #{updatedTime},
+	        #{type}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="TemplateCustom">
+	   UPDATE template_custom SET
+		   template_id = #{templateId}, 
+		   item_key = #{itemKey}, 
+		   item_value = #{itemValue}, 
+		   item_seq = #{itemSeq}, 
+		   updated_time = #{updatedTime},
+		   type = #{type}
+	   WHERE 
+		   template_custom_id = #{templateCustomId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM template_custom where template_custom_id = #{templateCustomId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="TemplateCustom" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM template_custom p
+	     WHERE 
+			  p.template_custom_id = #{templateCustomId}
+	</select>
+	
+	<!-- 查询模板 -->
+	<select id="findByTemplateIdAndKey" resultType="TemplateCustom" parameterType="java.util.Map">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM template_custom p
+	     WHERE 1 = 1 
+			  <if test="templateId != '' and templateId != null"> and p.template_id = #{templateId}</if>
+			  <if test="itemKey != '' and itemKey != null"> and p.item_key = #{itemKey}</if>
+	</select>
+	
+</mapper>

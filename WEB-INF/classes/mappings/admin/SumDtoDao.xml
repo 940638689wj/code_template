@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.admin.dao.SumDtoDao">
+
+	<!-- 查询所有数据 -->
+	<select id="findAllList" resultType="SumDto" parameterType="java.util.Map">
+		select 
+		substr(b.Create_Time,1,10) as date_str,substr(b.Create_Time,12,2) as hour_str , count(p1.Order_Id) AS orderNum,sum(b.Product_Total) AS productTotalNum,sum(b.Quantity) AS QuantitySum
+		from order_item b 
+		left join order_header p1 on p1.Order_Id = b.Order_Id
+		where 1=1 
+		<if test="beginTime != null and beginTime != ''"> and b.Create_Time >=#{beginTime}</if>
+		<if test="endTime != null and endTime != ''"> and b.Create_Time <![CDATA[ <= ]]> #{endTime}</if>
+
+		group by 1,2 order by 1,2
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.ProductSalesDao">
+
+    <!-- 查询搜索范围内的每款商品信息 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.ProductSales"
+            parameterType="cn.yr.chile.analysis.dto.ParameterDTO">
+        SELECT tt.* FROM (
+        SELECT
+        t.*, @rn :=@rn + 1 AS rankId
+        FROM
+        (
+        SELECT
+        t1.Product_id AS productId,
+        t3.Pic_Url AS picUrl,
+        t2.Product_Name AS productName,
+        t2.Bar_Code AS barCode,
+        sum(t1.Quantity) AS totalQuantity
+        FROM
+        order_item t1
+        LEFT JOIN product t2 ON t2.Product_Id = t1.Product_Id
+        LEFT JOIN product_pic_info t3 ON t3.Product_Id = t1.Product_Id AND t3.Is_Default_Pic = 1
+        LEFT JOIN order_header t4 ON t4.Order_Id = t1.Order_Id
+        WHERE 1=1
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t4.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t4.Create_Time,'%Y%m%d')
+        </if>
+        <if test="keyWords !='' and keyWords !=null">
+            and t2.Product_Name LIKE ('%${keyWords}%')
+        </if>
+        <if test="categoryIds !='' and categoryIds !=null">
+            and t2.Category_Id in (${categoryIds})
+        </if>
+        <if test="orderStatusCd !='' and orderStatusCd !=null">
+            and t4.Order_Status_Cd = #{orderStatusCd}
+        </if>
+        GROUP BY
+        t1.Product_id
+        ORDER BY totalQuantity DESC
+        ) t INNER JOIN (SELECT @rn := 0) t1 ON 1 = 1)tt
+        <if test="start!=null and limit!=null">
+            limit #{start},#{limit}
+        </if>
+    </select>
+
+    <!-- 查询搜索范围内商品总数 -->
+    <select id="getCount" resultType="java.lang.Integer" parameterType="cn.yr.chile.analysis.dto.ParameterDTO">
+        SELECT
+        count(*)
+        FROM
+        (
+        SELECT
+        t1.Product_id AS productId,
+        t3.Pic_Url AS picUrl,
+        t2.Product_Name AS productName,
+        t2.Bar_Code AS barCode,
+        sum(t1.Quantity) AS totalQuantity
+        FROM
+        order_item t1
+        LEFT JOIN product t2 ON t2.Product_Id = t1.Product_Id
+        LEFT JOIN product_pic_info t3 ON t3.Product_Id = t1.Product_Id AND t3.Is_Default_Pic = 1
+        LEFT JOIN order_header t4 ON t4.Order_Id = t1.Order_Id
+        WHERE 1=1
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(t4.Create_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(t4.Create_Time,'%Y%m%d')
+        </if>
+        <if test="keyWords !='' and keyWords !=null">
+            and t2.Product_Name = #{keyWords}
+        </if>
+        <if test="categoryIds !='' and categoryIds !=null">
+            and t2.Category_Id in (${categoryIds})
+        </if>
+        <if test="orderStatusCd !='' and orderStatusCd !=null">
+            and t4.Order_Status_Cd = #{orderStatusCd}
+        </if>
+        GROUP BY
+        t1.Product_id
+        ) t INNER JOIN (SELECT @rn := 0) t1 ON 1 = 1
+    </select>
+
+</mapper>

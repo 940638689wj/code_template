@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.wechat.dao.WxMessageLogDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Id,
+			p1.From_User_Name,
+			p1.To_User_Name,
+			p1.Create_Time,
+			p1.Msg_Type,
+			p1.Msg_Id,
+			p1.Content,
+			p1.Pic_Url,
+			p1.Format,
+			p1.Recognition,
+			p1.Thumb_Media_Id,
+			p1.Location_X,
+			p1.Location_Y,
+			p1.Scale,
+			p1.Label,
+			p1.Title,
+			p1.Description,
+			p1.Url,
+			p1.Media_Id,
+			p1.Event,
+			p1.Event_Key,
+			p1.Ticket,
+			p1.Latitude,
+			p1.Longitude,
+			p1.F_Precision,
+			p1.Message_Time,
+			p1.User_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="WxMessageLog" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO wx_message_log (
+			From_User_Name, 
+			To_User_Name, 
+			Create_Time, 
+			Msg_Type, 
+			Msg_Id, 
+			Content, 
+			Pic_Url, 
+			Format, 
+			Recognition, 
+			Thumb_Media_Id, 
+			Location_X, 
+			Location_Y, 
+			Scale, 
+			Label, 
+			Title, 
+			Description, 
+			Url, 
+			Media_Id, 
+			Event, 
+			Event_Key, 
+			Ticket, 
+			Latitude, 
+			Longitude, 
+			F_Precision, 
+			Message_Time, 
+			User_Id
+	    ) VALUES (
+			#{fromUserName}, 
+			#{toUserName}, 
+			#{createTime}, 
+			#{msgType}, 
+			#{msgId}, 
+			#{content}, 
+			#{picUrl}, 
+			#{format}, 
+			#{recognition}, 
+			#{thumbMediaId}, 
+			#{locationX}, 
+			#{locationY}, 
+			#{scale}, 
+			#{label}, 
+			#{title}, 
+			#{description}, 
+			#{url}, 
+			#{mediaId}, 
+			#{event}, 
+			#{eventKey}, 
+			#{ticket}, 
+			#{latitude}, 
+			#{longitude}, 
+			#{fPrecision}, 
+			#{messageTime}, 
+			#{userId}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="WxMessageLog">
+	   UPDATE wx_message_log SET
+	   		From_User_Name = #{fromUserName}, 
+	   		To_User_Name = #{toUserName}, 
+	   		Create_Time = #{createTime}, 
+	   		Msg_Type = #{msgType}, 
+	   		Msg_Id = #{msgId}, 
+	   		Content = #{content}, 
+	   		Pic_Url = #{picUrl}, 
+	   		Format = #{format}, 
+	   		Recognition = #{recognition}, 
+	   		Thumb_Media_Id = #{thumbMediaId}, 
+	   		Location_X = #{locationX}, 
+	   		Location_Y = #{locationY}, 
+	   		Scale = #{scale}, 
+	   		Label = #{label}, 
+	   		Title = #{title}, 
+	   		Description = #{description}, 
+	   		Url = #{url}, 
+	   		Media_Id = #{mediaId}, 
+	   		Event = #{event}, 
+	   		Event_Key = #{eventKey}, 
+	   		Ticket = #{ticket}, 
+	   		Latitude = #{latitude}, 
+	   		Longitude = #{longitude}, 
+	   		F_Precision = #{fPrecision}, 
+	   		Message_Time = #{messageTime}, 
+	   		User_Id = #{userId}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM wx_message_log where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="WxMessageLog" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_message_log p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+
+	<!-- 根据 msgId 获取记录 -->
+    <select id="getMessageLogByMsgId" resultType="WxMessageLog" parameterType="java.lang.Long">
+		SELECT
+		<include refid="allColumns" />
+	     FROM wx_message_log p1
+	     WHERE
+			p1.Msg_Id=#{0} limit 0,1
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="WxMessageLog">  
+	    select 
+		<include refid="allColumns" />
+	    from wx_message_log p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="WxMessageLog" parameterType="java.util.HashMap">  
+		SELECT 
+			p1.Nick_Name,p1.Head_Img_Url,x.* 
+			from 
+			wx_message_log x
+			LEFT JOIN
+			wx_user p1
+			ON
+		x.User_Id=p1.Id
+	    where
+			1=1
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="fromUserName != null"> and p1.From_User_Name = #{fromUserName}</if>
+		<if test="toUserName != null"> and p1.To_User_Name = #{toUserName}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="msgType != null"> and x.Msg_Type = #{msgType}</if>
+		<if test="msgId != null"> and p1.Msg_Id = #{msgId}</if>
+		<if test="content != null"> and p1.Content = #{content}</if>
+		<if test="picUrl != null"> and p1.Pic_Url = #{picUrl}</if>
+		<if test="format != null"> and p1.Format = #{format}</if>
+		<if test="recognition != null"> and p1.Recognition = #{recognition}</if>
+		<if test="thumbMediaId != null"> and p1.Thumb_Media_Id = #{thumbMediaId}</if>
+		<if test="locationX != null"> and p1.Location_X = #{locationX}</if>
+		<if test="locationY != null"> and p1.Location_Y = #{locationY}</if>
+		<if test="scale != null"> and p1.Scale = #{scale}</if>
+		<if test="label != null"> and p1.Label = #{label}</if>
+		<if test="title != null"> and p1.Title = #{title}</if>
+		<if test="description != null"> and p1.Description = #{description}</if>
+		<if test="url != null"> and p1.Url = #{url}</if>
+		<if test="mediaId != null"> and p1.Media_Id = #{mediaId}</if>
+		<if test="event != null"> and p1.Event = #{event}</if>
+		<if test="eventKey != null"> and p1.Event_Key = #{eventKey}</if>
+		<if test="ticket != null"> and p1.Ticket = #{ticket}</if>
+		<if test="latitude != null"> and p1.Latitude = #{latitude}</if>
+		<if test="longitude != null"> and p1.Longitude = #{longitude}</if>
+		<if test="fPrecision != null"> and p1.F_Precision = #{fPrecision}</if>
+		<if test="messageTime != null"> and p1.Message_Time = #{messageTime}</if>
+		<if test="userId != null"> and x.User_Id = #{userId}</if>
+		and x.User_Id is NOT NULL
+		order by x.Message_Time desc
+	</select>
+	
+	<!-- 用户消息数量 -->
+	<select id="findMsgCountByDate" parameterType="java.util.Map" resultType="java.lang.Integer">
+		SELECT COUNT(1) FROM 
+			wx_message_log m 
+		WHERE 
+			<![CDATA[m.Message_Time >= #{startDate}]]>
+		AND 
+			<![CDATA[m.Message_Time <= #{endDate}]]>
+		AND m.Msg_Type = #{msgType}
+	</select>
+	
+	<!-- 总消息数量 -->
+	<select id="findAllMsgCount" resultType="java.lang.Integer">
+		SELECT COUNT(1) FROM wx_message_log
+		WHERE 1=1
+		AND Msg_Type = #{mgsType}
+	</select>
+</mapper>

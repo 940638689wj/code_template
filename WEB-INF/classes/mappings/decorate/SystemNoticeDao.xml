@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.SystemNoticeDao">
+	<sql id="allColumns">
+		Id AS id,
+		Title AS title,
+		Content AS content,
+		Author AS author,
+		Is_Important AS isImportant,
+		Received_Cd AS receivedCd,
+		Notice_Url AS noticeUrl,
+		View_Times AS viewTimes,
+		Create_Time AS createTime,
+		Last_Update_Time AS lastUpdateTime
+	</sql>
+	
+	<!-- 根据receivedCd查询 -->
+	<select id="querySystemNotice" resultType="cn.yr.chile.decorate.domain.SystemNotice" parameterType="java.util.HashMap">
+		SELECT
+			<include refid="allColumns"/>
+		FROM notice a
+		WHERE 1=1
+		<if test="receivedCd != null"> AND a.Received_Cd LIKE CONCAT('%',#{receivedCd},'%')</if>
+		ORDER BY Create_Time DESC
+	</select>
+	
+	<!-- 根据id查询通知 -->
+	<select id="findSystemNotice" resultType="cn.yr.chile.decorate.domain.SystemNotice" parameterType="Integer">
+		SELECT
+			<include refid="allColumns"/>
+		FROM notice 
+		WHERE Id = #{id}
+	</select>
+	
+	<!-- 删除 -->
+	<delete id="deleteSystemNotice" parameterType="Integer">
+		DELETE FROM notice 
+		WHERE Id = #{id}
+	</delete>
+	
+	<!-- 添加 -->
+	<insert id="addSystemNotice" parameterType="cn.yr.chile.decorate.domain.SystemNotice" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO notice( 
+			Id,
+			Title, 
+			Content, 
+			Is_Important,
+			Received_Cd,
+			Create_Time 
+		) VALUES (
+			#{id},
+			#{title}, 
+			#{content}, 
+			#{isImportant},
+			#{receivedCd},
+			#{createTime} 
+		)
+	</insert>
+
+	<!-- 修改 -->
+	<update id="saveSystemNotice" parameterType="cn.yr.chile.decorate.domain.SystemNotice">
+		UPDATE notice 
+		SET Title=#{title},
+			Content=#{content},
+			Is_Important=#{isImportant},
+			Received_Cd=#{receivedCd},
+			Last_Update_Time=#{lastUpdateTime}
+		WHERE Id=#{id}
+	</update>
+	
+	<!-- 更新阅读次数 -->
+	<update id="addViewTimes" parameterType="cn.yr.chile.decorate.domain.SystemNotice">
+		UPDATE notice 
+		SET View_Times=#{viewTimes}
+		WHERE Id=#{id}
+	</update>
+	
+</mapper>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.DecorateControlDao">
+	<sql id="allColumns">
+		p.Id,
+		p.Name,
+		p.Type,
+		p.Sort,
+		p.Create_Time,
+		p.Content_Json,
+		p.Status_Cd,
+		p.Show_Type,
+		p.Show_Name
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="DecorateControl" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO pc_decorate_control (
+	        Name,
+	        Type,
+	        Sort,
+	        Create_Time,
+	        Content_Json,
+	        Status_Cd,
+	        Show_Type,
+	        Show_Name
+	    ) VALUES (
+	        #{name},
+	        #{type},
+	        #{sort},
+	        #{createTime},
+	        #{contentJson},
+	        #{statusCd},
+	        #{showType},
+	        #{showName}      
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="DecorateControl">
+	   UPDATE pc_decorate_control SET
+		   Name = #{name}, 
+		   Type = #{type}, 
+		   Sort = #{sort}, 
+		   Create_Time = #{createTime}, 
+		   Content_Json = #{contentJson}, 
+		   Status_Cd = #{statusCd},
+		   Show_Type = #{showType},
+		   Show_Name = #{showName}
+	   WHERE 
+		   Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="Long">
+		DELETE FROM pc_decorate_control where Id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="DecorateControl" parameterType="Long">  
+		SELECT
+		<include refid="allColumns" />
+	    FROM pc_decorate_control p
+	    WHERE 
+			 p.Id = #{id}
+	</select>
+	
+	<!-- 获取所有模块 -->
+	<select id="findAllList" resultType="DecorateControl" parameterType="Long">
+		SELECT
+		<include refid="allColumns" />
+	    FROM pc_decorate_control p
+	    ORDER BY p.Sort
+	</select>
+	
+	<!-- 获取启用模块-->
+	<select id="findListByStatus" resultType="DecorateControl" parameterType="Integer">
+		SELECT
+		<include refid="allColumns" />
+	    FROM pc_decorate_control p
+	    WHERE Status_Cd = #{statusCd}
+		ORDER BY p.Sort
+	</select>
+	
+</mapper>

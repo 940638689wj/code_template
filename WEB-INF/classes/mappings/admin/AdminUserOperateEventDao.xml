@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.admin.dao.AdminUserOperateEventDao">
+    <sql id="allColumns">
+        a.Event_Id,
+        a.Admin_User_Id,
+        a.Admin_User_Name,
+        a.Operate_Description,
+        a.Operate_IP_Addr,
+        a.Operate_Time,
+        a.Request_Uri,
+        a.Method,
+        a.Params,
+        a.Exception
+    </sql>
+
+
+    <!-- 分页查询 -->
+    <select id="findList" resultType="AdminUserOperateEvent" parameterType="AdminUserOperateEvent">
+        SELECT
+        <include refid="allColumns"/>
+        FROM admin_user_operate_event a
+        WHERE 1=1
+        <if test="adminUserName != null and adminUserName != ''">
+            AND a.Admin_User_Name LIKE CONCAT('%',#{adminUserName},'%')
+        </if>
+        ORDER BY a.Operate_Time DESC
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="insert">
+        INSERT INTO admin_user_operate_event(
+            Admin_User_Id,
+            Admin_User_Name,
+            Operate_Description,
+            Operate_IP_Addr,
+            Operate_Time,
+            Request_Uri,
+            Method,
+            Params,
+            Exception
+        ) VALUES (
+            #{adminUserId},
+            #{adminUserName},
+            #{operateDescription},
+            #{operateIpAddr},
+            #{operateTime},
+            #{requestUri},
+            #{method},
+            #{params},
+            #{exception}
+        )
+    </insert>
+
+</mapper>

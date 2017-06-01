@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.AwardsDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		a.Id as id,
+		a.Title as title,
+		a.Award_Type_Cd as awardTypeCd,
+		a.One_Day_Times as oneDayTimes,
+		a.Status_Cd as status,
+		a.Start_Time as startTime,
+		a.End_Time as endTime,
+		a.Use_Point as usePoint,
+		a.Recommend_Point as recommendPoint,
+		a.Top_Html,
+		a.Bottom_Html,
+		a.Center_Bg_Pic_Url as centerBgPicUrl,
+		a.Awards_Pic_Url as awardsPicUrl,
+		a.Awards_Point_Pic_Url as awardsPointPicUrl,
+		a.Consume_Amt as consumeAmt,
+		a.Game_Time as times,
+		a.Share_Limit as shareLimit,
+		a.Create_Time as createTime,
+		a.Last_Update_Time as lastUpdateTime,
+		a.PC_Top_Html,
+		a.PC_Bottom_Html,
+		a.PC_Center_Bg_Pic_Url,
+		a.PC_Awards_Pic_Url,
+		a.PC_Awards_Point_Pic_Url
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="Awards" useGeneratedKeys="true"
+            keyProperty="id">
+		INSERT INTO awards (
+		Title,
+		Award_Type_Cd,
+		One_Day_Times,
+		Status_Cd,
+		Start_Time,
+		End_Time,
+		Use_Point,
+		Recommend_Point,
+		Top_Html,
+		Bottom_Html,
+		Center_Bg_Pic_Url,
+		Awards_Pic_Url,
+		Awards_Point_Pic_Url,
+		Consume_Amt,
+		Game_Time,
+		Share_Limit,
+		Create_Time,
+		Last_Update_Time,
+		PC_Top_Html,
+		PC_Bottom_Html,
+		PC_Center_Bg_Pic_Url,
+		PC_Awards_Pic_Url,
+		PC_Awards_Point_Pic_Url
+		) VALUES (
+		#{title},
+		#{awardTypeCd},
+		#{oneDayTimes},
+		#{status},
+		#{startTime},
+		#{endTime},
+		#{usePoint},
+		#{recommendPoint},
+		#{topHtml},
+		#{bottomHtml},
+		#{centerBgPicUrl},
+		#{awardsPicUrl},
+		#{awardsPointPicUrl},
+		#{consumeAmt},
+		#{times},
+		#{shareLimit},
+		#{createTime},
+		#{lastUpdateTime},
+		#{pcTopHtml},
+		#{pcBottomHtml},
+		#{pcCenterBgPicUrl},
+		#{pcAwardsPicUrl},
+		#{pcAwardsPointPicUrl}
+		)
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="Awards">
+		UPDATE awards SET
+		Title = #{title},
+		Award_Type_Cd = #{awardTypeCd},
+		One_Day_Times = #{oneDayTimes},
+		Status_Cd = #{status},
+		Start_Time = #{startTime},
+		End_Time = #{endTime},
+		Use_Point = #{usePoint},
+		Recommend_Point = #{recommendPoint},
+		Top_Html = #{topHtml},
+		Bottom_Html = #{bottomHtml},
+		Center_Bg_Pic_Url = #{centerBgPicUrl},
+		Awards_Pic_Url = #{awardsPicUrl},
+		Awards_Point_Pic_Url = #{awardsPointPicUrl},
+		Consume_Amt = #{consumeAmt},
+		Game_Time = #{times},
+		Share_Limit = #{shareLimit},
+		Create_Time = #{createTime},
+		Last_Update_Time = #{lastUpdateTime},
+		PC_Top_Html = #{pcTopHtml},
+		PC_Bottom_Html = #{pcBottomHtml},
+		PC_Center_Bg_Pic_Url = #{pcCenterBgPicUrl},
+		PC_Awards_Pic_Url = #{pcAwardsPicUrl},
+		PC_Awards_Point_Pic_Url = #{pcAwardsPointPicUrl}
+		WHERE
+		Id = #{id}
+	</update>
+
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM awards where Id =
+		#{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="Awards" parameterType="long">
+        SELECT
+        <include refid="allColumns"/>
+        FROM awards a
+        WHERE
+        a.Id=#{id}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="Awards">
+        select
+        <include refid="allColumns"/>
+        from awards a
+        <if test="order_col != null">order by a.${order_col}</if>
+    </select>
+
+    <!-- 返回大转盘列表 -->
+    <select id="findAwardsList" resultType="Awards" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from awards a
+        <where>
+            <if test="status != null">and a.Status_Cd = #{status}</if>
+            <if test="start_Time != null">and a.Start_Time &gt;= #{start_Time}</if>
+            <if test="gt_end_Time != null">and a.End_Time &gt;= #{gt_end_Time}</if>
+            <if test="lt_end_Time != null">and a.End_Time &lt;= #{lt_end_Time}</if>
+            <if test="Award_Type_Cd != null and Award_Type_Cd !=''">and a.Award_Type_Cd = #{Award_Type_Cd}</if>
+        </where>
+
+        ORDER BY a.Create_Time DESC
+    </select>
+
+
+    <!-- 查询GGC有效的活动 -->
+    <select id="findAllAvailableGGC" resultType="Awards"
+            parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from awards a
+        <where>
+            and a.Status_Cd = '1'
+            and a.Award_Type_Cd = '2'
+            and a.End_Time >= NOW()
+        </where>
+
+        ORDER BY a.Create_Time DESC
+    </select>
+
+    <!-- 查询TURN有效的活动 -->
+    <select id="findAllAvailableTURN" resultType="Awards"
+            parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from awards a
+        <where>
+            and a.Status_Cd = '1'
+            and a.Award_Type_Cd = '1'
+            and a.End_Time >= NOW()
+        </where>
+
+        ORDER BY a.Create_Time DESC
+    </select>
+
+
+</mapper>

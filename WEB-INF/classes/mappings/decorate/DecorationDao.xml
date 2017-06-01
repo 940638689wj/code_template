@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.DecorationDao">
+	<sql id="allColumns">
+		p.id,
+		p.name,
+		p.decoration_Area_Cd,
+		p.is_Publish,
+		p.preview_Data,
+		p.save_Data,
+		p.create_Time,
+		p.last_Update_Time
+	</sql>
+	
+	<!-- 查询手机首页装修-->
+	<select id="findDecorationList" resultType="Decoration">
+		SELECT
+			<include refid="allColumns"/>
+		FROM decoration p
+		WHERE p.decoration_Area_Cd = '1'
+	</select>
+	
+		<!-- 新增 -->
+	<insert id="insert" parameterType="Decoration" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO decoration (
+	        name, 
+	        decoration_Area_Cd, 
+	        is_Publish, 
+	        preview_Data, 
+	        save_Data, 
+	        create_Time,
+	        last_Update_Time
+	    ) VALUES (
+	        #{name},
+	        #{decorationAreaCd}, 
+	        #{isPublish}, 
+	        #{previewData}, 
+	        #{saveData}, 
+	        #{createTime},   
+	        #{lastUpdateTime}         
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="Decoration">
+	   UPDATE decoration SET
+		   name = #{name}, 
+		   decoration_Area_Cd = #{decorationAreaCd}, 
+		   is_Publish = #{isPublish}, 
+		   preview_Data = #{previewData}, 
+		   save_Data = #{saveData}, 
+		   create_Time = #{createTime},
+		   last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+		   id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM decoration where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="Decoration" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM decoration p
+	     WHERE 
+			  p.id = #{id}
+	</select>
+	
+	<!-- 更新已发布的状态为false -->
+	<update id="updateLayoutIsPushToFalse" parameterType="java.lang.Integer">
+	   UPDATE decoration SET
+		   is_Publish = 0
+	   WHERE 
+		   decoration_Area_Cd = #{0}
+	</update>
+	
+	<!-- 查询门店、微店装修信息 -->	
+	<select id="findMSDecorate" resultType="Decoration" parameterType="java.lang.Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM decoration p
+	     WHERE 
+			  p.decoration_Area_Cd = #{0}
+	</select>
+	
+	<!-- 查询手机首页已发布的装修信息-->
+	<select id="getDecorate" resultType="Decoration">
+		SELECT
+			<include refid="allColumns"/>
+		FROM decoration p
+		WHERE p.decoration_Area_Cd = '1'
+		AND p.is_publish = '1'
+	</select>
+	
+	<!-- 查询门店、微店首页已发布的装修信息-->
+	<select id="getMSDecorate" resultType="Decoration" parameterType="java.lang.Integer">
+		SELECT
+			<include refid="allColumns"/>
+		FROM decoration p
+		WHERE p.decoration_Area_Cd = #{0}
+		AND p.is_publish = '1'
+	</select>
+	
+</mapper>

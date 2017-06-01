@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.SubCustomerTotalBillDao">
+
+
+    <!-- 查询列表 -->
+    <select id="findAllSubCustomerTotalBill" parameterType="map" resultType="cn.yr.chile.bill.dto.SubCustomerTotalBillDTO">
+		SELECT t1.phone as phone,
+			t1.order_number as mOrderNumber,
+			t1.order_total_amt as mTotalAmt,
+			t2.subOrderNum as subOrderTotal,
+			t2.subTotalAmt as subTotalAmt
+			FROM(SELECT DISTINCT
+				m.user_id AS mId,
+				m.Phone,
+				a.Order_Number,
+				a.Order_Total_Amt
+			FROM
+				USER m
+			JOIN USER c ON m.User_Id = c.Parent_User_Id
+				<if test="loginName != null and loginName != ''">
+        			and m.phone like CONCAT('%',#{loginName},'%')
+       			</if>
+			LEFT JOIN order_header a ON m.User_Id=a.User_Id AND a.Order_Status_Cd=5
+				<if test="beginTime != null and beginTime != ''">
+            		AND DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> a.create_time
+        		</if>
+       	 		<if test="endTime != null and endTime != ''">
+            		and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> a.create_time
+       		 	</if>
+			)t1
+			LEFT JOIN
+			(SELECT 
+					ttt.mId,
+					count(*) as subOrderNum,
+					sum(b.Quantity*b.Sale_Price) as subTotalAmt,
+					b.Create_Time
+				FROM(SELECT 
+					tt.mId,
+					a.Order_Id
+				FROM (SELECT
+					t.mId,
+					cc.User_Id
+				FROM
+					(
+						SELECT DISTINCT
+							c.User_Id,
+							m.User_Id AS mId
+						FROM
+							USER m
+						JOIN USER c ON m.User_Id = c.Parent_User_Id
+							<if test="loginName != null and loginName != ''">
+				        			and m.phone like CONCAT('%',#{loginName},'%')
+				       			</if>
+					) t
+				JOIN USER cc ON cc.Parent_User_Id = t.User_Id)tt
+				LEFT JOIN order_header a ON a.User_Id=tt.User_Id AND a.Order_Status_Cd=5)ttt
+				LEFT JOIN order_item b ON ttt.Order_Id=b.Order_Id GROUP BY b.Order_Id
+				
+				HAVING <if test="beginTime != null and beginTime != ''">
+				            		 DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> b.create_time
+				        		</if>
+				       	 		<if test="endTime != null and endTime != ''">
+				            		and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> b.create_time
+				       		 	</if>
+			)t2
+			ON 
+			t1.mId=t2.mId
+
+		
+    </select>
+    
+</mapper>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserDistributionDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Distribution_Detail_Id,
+        Distribution_Type_Cd,
+        Rebate_Amt,
+        Create_Time,
+        Order_Number,
+        User_Id,
+        Source_User_Id,
+        Rebate_Product_Point,
+        Rebate_Product_Point_Base,
+        Rebate_Product_Point_Percent,
+        Remark
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserDistributionDetail" useGeneratedKeys="true" keyProperty="distributionDetailId">
+	    INSERT INTO user_distribution_detail (
+	        Distribution_Type_Cd,
+	        Rebate_Amt,
+	        Create_Time,
+	        Order_Number,
+	        User_Id,
+	        Source_User_Id,
+	        Rebate_Product_Point,
+	        Rebate_Product_Point_Base,
+        	Rebate_Product_Point_Percent,
+	        Remark
+	    ) VALUES (
+	        #{distributionTypeCd},
+	        #{rebateAmt},
+	        #{createTime},
+	        #{orderNumber},
+	        #{userId},
+	        #{sourceUserId},
+	        #{rebateProductPoint},
+	        #{rebateProductPointBase},
+	        #{rebateProductPointPercent},
+	        #{remark}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserDistributionDetail">
+	   UPDATE user_distribution_detail SET
+		   Distribution_Type_Cd = #{distributionTypeCd}, 
+		   Rebate_Amt = #{rebateAmt}, 
+		   Create_Time = #{createTime}, 
+		   Order_Number = #{orderNumber}, 
+		   User_Id = #{userId}
+	   WHERE 
+		   Distribution_Detail_Id = #{distributionDetailId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_distribution_detail where Distribution_Detail_Id = #{distributionDetailId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserDistributionDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_distribution_detail 
+	     WHERE 
+			  Distribution_Detail_Id=#{distributionDetailId}
+	</select>
+
+
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserDistributionDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_distribution_detail
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserDistributionDetail" parameterType="UserDistributionDetail">  
+	    select 
+		a.Distribution_Detail_Id,
+		a.Distribution_Type_Cd,
+		a.Rebate_Amt,
+		a.Create_Time,
+		a.Order_Number,
+		a.User_Id,
+		a.Rebate_Product_Point,
+		b.phone,
+		c.Order_Total_Amt,
+		c.Order_Id,
+		d.phone AS 'source_phone',
+		e.User_level_Name
+		from user_distribution_detail a 
+		left join user b on a.User_Id=b.User_Id
+		left join order_header c on c.Order_Number=a.Order_Number
+		left join user d on d.User_Id = a.Source_User_Id
+		left join user_level e on e.User_level_Id = d.User_Level_Id
+	    <where>
+	    	a.User_Id=#{userId} AND c.Order_Status_Cd=5
+	    	<if test="orderNumber != null"> and a.Order_Number = #{orderNumber}</if>
+	    	<if test="distributionTypeCd !=null and distributionTypeCd !=''"> and a.Distribution_Type_Cd=#{distributionTypeCd} </if>
+	    	<if test="startDate !=null and startDate !=''"> and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+	    	<if test="endDate !=null and endDate !=''"><![CDATA[and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d')]]></if>
+	    </where>
+	    order by a.Create_Time DESC
+	</select>
+	
+	<!-- 2016.06.17 By caobr 根据微店主id查询返利信息 -->
+	<select id="findDistributionDetailListByUserId" resultType="UserDistributionDetail" parameterType="UserDistributionDetail">
+		SELECT d.Distribution_Detail_Id, d.Distribution_Type_Cd, d.Rebate_Amt, d.Create_Time, d.Order_Number, d.User_Id, ums.M_Store_Name as mstoreName
+		FROM 
+		user_distribution_detail d 
+		LEFT JOIN order_header o ON d.Order_Number=o.Order_Number 
+		LEFT JOIN order_origin_info ooi  ON o.Order_Id=ooi.Order_Id 
+		LEFT JOIN user_m_store ums ON ums.User_Id=ooi.Order_From_M_Store_User_Id
+		WHERE d.User_Id=#{userId} 
+		<if test=" distributionTypeCd != '' and distributionTypeCd != null">
+			AND d.Distribution_Type_Cd=#{distributionTypeCd}
+		</if>
+		ORDER BY d.Create_Time DESC
+		
+	</select>
+	
+	<!-- 今日的下级微店主返利收益 2016.07.19 By caobr -->
+	<select id="getSumDistributionToday" parameterType="java.lang.Integer" resultType="java.math.BigDecimal">
+		SELECT sum(u.Rebate_Amt) FROM user_distribution_detail u LEFT JOIN order_header o ON u.Order_Number=o.Order_Number 
+		WHERE DATE_FORMAT(u.Create_Time,'%Y-%m-%d')=DATE_FORMAT(now(),'%Y-%m-%d') AND u.User_Id=#{userId} AND u.Distribution_Type_Cd=3 AND o.Order_Status_Cd=5 
+	</select>
+	
+	<!-- 每月的下级微店主返利收益  2016.08.5 By csw -->
+	<select id="getSumDistributionMonth" parameterType="java.lang.Integer" resultType="java.math.BigDecimal">
+		SELECT sum(Rebate_Amt) FROM user_distribution_detail 
+		WHERE DATE_FORMAT(Create_Time,'%Y-%m')=DATE_FORMAT(now(),'%Y-%m') AND User_Id=#{userId} AND Distribution_Type_Cd=3
+	</select>
+	
+	<!-- 根据用户和分销类型查询对应数据 2016.09.19 By csw -->
+	<select id="findListByUserIdAndType" parameterType="java.util.Map" resultType="cn.yr.chile.user.dto.UserDistributionDetailDTO">
+		SELECT
+			*
+		FROM
+		(SELECT
+			'order' as rebateType,
+			u.Distribution_Type_Cd as distributionTypeCd,
+			u.Rebate_Amt as rebateAmt,
+			u.Create_Time as createTime,
+			s.Code_Cn_Name as distributionTypeName
+		FROM
+			user_distribution_detail u
+			LEFT JOIN system_code s ON s.Code_Id = u.Distribution_Type_Cd AND s.Code_Type_Cd = 'DISTRIBUTION_TYPE_CD'
+			LEFT JOIN order_header o ON o.Order_Number = u.Order_Number
+		WHERE
+			u.User_Id = #{userId}
+		AND o.Order_Status_Cd = 5
+		AND u.Distribution_Type_Cd IN
+		<foreach item="item" index="index" collection="distributionTypeCds" open="("
+				separator="," close=")">
+				#{item}
+		</foreach>
+		
+		<if test=" type != '' and type != null and type ==2">
+		UNION
+		
+		SELECT
+			'withdrawal' as rebateType,
+			u.Withdrawal_Type_Cd as distributionTypeCd,
+			u.Withdrawal_Amt as rebateAmt,
+			u.Apply_Time as createTime,
+			s.Code_Cn_Name as distributionTypeName
+		FROM
+			user_withdrawal_detail u
+			LEFT JOIN system_code s ON s.Code_Id = u.Withdrawal_Type_Cd AND s.Code_Type_Cd = 'WITHDRAWAL_TYPE_CD'
+		WHERE
+			u.User_Id = #{userId}
+		AND u.Withdrawal_Type_Cd = 2
+		AND u.Apply_Status_Cd != 3
+		</if>
+		) d order BY d.createTime DESC
+	</select>
+	
+	<!-- 根据订单号和分销类型或用户Id查询数据  2016.9.20 csw-->
+	<select id="findListByOrderNumberAndType" parameterType="java.util.Map" resultType="UserDistributionDetail">
+		select
+			<include refid="allColumns" />
+		from 
+			user_distribution_detail
+		where 
+			Distribution_Type_Cd = #{distributionTypeCd}
+			and Order_Number = #{orderNumber}
+			<if test="userId != null and userId != ''">
+				and User_Id = #{userId}
+			</if>
+	</select>
+	
+	<!-- 根据用户Id查询对应业绩  2017.04.13 wdf-->
+	<select id="getMyCustomerPerformance" parameterType="MyCustomerDTO" resultType="MyCustomerDTO">
+		SELECT
+			u1.Create_Time,
+			u1.Distribution_Detail_Id,
+			u1.Rebate_Amt,
+			u1.Rebate_Product_Point,
+			o1.Order_Pay_Amt,
+			o1.Order_Total_Amt
+		FROM
+			user_distribution_detail u1
+		LEFT JOIN order_header o1 ON u1.Order_Number = o1.Order_Number
+		WHERE
+			u1.User_Id = #{userId}
+		<if test="startTime !=null and startTime != ''">
+			AND DATE_FORMAT(#{startTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(u1.Create_Time,'%Y%m%d')
+		</if>
+		<if test="endTime != null and endTime != ''">
+			AND DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(u1.Create_Time,'%Y%m%d')
+		</if>
+	</select>
+
+</mapper>

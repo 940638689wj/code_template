@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductCategoryTypeDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Category_Type_Id, Category_Type_Name, Category_Status_Cd, Create_Time, Last_Update_Time
+	</sql>
+	
+	<sql id="categoryTypeColumns">
+		c.category_Type_Id,
+		c.category_Type_Name,
+		c.category_Status_Cd,
+		c.create_Time,
+		c.last_Update_Time
+	</sql>
+	
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductCategoryType" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_category_type (
+	        Category_Type_Name, Category_Status_Cd, Create_Time, Last_Update_Time
+	    ) VALUES (
+	        #{categoryTypeName}, #{categoryStatusCd}, #{createTime}, #{lastUpdateTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductCategoryType">
+	   UPDATE product_category_type SET
+		   Category_Type_Name = #{categoryTypeName}, 
+		   Category_Status_Cd = #{categoryStatusCd}, 
+		   Create_Time = #{createTime}, 
+		   Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+		   Category_Type_Id = #{categoryTypeId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_category_type where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductCategoryType" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_category_type 
+	     WHERE 
+			  Category_Type_Id=#{ategoryTypeId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductCategoryType">  
+	    select 
+		<include refid="allColumns" />
+	    from product_category_type
+	</select>
+
+	<!-- 查询类型数据总数 -->
+	<select id="getAllCount" resultType="java.lang.Integer">
+		select count(*)
+		from product_category_type c
+		where c.category_Status_Cd = '1'
+	</select>
+	
+	<!-- 查询启用的系列类型 -->
+	<select id="findCategoryTypeList" resultType="ProductCategoryType">
+		select 
+		<include refid="categoryTypeColumns" />
+		from product_category_type c
+	</select>
+	
+	<!-- 查询系列类型 -->
+	<select id="findActiveCategoryTypeList" resultType="ProductCategoryType">
+		select 
+		<include refid="categoryTypeColumns" />
+		from product_category_type c
+		where c.category_Status_Cd = '1'
+	</select>
+	
+	<!-- 判断类型名称是否存在 -->
+	<select id="findCategoryTypeByName" resultType="java.lang.Integer" parameterType="java.lang.String">
+		select 
+		count(*)
+		from product_category_type c
+		where c.category_Type_Name = #{categoryTypeName}
+	</select>
+	
+</mapper>

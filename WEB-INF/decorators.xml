@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<decorators defaultdir="/WEB-INF/layouts/">
+	<excludes>
+        <pattern>/admin/*</pattern>
+		<pattern>/static/*</pattern>
+        <pattern>/userfiles/*</pattern>
+        <pattern>*_ajaxpage*</pattern>
+        <pattern>*_ajaxpage.html</pattern>
+
+        <!-- ********** pc端 ********** -->
+        <pattern>/cart/getMiniCartInfo</pattern>
+
+        <!--pc端 订单跳转去支付-->
+        <pattern>/account/order/goToOrderPayment**</pattern>
+        <!--pc端 订单支付 回调-->
+        <pattern>/payment/order/directNotify**</pattern>
+
+        <!--pc端 跳转去充值-->
+        <pattern>/account/recharge/goToPayment**</pattern>
+        <!--pc端 充值 回调-->
+        <pattern>/payment/recharge/directNotify**</pattern>
+
+        <!-- ********** 手机端 ********** -->
+        <!--手机端 订单跳转去支付-->
+        <pattern>/m/account/order/goToOrderPayment**</pattern>
+        <!--手机端 订单支付 回调-->
+        <pattern>/m/payment/order/directNotify**</pattern>
+        <!--<pattern>/m/payment/order/getWxOpenId</pattern>-->
+        <pattern>/m/payment/order/wxPayReturn</pattern>
+        <pattern>/m/payment/order/checkOrder</pattern>
+
+        <!--手机端 跳转去充值-->
+        <pattern>/m/account/recharge/goToPayment**</pattern>
+        <!--手机端 充值 回调-->
+        <pattern>/m/payment/recharge/directNotify**</pattern>
+        <!--<pattern>/m/payment/recharge/getWxOpenId</pattern>-->
+        <pattern>/m/payment/recharge/wxPayReturn</pattern>
+        <pattern>/m/payment/recharge/checkOrder</pattern>
+
+
+        <pattern>/m/weixin/injection/*</pattern>
+
+        <!--退款通知-->
+        <pattern>/m/refund/*</pattern>
+
+        <pattern>/common/staticAsset/upload/*</pattern>
+        <pattern>/common/nopermission*</pattern>
+        <pattern>/weixinapi*</pattern>
+        <pattern>/api*</pattern>
+        <pattern>/spa/*</pattern>
+    </excludes>
+
+    <decorator name="pc" page="pcFullPageLayout.ftl">
+        <pattern>/*</pattern>
+    </decorator>
+
+    <decorator name="mobile" page="mFullPageLayout.ftl">
+        <pattern>/m</pattern>
+        <pattern>/m/*</pattern>
+        <pattern>/wxpay/*</pattern>
+    </decorator>
+</decorators>

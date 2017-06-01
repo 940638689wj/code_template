@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionGiftXrefDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Id,
+			p1.Product_ID,
+			p1.Create_Time,
+			p1.promo_condition_id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionGiftXref">
+	    INSERT INTO promotion_gift_xref (
+			Promotion_Id,
+			Product_ID,
+			Create_Time,
+			promo_condition_id
+	    ) VALUES (
+			#{promotionId},
+			#{productId},
+			#{createTime},
+			#{promoConditionId}
+	    )
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionGiftXref">
+	   UPDATE promotion_gift_xref SET
+	   		Promotion_Id = #{promotionId}, 
+	   		Product_ID = #{productId}, 
+	   		Create_Time = #{createTime},
+	   		promo_condition_id = #{promoConditionId}
+	   WHERE 
+			Promotion_Id = #{promotionId}
+	</update>
+	
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionGiftXref" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_gift_xref p1
+	     WHERE
+			p1.Promotion_Id=#{promotionId}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionGiftXref">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_gift_xref p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionGiftXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_gift_xref p1
+	    where 1=1
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="productId != null"> and p1.Product_ID = #{productId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="promoConditionId != null"> and p1.promo_condition_id = #{promoConditionId}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 根据条件Id查询赠品 -->
+	<select id="findProductIdByConditionId" resultType="cn.yr.chile.promotion.dto.PromotionGiftXrefDTO" parameterType="Integer">
+		select
+			p1.Promotion_Id,
+			p1.Product_ID,
+			p2.Product_Name,
+			p2.Default_Price,
+			p2.Tag_Price,
+			p2.Sale_Unit_Type_Cd,
+			p2.Bar_Code,
+			p3.Pic_Url
+		from 
+			promotion_gift_xref p1
+			left join product p2 on p1.Product_Id = p2.Product_Id
+			left join product_pic_info p3 on p1.Product_Id = p3.Product_Id and p3.Is_Default_Pic = 1
+		where 
+			promo_condition_id = #{promoConditionId}
+	</select>
+</mapper>

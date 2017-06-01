@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductAreaXerfDao">
+	
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Area_ID, Product_Id,Create_Time
+	</sql>
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductAreaXerf" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_area_xref (
+	        Area_ID, Product_Id, Create_Time
+	    ) VALUES (
+	        #{areaId}, #{productId}, #{createTime}        
+	    )
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductAreaXerf">
+	   UPDATE product_area_xref SET
+		   Create_Time = #{createTime}
+	   WHERE 
+		   Area_ID = #{areaId}, 
+		   Product_Id = #{productId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_area_xref where Product_Id = #{productId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductAreaXerf" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_area_xref 
+	     WHERE 
+			  Product_Id=#{productId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductAreaXerf">  
+	    select 
+		<include refid="allColumns" />
+	    from product_area_xref
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductAreaXerf" parameterType="ProductAreaXerf">  
+	    select 
+		a.Area_ID,a.Product_Id,a1.level
+	    from product_area_xref a
+	    left join area a1 on a1.Id = a.Area_ID 
+	    where 1=1
+		<if test="areaId != null and areaId!=0"> and a.Area_ID = #{areaId}</if>
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		
+	</select>
+
+	<!--根据城市Id查询多个商品种类中，符合配送区域的数量（判断依据：查询出来的数量与商品种类数进行对比）-->
+	<select id="findCountByProductIdsAndCityId" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+		FROM product_area_xref
+		WHERE Product_ID IN (${productIds})
+		AND Area_ID = #{cityId}
+	</select>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.UserScoreDetailPcDao">
+
+
+    <!-- 查询列表 -->
+    <select id="findAllList" resultType="UserScoreDetailDTO" parameterType="java.util.Map">
+        SELECT T1.Score_Detail_Id,
+        IFNULL(T1.Score_Income,0) AS Score_Income,
+        IFNULL(T1.Score_Expend,0) AS Score_Expend,
+        T1.Remark,
+        T1.Order_Number,
+        T1.User_Id,
+        T1.Admin_User_Id,
+        T1.Admin_User_Name,
+        T1.Create_Time,
+        T1.OPER_Event_Type_Cd,
+        T2.Login_Name,
+        T2.User_Name
+        from user_score_detail T1
+        LEFT JOIN user T2 ON T1.User_Id=T2.User_Id
+        WHERE 1=1
+        <if test="loginName !=null and loginName !=''">
+            and T2.Login_Name = #{loginName}
+        </if>
+        ORDER BY
+        T1.Create_Time DESC
+    </select>
+	
+	<select id="findAllUserScoreDetail" resultType="string">
+		SELECT DISTINCT
+	b.Code_Cn_Name as codeCnName
+FROM
+	user_score_detail a
+LEFT JOIN system_code b ON b.Code_Type_Cd = 'oper_event_type_cd'
+AND b.Code_Id = a.OPER_Event_Type_Cd
+	</select>
+
+</mapper>

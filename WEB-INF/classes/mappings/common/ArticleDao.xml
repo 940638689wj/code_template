@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.common.dao.ArticleDao">
+	<sql id="articleColumns">
+		a.ARTICLE_ID as articleId,
+		a.ARTICLE_AUTHOR as articleAuthor,
+		a.ARTICLE_TITLE as articleTitle,
+		a.ARTICLE_CONTENT as articleContent,
+		a.Is_Publication as articleIsPublication,
+		a.Is_Top as articleIsTop,
+		a.Start_Date as articleStartDate,
+		a.End_Date as articleEndDate,
+		a.Hit_Count as articleHitCount,
+		a.Article_Type_Id as articleType,
+		a.Create_Time as articleCreateTime,
+		a.Cover_Image_Url as coverImage
+	</sql>
+	
+	<!-- 查询文章类型 -->
+	<select id="findType" resultType="cn.yr.chile.common.dto.ArticleTypeDTO">
+		SELECT 
+			a.cms_article_Type_ID AS typeId,
+			a.Type_Name AS typeName
+		FROM cms_article_type a 
+	</select>
+	
+	<!-- 根据Id查文章 -->
+	<select id="findById" parameterType="java.lang.Long" resultType="cn.yr.chile.common.domain.Article">
+		SELECT 
+			<include refid="articleColumns" />
+		FROM cms_article a WHERE a.ARTICLE_ID=#{articleId} 
+	</select>
+	<!-- 查询全部文章 -->
+	<select id="findAllList" resultType="cn.yr.chile.common.domain.Article">
+		SELECT
+			<include refid="articleColumns" />,
+			b.Type_Name as articleTypeName
+		FROM cms_article a
+		 left join cms_article_type b on a.Article_Type_Id=b.cms_article_Type_ID
+		
+	</select>
+	<insert id="insert" useGeneratedKeys="true" keyProperty="atricleId">
+		INSERT INTO cms_article(
+			ARTICLE_AUTHOR,
+			ARTICLE_TITLE,
+			ARTICLE_CONTENT,
+			Article_Type_Id,
+			Is_Publication,
+			Create_Time,
+			Start_Date,
+			End_Date,
+			Cover_Image_Url
+		) VALUES(
+			#{articleAuthor},
+			#{articleTitle},
+			#{articleContent},
+			#{articleType},
+			#{articleIsPublication},
+			#{articleCreateTime},
+			#{articleStartDate},
+			#{articleEndDate},
+			#{coverImage}
+			)
+	</insert>
+	
+	<delete id="deleteArticle" parameterType="java.lang.Long">
+		DELETE FROM cms_article WHERE ARTICLE_ID = #{articleId}
+	</delete>
+	
+	<update id="update">
+		UPDATE cms_article SET
+			ARTICLE_AUTHOR=#{articleAuthor},
+			ARTICLE_TITLE=#{articleTitle},
+			ARTICLE_CONTENT=#{articleContent},
+			Article_Type_Id=#{articleType},
+			Is_Publication=#{articleIsPublication},
+			Cover_Image_Url=#{coverImage}
+		 WHERE 
+		 	ARTICLE_ID=#{articleId}
+	</update>
+	
+	
+	<select id="findByTitle" parameterType="java.lang.String" resultType="cn.yr.chile.common.domain.Article">
+		SELECT
+			<include refid="articleColumns" />
+		FROM cms_article a WHERE a.ARTICLE_TITLE like %#{title}%
+	</select>
+	
+	<!-- 查询 -->
+	<select id="queryArticle" resultType="cn.yr.chile.common.domain.Article" parameterType="java.util.HashMap">
+		SELECT
+			<include refid="articleColumns"/>,
+			b.Code_Cn_Name as articleTypeName
+		FROM cms_article a
+		 left join system_code b on a.Article_Type_Id=b.Code_Id and b.Code_Type_Cd = 'Article_Type_Id'
+		 
+		  <where>
+		 	  <if test="articleType != null">
+				 and a.Article_Type_Id = #{articleType}
+			</if>
+			
+			  <if test="isPublish != null">
+				 and a.Is_Publication = #{isPublish}
+			</if>
+			
+			 <if test="order != null and order == 'asc'">
+				 and a.ARTICLE_ID &gt; #{articleId}
+			</if>
+			 <if test="order != null and order == 'desc'">
+				 and a.ARTICLE_ID &lt; #{articleId}
+			</if>
+		 
+		 </where>
+		  <if test="order != null and order == 'asc'">
+				ORDER BY a.ARTICLE_ID asc
+			</if>
+			 <if test="order != null and order == 'desc'">
+				ORDER BY a.ARTICLE_ID desc
+			</if>
+		 
+		 
+	</select>
+	
+	
+	<!-- 获取文章上篇id -->
+   <select id="findMinId" resultType="Long" parameterType="java.util.HashMap">
+     select min(p.ARTICLE_ID) FROM cms_article p WHERE p.Is_Publication = 1 
+     		<if test="articleType != null">
+				 and p.Article_Type_Id = #{articleType}
+			</if>
+    
+   </select>
+   
+   <!-- 获取文章下篇id -->
+   <select id="findMaxId" resultType="Long" parameterType="java.util.HashMap">
+      	select max(p.ARTICLE_ID) FROM cms_article p WHERE p.Is_Publication = 1 
+      	  <if test="articleType != null">
+				 and p.Article_Type_Id = #{articleType}
+			</if>
+   </select>
+</mapper>

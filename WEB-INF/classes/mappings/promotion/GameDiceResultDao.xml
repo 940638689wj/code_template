@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.GameDiceResultDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		a.Id,
+		a.Dice_Prize_Type_Cd,
+		a.Dice_Result
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="cn.yr.chile.promotion.domain.GameDiceResult" useGeneratedKeys="true"
+            keyProperty="id">
+		INSERT INTO awards (
+		Id,
+		Dice_Prize_Type_Cd,
+		Dice_Result
+		) VALUES (
+		#{id},
+		#{dicePrizeTypeCd},
+		#{diceResult}
+		)
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="cn.yr.chile.promotion.domain.GameDiceResult">
+		UPDATE awards SET
+		Id = #{id},
+		Dice_Prize_Type_Cd = #{dicePrizeTypeCd},
+		Dice_Result = #{diceResult}
+		WHERE
+		Id = #{id}
+	</update>
+
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM awards
+		where Id = #{id}
+	</delete>
+
+    <!-- 根据获取 -->
+    <select id="getByTypeCd" resultType="cn.yr.chile.promotion.domain.GameDiceResult" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM
+        game_dice_result a
+        WHERE a.Dice_Prize_Type_Cd = #{dicePrizeTypeCd}
+        ORDER BY RAND() LIMIT 1
+    </select>
+
+</mapper>

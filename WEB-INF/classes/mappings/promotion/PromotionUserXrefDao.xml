@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionUserXrefDao">
+	<!--<resultMap id="promotionUserLevelXrefMap" type="PromotionUserLevelXref">
+		<result property="promotionId" column="Promotion_Id" />
+		<result property="userLevelId" column="User_Level_Id" />
+		<result property="createTime" column="Create_Time" />
+		<result property="displayId" column="Display_Id" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Promotion_Id,
+			p1.User_Id,
+			p1.Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionUserXref">
+	    INSERT INTO promotion_user_xref (
+			Promotion_Id,
+			User_Id,
+			Create_Time
+	    ) VALUES (
+			#{promotionId},
+			#{userId},
+			#{createTime}
+	    )
+	</insert>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionUserXref">
+	    select 
+		<include refid="allColumns" />
+	    from promotion_user_xref p1
+		order by p1.Create_Time
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionUserXref" parameterType="java.util.HashMap">
+	    select 
+		<include refid="allColumns" />
+	    from promotion_user_xref p1
+	    where 1=1
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="userId != null"> and p1.User_Id = #{userId}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+	</select>
+
+	<select id="get" resultType="PromotionUserXref" parameterType="java.lang.Integer">
+		select
+		<include refid="allColumns" />
+		from promotion_user_xref p1
+		where p1.Promotion_Id = #{0}
+	</select>
+	
+	<!-- 按活动Id删除数据 -->
+	<delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM promotion_user_xref where Promotion_Id = #{promotionId}
+	</delete>
+	
+	<!-- 根据活动id找到所有的会员ID -->
+	<select id="findAllUserIdByPromotionId" parameterType="int" resultType="int">
+		SELECT 
+			user_id
+		from 
+			promotion_user_xref
+		WHERE 
+			Promotion_Id=#{promotionId}
+	</select>
+
+	<!-- 根据活动id和用户获取对应的数据 -->
+	<select id="findByPromotionIdAndUserId" parameterType="map" resultType="PromotionUserXref">
+		SELECT
+			<include refid="allColumns" />
+		from
+			promotion_user_xref p1
+		WHERE
+			p1.Promotion_Id=#{promotionId}
+		AND p1.User_Id = #{userId}
+		limit 0,1
+	</select>
+</mapper>

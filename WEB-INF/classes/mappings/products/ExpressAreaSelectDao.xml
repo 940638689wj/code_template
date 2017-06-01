@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ExpressAreaSelectDao">
+	<sql id="areafield">
+	a.Id,
+	a.Area_Name,
+	a.Parent_Area_Id,
+	a.Level,
+	a.Post_code,
+	a.Status_Cd,
+	a.Sort,
+	a.Is_Displayed,
+	a.Is_Common_Addr
+	</sql>
+	<sql id="childAreaList">
+	a.Level AS level,
+	a.Area_Name AS parentAreaName,
+	b.Id AS id,
+	b.Parent_Area_Id AS parentAreaId,
+	b.Area_Name AS childAreaName 
+	</sql>
+	<!-- 查找所有的省份 -->
+	<select id="findProvince" parameterType="long" resultType="cn.yr.chile.products.domain.ExpressSelectShipArea">
+		SELECT
+		<include refid="areafield"/>
+		FROM area a
+		WHERE a.Parent_Area_Id = #{parentAreaId}
+	</select>
+	<!-- 根据省份查市的数量 -->
+	<select id="findCityCount" parameterType="java.lang.Long" resultType="java.lang.Integer">
+		SELECT
+		COUNT(Id)
+		FROM area
+		WHERE Parent_Area_Id = #{parentAreaId}
+	</select>
+	<!-- 查找除了其他模板已选择的市 -->
+	<select id="findCity" parameterType="java.lang.Long" resultType="cn.yr.chile.products.domain.ExpressSelectShipArea">
+		SELECT
+		a.Id,
+		a.Area_Name,
+		a.Parent_Area_Id,
+		b.Area_id as chosed_Area_Id,
+		b.Area_names as chosed_Area_Name
+		FROM area a LEFT JOIN express_template_area b 
+		ON a.Id = b.Area_id
+		WHERE 1=1
+		AND a.Parent_Area_Id = #{parentAreaId}
+		AND a.Is_Displayed = 1
+		AND a.Status_Cd=1
+	</select>
+	<!-- 模糊查询出地区的id -->
+	<select id="findAreaId" parameterType="string" resultType="long">
+		SELECT 
+		a.Id 
+		FROM area a 
+		WHERE a.Area_Name 
+		LIKE #{areaName}
+	</select>
+	<!-- 根据地区id查询出子地区 -->
+	<select id="findChildArea" parameterType="long" resultType="cn.yr.chile.products.domain.ExpressSelectShipArea">
+		SELECT 
+		<include refid="childAreaList"/>
+		FROM area a JOIN area b 
+		ON a.Id = b.Parent_Area_Id 
+		AND b.Parent_Area_Id = #{id}
+		AND b.Is_Displayed = 1
+		AND b.Status_Cd=1
+	</select>
+	<!-- 查出5级地区,过滤掉模板已经选择的地区 -->
+	<select id="findGrandChildArea" parameterType="long" resultType="cn.yr.chile.products.domain.ExpressSelectShipArea">
+		SELECT distinct
+		a.Level AS level,
+		a.Id AS id,
+		a.Parent_Area_Id AS parentAreaId,
+		a.Area_Name AS childAreaName,
+		b.Area_names
+		FROM area a LEFT JOIN express_template_area b 
+		ON a.Id=b.Area_id
+		WHERE  b.Area_names is NULL
+		AND a.Parent_Area_Id = #{parentAreaId}
+	</select>
+	<!-- 查出5级地区,过滤掉其他模板已经选择的地区(包含当前编辑模板的地区) -->
+	<select id="findGrandChildAreaAnd" parameterType="java.util.Map" resultType="cn.yr.chile.products.domain.ExpressSelectShipArea">
+		SELECT distinct
+		a.Level AS level,
+		a.Id AS id,
+		a.Parent_Area_Id AS parentAreaId,
+		a.Area_Name AS childAreaName,
+		b.Area_names
+		FROM area a LEFT JOIN 
+		(SELECT c.Area_Names ,c.Area_id FROM express_template_area c 
+		<where>
+		<if test="templateId != null" >
+		c.Template_id != #{templateId}
+		</if>
+		</where>) b 
+		ON a.Id=b.Area_id
+		WHERE  b.Area_names is NULL
+		AND a.Parent_Area_Id = #{parentAreaId}
+		AND a.Is_Displayed = 1
+		AND a.Status_Cd=1
+	</select>
+	<!-- 计算子地区的数目 -->
+	<select id="childAreaCount" parameterType="java.util.Map" resultType="int">
+		SELECT distinct
+		COUNT(a.Area_Name)AS amount,
+		b.Area_names
+		FROM area a LEFT JOIN 
+		(SELECT c.Area_Names ,c.Area_id FROM express_template_area c 
+		<where>
+		<if test="templateId != null" >
+		c.Template_id != #{templateId}
+		</if>
+		</where>) b 
+		ON a.Id=b.Area_id
+		WHERE  b.Area_names is NULL
+		AND a.Parent_Area_Id = #{areaId}
+		AND a.Is_Displayed = 1
+		AND a.Status_Cd=1
+	</select>
+</mapper>

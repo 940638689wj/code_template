@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="cn.yr.chile.common.dao.ReshipAddressDao">
+ 
+ 	
+     <!-- 获取退货地址 -->
+    <select id="getReshipAddress" parameterType="java.util.HashMap"  resultType="cn.yr.chile.common.domain.ReshipAddress">
+         SELECT a.id,a.consignee,a.regionId,a.province, a.street, a.city, a.county, a.phone,a.postalCode,a.remark,a.create_time as createTime
+		FROM `mall_reship_address` as a 
+		 left join store b on b.STORE_ID=a.store 
+		<where>
+			<if test="storeId != null">
+				and a.store = #{storeId}
+			</if>
+		</where>
+		  
+    </select>
+    
+    
+     <!-- 插入系统通知-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO mall_reship_address(
+            consignee,
+            regionId,
+            province,
+            street,
+            city,
+            county,
+            phone,
+            postalCode,
+            remark,
+            create_time,
+             store
+        ) VALUES (
+            #{consignee},
+            #{regionId},
+            #{province},
+            #{street},
+            #{city},
+            #{county},
+            #{phone},
+            #{postalCode},
+            #{remark},
+            #{createTime},
+            #{storeId}
+                
+          
+        )
+    </insert>
+
+    <!-- 更新系统通知 -->
+    <update id="update">
+        UPDATE mall_reship_address SET
+         consignee = #{consignee},
+            regionId = #{regionId},
+            province = #{province},
+            street = #{street},
+            city =  #{city},
+            county = #{county},
+            phone = #{phone},
+            postalCode = #{postalCode},
+            remark = #{remark},
+             store =  #{storeId}
+           
+        WHERE id = #{id}
+    </update>
+ 		
+ </mapper>

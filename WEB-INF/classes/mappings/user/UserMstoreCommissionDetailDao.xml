@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreCommissionDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Commission_Detail_Id, User_Id, Commission_Amt, Create_Time, Order_Number
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstoreCommissionDetail" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_m_store_commission_detail (
+	        User_Id, Commission_Amt, Create_Time, Order_Number
+	    ) VALUES (
+	        #{userId}, #{commissionAmt}, #{createTime}, #{orderNumber}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstoreCommissionDetail">
+	   UPDATE user_m_store_commission_detail SET
+		   User_Id = #{userId}, 
+		   Commission_Amt = #{commissionAmt}, 
+		   Create_Time = #{createTime}, 
+		   Order_Number = #{orderNumber}
+	   WHERE 
+		   Commission_Detail_Id = #{commissionDetailId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store_commission_detail where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstoreCommissionDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_m_store_commission_detail 
+	     WHERE 
+			  User_Id=#{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstoreCommissionDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_commission_detail
+	</select>
+	
+	
+	<!-- 返回本月获取的佣金总额 -->
+	<select id="findComByMonth" resultType="java.lang.String" parameterType="int">  
+	   SELECT SUM(Commission_Amt) 
+	   FROM user_m_store_commission_detail 
+	   WHERE user_id=#{userId}
+	   and 	DATE_FORMAT(Create_Time,'%Y%m')=DATE_FORMAT(now(),'%Y%m')
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserMstoreCommissionDetail" parameterType="UserMstoreCommissionDetail">  
+	    select 
+		a.Commission_Detail_Id,
+		a.User_Id,
+		a.Commission_Amt,
+		a.Create_Time,
+		a.Order_Number,
+		b.Phone 
+		from user_m_store_commission_detail a 
+		left join user b on a.User_Id=b.User_Id 
+	    <where> 
+	    1=1 
+		<if test="commissionDetailId != null"> and a.Commission_Detail_Id = #{commissionDetailId}</if>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="commissionAmt != null"> and a.Commission_Amt = #{commissionAmt}</if>
+		<if test="orderNumber != null"> and a.Order_Number = #{orderNumber}</if>
+		<if test="null != startDate and '' != startDate"> and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') >= #{startDate} </if>
+		<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') <= #{endDate} ]]></if>
+		</where> 
+		order by a.Create_Time DESC 
+	</select>
+	
+	<!-- 查询微店主的佣金明细(订单状态为已完成) 2016.06.16 By Caobr -->
+	<select id="findCommissionDetailListByMstoreUserId" resultType="UserMstoreCommissionDetail" parameterType="UserMstoreCommissionDetail">
+		SELECT 
+		uc.Commission_Detail_Id, 
+		uc.User_Id, 
+		uc.Commission_Amt, 
+		uc.Create_Time, 
+		uc.Order_Number, 
+		us.User_Name as customerName,
+		o.Order_Id 
+		FROM user_m_store_commission_detail uc 
+		LEFT JOIN order_header o ON uc.Order_Number=o.Order_Number 
+		LEFT JOIN user us on o.User_Id=us.User_Id
+		WHERE uc.User_Id=#{userId} AND o.Order_Status_Cd=5
+		ORDER BY Create_Time DESC
+	</select>
+	
+	<!-- 今日的佣金奖励收益 2016.07.19 By caobr -->
+	<select id="getSumCommissionToday" parameterType="java.lang.Integer" resultType="java.math.BigDecimal">
+		SELECT sum(u.Commission_Amt) FROM user_m_store_commission_detail u LEFT JOIN order_header o ON u.Order_Number=o.Order_Number
+		WHERE DATE_FORMAT(u.Create_Time,'%Y-%m-%d')=DATE_FORMAT(now(),'%Y-%m-%d') AND u.User_Id=#{userId} AND o.Order_Status_Cd=5
+	</select>
+	
+	<!-- 通过订单号查询产品佣金 -->
+	<select id="getCommissionDetailByOrderNo" parameterType="String" resultType="UserMstoreCommissionDetail">
+		select <include refid="allColumns" />
+		from user_m_store_commission_detail
+	    where Order_Number=#{orderNo}
+	</select>
+	
+	<!-- 通过订单号、微店主Id查询佣金 -->
+	<select id="getCommissionDetailByOrderNoAndUserId" parameterType="java.util.Map" resultType="UserMstoreCommissionDetail">
+		select <include refid="allColumns" />
+		from user_m_store_commission_detail
+		where Order_Number=#{orderNumber} AND User_Id=#{userId}
+	</select>
+	
+	<select id="getNeedBackCommission" parameterType="Integer" resultType="java.math.BigDecimal">
+		SELECT IFNULL(SUM(umsc.Commission_Amt)+SUM(umsr.reward_amt),0.0) FROM user_m_store_commission_detail umsc 
+		LEFT JOIN order_header o ON umsc.order_number = o.order_number
+		LEFT JOIN  order_origin_info ooi ON o.Order_Id = ooi.Order_Id
+		LEFT JOIN user_m_store_reward_detail umsr ON o.order_number = umsr.order_number
+		WHERE ooi.Order_From_M_Store_User_Id = #{userId} AND o.order_status_cd != 5 AND o.order_status_cd != 6
+	</select>
+</mapper>

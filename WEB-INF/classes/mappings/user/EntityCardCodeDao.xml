@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.EntityCardCodeDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        a.Id,
+        a.Card_Num,
+        a.Password,
+        a.Use_Time,
+        a.Is_Used,
+      	a.User_Id,
+      	a.Entity_Card_Id
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="cn.yr.chile.user.domain.EntityCardCode" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO entity_card_code (
+	        Card_Num,
+	        Password,
+	        Use_Time,
+	        Is_Used,
+	        User_Id,
+	        Entity_Card_Id
+	    ) VALUES (
+	        #{cardNum},
+	        #{password},
+	        #{useTime},
+	        #{isUsed},
+	        #{userId},
+	        #{entityCardId}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="cn.yr.chile.user.domain.EntityCardCode">
+	   UPDATE entity_card_code SET
+	  	  Card_Num = #{cardNum},
+	  	  Password = #{password},
+	  	  Use_Time = #{useTime},
+	  	  Is_Used = #{isUsed},
+	  	  User_Id = #{userId},
+	  	  Entity_Card_Id = #{entityCardId}
+	   WHERE
+		   id = #{id}
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+		DELETE FROM entity_card where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="cn.yr.chile.user.domain.EntityCardCode" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM entity_card_code a
+        WHERE
+        id=#{id}
+    </select>
+
+    <!--查询列表-->
+    <select id="findList" resultType="cn.yr.chile.user.domain.EntityCardCode" parameterType="cn.yr.chile.user.domain.EntityCardCode">
+        SELECT
+        <include refid="allColumns"/>
+		,
+		s.Login_Name AS userName
+        FROM entity_card_code a
+        LEFT JOIN user s ON a.User_Id = s.User_Id
+		WHERE a.Entity_Card_Id = #{entityCardId}
+        ORDER BY id DESC
+    </select>
+
+	<!--查询已使用记录-->
+	<select id="getCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM entity_card_code a
+		WHERE a.Is_Used = 1 AND a.Entity_Card_Id = #{entityCardId}
+	</select>
+
+	<!-- 充值验证 -->
+	<select id="getByMap" resultType="EntityCardCodeDTO" parameterType="java.util.Map">
+		SELECT
+		<include refid="allColumns"/>,
+		b.Name,b.Description,b.Card_Type_Cd,b.End_Date,b.Start_Date,b.Value
+		FROM entity_card_code a 
+		LEFT JOIN entity_card b ON a.Entity_Card_Id = b.Id 
+		WHERE 1=1
+		<if test="cardNum !=null and '' != cardNum">AND a.Card_Num = #{cardNum}</if>
+		<if test="password !=null and '' != password">AND a.Password = #{password}</if>
+		<if test="cardTypeCd !=null and '' != cardTypeCd">AND b.Card_Type_Cd = #{cardTypeCd}</if>
+		<if test="statusCd != null">AND b.Status_Cd = #{statusCd}</if>
+	</select>
+
+	<!--根据id查询实物卡总记录数-->
+	<select id="getCardCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM entity_card_code a
+		WHERE a.Entity_Card_Id = #{entityCardId}
+	</select>
+</mapper>

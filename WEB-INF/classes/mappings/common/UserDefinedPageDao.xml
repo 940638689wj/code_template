@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.common.dao.UserDefinedPageDao">
+	<sql id="allColumns">
+		a.id,
+		a.title,
+		a.content,
+		a.header_footer,
+		a.view_access_url,
+		a.view_times,
+		a.create_time,
+		a.is_display
+	</sql>
+	<!-- 查询所有自定义信息 -->
+	<select id="findUserDefinedPageList" resultType="UserDefinedPage">
+		SELECT 
+		<include refid="allColumns" />
+		FROM CMS_DEFINED_PAGE a
+		ORDER BY a.create_time desc
+	</select>
+	
+	<!-- 根据ID查询自定义信息 -->
+	<select id="findUserDefinedPageById" resultType="UserDefinedPage" parameterType="java.lang.Long">
+		SELECT 
+		<include refid="allColumns" />
+		FROM CMS_DEFINED_PAGE a
+		WHERE a.id = #{id}
+	</select>
+	
+	<!-- 更新自定义信息 -->
+	<update id="saveUserDefinedPage">
+		UPDATE CMS_DEFINED_PAGE SET
+			title = #{title},
+			content = #{content},
+			header_footer = #{headerFooter},
+			view_access_url = #{viewAccessUrl},
+			view_times = #{viewTimes},
+			create_time = #{createTime},
+			is_display = #{isDisplay}
+		 WHERE 
+		 	id = #{id}
+	</update>
+	
+	<!-- 保存自定义信息 -->
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO CMS_DEFINED_PAGE(
+			title,
+			content,
+			header_footer,
+			view_access_url,
+			view_times,
+			create_time,
+			is_display
+			) VALUES(
+			#{title},
+			#{content},
+			#{headerFooter},
+			#{viewAccessUrl},
+			#{viewTimes},
+			#{createTime},
+			#{isDisplay}
+			)
+	</insert>
+	
+	<!-- 删除自定义信息 -->
+	<delete id="deleteUserDefinedPage" parameterType="java.lang.Long">
+		DELETE FROM CMS_DEFINED_PAGE WHERE id = #{id}
+	</delete>
+	
+	<!-- 根据viewAccessUrl查询自定义信息 -->
+	<select id="findUserDefinedPageByUrl" resultType="UserDefinedPage" parameterType="java.lang.String">
+		SELECT 
+		<include refid="allColumns" />
+		FROM CMS_DEFINED_PAGE a
+		WHERE a.view_access_url = #{statePageUrl}
+	</select>
+	
+	<!-- 查询自定义信息 -->
+		<select id="getDefinedPage" resultType="UserDefinedPage">
+		SELECT 
+		<include refid="allColumns" />
+		FROM CMS_DEFINED_PAGE a
+		WHERE a.title = #{title}
+		AND	a.content = #{content}
+		AND a.is_display = #{isDisplay}
+	</select>
+	
+	<!-- 查询有效的自定义页面信息 -->
+		<select id="findActiveUserDefinedPageList" resultType="UserDefinedPage" parameterType="java.util.Map">
+		SELECT 
+		<include refid="allColumns" />
+		FROM CMS_DEFINED_PAGE a
+	</select>
+</mapper>

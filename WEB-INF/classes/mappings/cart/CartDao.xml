@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.cart.dao.CartDao">
+	<sql id="allColumns">
+        c.Cart_Item_Id,
+        c.User_Id,
+        c.Product_Id,
+        c.Product_Name,
+        c.Product_Pic_Url,
+        c.Tag_Price,
+        c.First_Added_Sale_Price,
+        c.Quantity,
+        c.From_M_Store,
+        c.Create_Time,
+        c.Last_Update_Time,
+        c.Cart_Item_Type_Cd,
+        c.Is_Selected,
+        c.Share_User_Id,
+        c.Master_Product_ID
+    </sql>
+    
+    <!-- 新增 -->
+	<insert id="insert" parameterType="Cart" useGeneratedKeys="true" keyProperty="cartItemId">
+	    INSERT INTO cart_item (
+			Cart_Item_Id, 
+			User_Id, 
+			Product_Id, 
+			Product_Name, 
+			Product_Pic_Url, 
+			Tag_Price, 
+			First_Added_Sale_Price, 
+			Quantity, 
+			From_M_Store, 
+			Create_Time, 
+			Last_Update_Time,
+			Cart_Item_Type_Cd,
+			Is_Selected,
+			Share_User_Id,
+			Master_Product_ID
+	    ) VALUES (
+			#{cartItemId}, 
+			#{userId}, 
+			#{productId}, 
+			#{productName}, 
+			#{productPicUrl}, 
+			#{tagPrice}, 
+			#{firstAddedSalePrice}, 
+			#{quantity}, 
+			#{fromMStore}, 
+			#{createTime}, 
+			#{lastUpdateTime},
+			#{cartItemTypeCd},
+			#{isSelected},
+			#{shareUserId},
+			#{masterProductId}
+	    )
+	</insert>
+	<!-- 更新 -->
+    <update id="update" parameterType="Cart">
+		UPDATE cart_item SET
+        User_Id = #{userId},
+        Product_Id = #{productId},
+        Product_Name = #{productName},
+        Product_Pic_Url = #{productPicUrl},
+        Tag_Price = #{tagPrice},
+        First_Added_Sale_Price = #{firstAddedSalePrice},
+        Quantity = #{quantity},
+        From_M_Store = #{fromMStore},
+        Create_Time = #{createTime},
+        Last_Update_Time = #{lastUpdateTime},
+        Cart_Item_Type_Cd = #{cartItemTypeCd},
+        Is_Selected = #{isSelected},
+        Share_User_Id = #{shareUserId},
+        Master_Product_ID = #{masterProductId}
+        WHERE Cart_Item_Id = #{cartItemId}
+    </update>
+    
+    <!--商城 更新该用户的购物车选中状态-->
+    <update id="updateCartIsSelected" parameterType="int">
+		UPDATE cart_item SET
+        	Is_Selected = 0
+        WHERE 
+        	User_Id = #{userId}
+        	and From_M_Store is NULL
+    </update>
+	
+	<!--商城 更新 -->
+    <update id="updateCart" parameterType="java.util.HashMap">
+        UPDATE cart_item SET
+        <if test="quantity != null"> Quantity = #{quantity},</if>
+		<if test="isSelected != null"> Is_Selected = #{isSelected},</if>
+		<if test="cartItemTypeCd != null"> Cart_Item_Type_Cd = #{cartItemTypeCd},</if>
+		Share_User_Id = #{shareUserId},
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE Cart_Item_Id = #{cartItemId}
+        	and From_M_Store is NULL
+    </update>
+    
+    <!--商城 更新购物车的选择状态 -->
+    <update id="updateCartSelected" parameterType="java.util.HashMap">
+        UPDATE cart_item SET
+        <if test="quantity != null"> Quantity = #{quantity},</if>
+		<if test="isSelected != null"> Is_Selected = #{isSelected},</if>
+		<if test="cartItemTypeCd != null"> Cart_Item_Type_Cd = #{cartItemTypeCd},</if>
+        Last_Update_Time = #{lastUpdateTime}
+        WHERE Cart_Item_Id = #{cartItemId}
+        	and From_M_Store is NULL
+    </update>
+    
+    <!-- 根据id删除 -->
+    <delete id="delete" parameterType="int">
+        DELETE FROM cart_item WHERE Cart_Item_Id = #{cartItemId}
+    </delete>
+    
+    <!--商城 根据id、选中状态及是否立即购买  删除-->
+    <delete id="deleteByUserId" parameterType="int">
+        DELETE FROM cart_item 
+        WHERE 
+        User_Id = #{userId} 
+        and (Is_Selected = 1 or Cart_Item_Type_Cd = 2 )
+        and From_M_Store is NULL 
+    </delete>
+    
+    <!-- 根据id获得 -->
+    <select id="get" resultType="Cart" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM cart_item c
+        WHERE c.Cart_Item_Id = #{cartItemId}
+    </select>
+
+	<!-- 根据 productId获得 -->
+	<select id="getByProductId" resultType="Cart" parameterType="int">
+		SELECT
+		<include refid="allColumns"/>
+		FROM cart_item c
+		WHERE c.User_Id = #{0}
+		AND c.Cart_Item_Type_Cd = 1
+		AND c.Product_Id = #{1}
+	</select>
+
+    <!--商城 根据id与产品id获得 -->
+    <select id="getCartByIdAndPId" resultType="Cart" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>
+        FROM cart_item c
+        WHERE c.User_Id = #{userId} 
+        	  and c.Cart_Item_Type_Cd = 1 
+              and c.Product_Id = #{productId}
+              and From_M_Store is NULL
+    </select>
+    
+    <!--商城 返回列表 -->
+	<select id="findAllList" resultType="Cart">  
+	    select 
+		<include refid="allColumns" />
+	    from cart_item c
+		<if test="order_col != null"> order by c.${order_col}</if>
+		and From_M_Store is NULL
+	</select>
+	
+	<!--商城 根据用户Id返回列表 -->
+	<select id="findAllListByUserId" resultType="Cart" parameterType="int">  
+	    select 
+		<include refid="allColumns" />
+	    from cart_item c
+	    where c.User_Id = #{userId}
+	    and From_M_Store is NULL
+	</select>
+	
+		<!-- 返回列表 -->
+	<select id="findAllMstoreListByUserId" resultType="Cart" >  
+	    select 
+		<include refid="allColumns" />,
+		u.M_Store_Name as m_store_Name
+	    from cart_item c
+	    left join user_m_store u
+	    on c.From_M_Store = u.User_Id
+	    where c.User_Id = #{userId}
+	    <if test="fromMStore != null"> and c.From_M_Store != 0 </if>
+		<if test="cartItemTypeCd != null"> and c.Cart_Item_Type_Cd = #{cartItemTypeCd}</if>
+	</select>
+	
+	<!-- 商城 根据对应条件返回列表 -->
+	<select id="findList" resultType="Cart" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+		,p.Virtual_Stock,
+		p.Real_Stock,
+		p.Product_Type_Cd,
+		p.Real_Stock
+	    from cart_item c
+	    left join product p on c.Product_Id = p.Product_Id
+	    where 1 = 1
+		<if test="cartItemId != null"> and c.Cart_Item_Id = #{cartItemId}</if>
+		<if test="userId != null"> and c.User_Id = #{userId}</if>
+		<if test="productId != null"> and c.Product_Id = #{productId}</if>
+		<if test="productName != null"> and c.Product_Name = #{productName}</if>
+		<if test="productPicUrl != null"> and c.Product_Pic_Url = #{productPicUrl}</if>
+		<if test="tagPrice != null"> and c.Tag_Price = #{tagPrice}</if>
+		<if test="firstAddedSalePrice != null"> and c.First_Added_Sale_Price = #{firstAddedSalePrice}</if>
+		<if test="quantity != null"> and c.Quantity = #{quantity}</if>
+		<if test="fromMStore != null"> and c.From_M_Store = #{fromMStore}</if>
+		<if test="createTime != null"> and c.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and c.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="cartItemTypeCd != null"> and c.Cart_Item_Type_Cd = #{cartItemTypeCd}</if>
+		<if test="isSelected != null"> and c.Is_Selected = #{isSelected}</if>
+		and From_M_Store is NULL
+		ORDER BY c.Create_Time DESC
+	</select>
+
+	<!-- 会员购物车商品数量 -->
+	<select id="getCartCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+		select count(*) from cart_item c where 1=1
+		<if test="userId != null"> and c.User_Id = #{userId}</if>
+		<if test="cartItemTypeCd != null"> and c.Cart_Item_Type_Cd = #{cartItemTypeCd}</if>
+	</select>
+	
+	<!-- 根据产品Id，获取产品一些基本信息 -->
+	<select id="getCartDto" resultType="CartDto" parameterType="int">
+		select
+			p1.Product_Id as productId,
+			p3.Product_Name as productName,
+			p1.Tag_Price as tagPrice,
+			p1.Default_Price as firstAddedSalePrice,
+			p2.Pic_Url as productPicUrl,
+			p1.Master_Product_ID as masterProductId
+		from product p1
+			left join product_pic_info p2 on p1.Master_Product_ID = p2.Product_Id and p2.Is_Default_Pic = 1
+			left join product p3 on p3.Product_Id = p1.Master_Product_ID
+		where p1.Product_Id = #{productId}
+	</select>
+	
+	<!-- 商城 根据对应条件返回列表 -->
+	<select id="findCartOrderDTO" resultType="CartOrderDTO" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+		<if test="allowPayTypeCds != null and allowPayTypeCds == 1"><!-- 是否关联商品控制信息 -->
+	    	,ps.Allow_Pay_Type_Cds,
+	    	ps.Product_Return_Score,
+	    	ps.Product_Point_Type_Cd,
+	    	ps.Product_Point_Value
+	    </if>
+		,p.Virtual_Stock,
+		p.Product_Type_Cd,
+		p.Product_Status_Cd,
+		p.Real_Stock,
+		p.Master_Product_ID,
+		p.SKU_KEY_Json_Str,
+		p.Category_Id,
+		p1.Product_Weight,
+		p1.Product_Weight_Unit_Cd,
+		p1.Blg_Store_ID,
+		p1.Template_Area_ID
+	    from cart_item c
+	    left join product p on c.Product_Id = p.Product_Id
+	    left join product_extend p1 on c.Master_Product_ID = p1.Product_Id
+	    <if test="allowPayTypeCds != null and allowPayTypeCds == 1"><!-- 是否关联商品控制信息 -->
+	    	left join product_setting ps on c.Product_Id = ps.Product_Id
+	    </if>
+	    where 1 = 1
+		<if test="cartItemId != null"> and c.Cart_Item_Id = #{cartItemId}</if>
+		<if test="userId != null"> and c.User_Id = #{userId}</if>
+		<if test="productId != null"> and c.Product_Id = #{productId}</if>
+		<if test="productName != null"> and c.Product_Name = #{productName}</if>
+		<if test="productPicUrl != null"> and c.Product_Pic_Url = #{productPicUrl}</if>
+		<if test="tagPrice != null"> and c.Tag_Price = #{tagPrice}</if>
+		<if test="firstAddedSalePrice != null"> and c.First_Added_Sale_Price = #{firstAddedSalePrice}</if>
+		<if test="quantity != null"> and c.Quantity = #{quantity}</if>
+		<if test="fromMStore != null"> and c.From_M_Store = #{fromMStore}</if>
+		<if test="createTime != null"> and c.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and c.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="cartItemTypeCd != null"> and c.Cart_Item_Type_Cd = #{cartItemTypeCd}</if>
+		<if test="isSelected != null"> and c.Is_Selected = #{isSelected}</if>
+		<if test="productStatusCd != null"> and p.Product_Status_Cd = #{productStatusCd}</if>
+		and From_M_Store is NULL
+		ORDER BY c.Create_Time DESC
+	</select>
+
+	<!-- 商城 根据对应条件返回购物车中的商品Id -->
+	<select id="findCartProductIds" resultType="string" parameterType="java.util.HashMap">
+		select
+		GROUP_CONCAT(c.Master_Product_ID)
+		from cart_item c
+		where 1 = 1
+		<if test="cartItemId != null"> and c.Cart_Item_Id = #{cartItemId}</if>
+		<if test="userId != null"> and c.User_Id = #{userId}</if>
+		<if test="productId != null"> and c.Product_Id = #{productId}</if>
+		<if test="productName != null"> and c.Product_Name = #{productName}</if>
+		<if test="fromMStore != null"> and c.From_M_Store = #{fromMStore}</if>
+		<if test="cartItemTypeCd != null"> and c.Cart_Item_Type_Cd = #{cartItemTypeCd}</if>
+		<if test="isSelected != null"> and c.Is_Selected = #{isSelected}</if>
+		and From_M_Store is NULL
+		ORDER BY c.Product_Id DESC
+	</select>
+</mapper>

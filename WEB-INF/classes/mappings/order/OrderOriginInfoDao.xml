@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderOriginInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Order_Id, Origin_System_Cd, Origin_Platform_Cd, Is_Customer_First_Order, Is_Store_First_Order, Is_Parent_M_Store_First_Order, Is_M_Store_First_Order_Cus, Is_M_Store_First_Order, Order_From_Store_Id, Order_From_M_Store_User_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderOriginInfo" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_origin_info (
+	        Order_Id,Origin_System_Cd, Origin_Platform_Cd, Is_Customer_First_Order, Is_Store_First_Order, Is_Parent_M_Store_First_Order, Is_M_Store_First_Order_Cus, Is_M_Store_First_Order, Order_From_Store_Id, Order_From_M_Store_User_Id
+	    ) VALUES (
+	        #{orderId},#{originSystemCd}, #{originPlatformCd}, #{isCustomerFirstOrder}, #{isStoreFirstOrder}, #{isParentMstoreFirstOrder}, #{isMstoreFirstOrderCus}, #{isMstoreFirstOrder}, #{orderFromStoreId}, #{orderFromMstoreUserId}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderOriginInfo">
+	   UPDATE order_origin_info SET
+		   Origin_System_Cd = #{originSystemCd}, 
+		   Origin_Platform_Cd = #{originPlatformCd}, 
+		   Is_Customer_First_Order = #{isCustomerFirstOrder}, 
+		   Is_Store_First_Order = #{isStoreFirstOrder}, 
+		   Is_Parent_M_Store_First_Order = #{isParentMstoreFirstOrder}, 
+		   Is_M_Store_First_Order_Cus = #{isMstoreFirstOrderCus}, 
+		   Is_M_Store_First_Order = #{isMstoreFirstOrder}, 
+		   Order_From_Store_Id = #{orderFromStoreId}, 
+		   Order_From_M_Store_User_Id = #{orderFromMstoreUserId}
+	   WHERE 
+		   Order_Id = #{orderId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_origin_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderOriginInfo" parameterType="Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_origin_info 
+	     WHERE 
+			  order_Id=#{orderId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderOriginInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from order_origin_info
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderOriginInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from order_origin_info
+	    where 1=1
+		<if test="orderId != null"> and Order_Id = #{orderId}</if>
+		<if test="originSystemCd != null"> and Origin_System_Cd = #{originSystemCd}</if>
+		<if test="originPlatformCd != null"> and Origin_Platform_Cd = #{originPlatformCd}</if>
+		<if test="isCustomerFirstOrder != null"> and Is_Customer_First_Order = #{isCustomerFirstOrder}</if>
+		<if test="isStoreFirstOrder != null"> and Is_Store_First_Order = #{isStoreFirstOrder}</if>
+		<if test="isParentMstoreFirstOrder != null"> and Is_Parent_M_Store_First_Order = #{isParentMstoreFirstOrder}</if>
+		<if test="isMstoreFirstOrderCus != null"> and Is_M_Store_First_Order_Cus = #{isMstoreFirstOrderCus}</if>
+		<if test="isMstoreFirstOrder != null"> and Is_M_Store_First_Order = #{isMstoreFirstOrder}</if>
+		<if test="orderFromStoreId != null"> and Order_From_Store_Id = #{orderFromStoreId}</if>
+		<if test="orderFromMstoreTel != null"> and Order_From_M_Store_User_Id = #{orderFromMstoreUserId}</if>
+	</select>
+	
+	<!-- 根据条件查询用户对应的来源数据条数 -->
+	<select id="getCount" resultType="int" parameterType="java.util.HashMap">  
+	    select 
+			count(*) 
+	    from order_origin_info o 
+	    left join order_header o1 on o.Order_Id = o1.Order_Id  
+	    where o1.User_Id = #{userId}
+		<if test="isCustomerFirstOrder != null"> and o.Is_Customer_First_Order = #{isCustomerFirstOrder}</if>
+		<if test="isStoreFirstOrder != null"> and o.Is_Store_First_Order = #{isStoreFirstOrder}</if>
+		<if test="isParentMstoreFirstOrder != null"> and o.Is_Parent_M_Store_First_Order = #{isParentMstoreFirstOrder}</if>
+		<if test="isMstoreFirstOrderCus != null"> and o.Is_M_Store_First_Order_Cus = #{isMstoreFirstOrderCus}</if>
+		<if test="isMstoreFirstOrder != null"> and o.Is_M_Store_First_Order = #{isMstoreFirstOrder}</if>
+		<if test="orderFromStoreId != null"> and o.Order_From_Store_Id = #{orderFromStoreId}</if>
+		<if test="orderFromMstoreUserId != null"> and o.Order_From_M_Store_User_Id = #{orderFromMstoreUserId}</if>
+	</select>
+
+</mapper>

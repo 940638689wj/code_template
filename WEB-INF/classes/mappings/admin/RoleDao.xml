@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.admin.dao.RoleDao">
+    <sql id="allColumns">
+        a.Role_ID,
+        a.Role_desc,
+        a.Is_Super_Role,
+        a.Create_Time,
+        a.Last_Update_Time,
+        a.Role_Status_Cd
+    </sql>
+
+    <!-- 查询全部 -->
+    <select id="findAllValidList" resultType="Role">
+        SELECT
+        <include refid="allColumns"/>
+        FROM role a
+        WHERE a.Is_Super_Role = '0' AND a.Role_Status_Cd > 100
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="findList" resultType="Role" parameterType="Role">
+        SELECT
+        <include refid="allColumns"/>
+        FROM role a
+        WHERE a.Is_Super_Role = '0' AND a.Role_Status_Cd >= 100
+        <if test="roleDesc != null and roleDesc != ''">
+            AND a.Role_desc LIKE CONCAT('%',#{roleDesc},'%')
+        </if>
+        ORDER BY a.Create_Time DESC
+    </select>
+
+    <!-- 插入 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="roleId">
+        INSERT INTO role(
+            Role_desc,
+            Is_Super_Role,
+            Create_Time,
+            Last_Update_Time,
+            Role_Status_Cd
+        ) VALUES (
+            #{roleDesc},
+            '0',
+            #{createTime},
+            #{lastUpdateTime},
+            #{roleStatusCd}
+        )
+    </insert>
+
+    <!-- 更新 -->
+    <update id="update">
+        UPDATE role SET
+        Role_desc = #{roleDesc},
+        Last_Update_Time = #{lastUpdateTime},
+        Role_Status_Cd = #{roleStatusCd}
+        WHERE Role_ID = #{roleId}
+    </update>
+
+    <!-- 根据id获得 -->
+    <select id="get" resultType="Role" parameterType="Role">
+        SELECT
+        <include refid="allColumns"/>
+        FROM role a
+        WHERE a.Role_ID = #{roleId}
+    </select>
+
+    <!-- 获取 角色 by adminUserId -->
+    <select id="findRolesByAdminUserId" resultType="Role" parameterType="java.lang.Long">
+        SELECT
+        <include refid="allColumns"/>
+        FROM role a LEFT JOIN admin_user_role_xref p1 ON a.Role_ID = p1.Role_ID
+        WHERE p1.Admin_User_ID = #{0} AND a.Role_Status_Cd >= 101
+    </select>
+
+    <!-- 获取 resourceId -->
+    <select id="findResourceIdListByRoleId" resultType="java.lang.Long" parameterType="java.lang.Long">
+        SELECT
+          a.Resource_ID
+        FROM role_authorization a LEFT JOIN role p1 ON p1.Role_ID = a.Role_ID
+        WHERE p1.Role_ID = #{0}
+    </select>
+
+    <!-- 获取 resourceId -->
+    <select id="findValidResourceIdListByRoleId" resultType="java.lang.Long" parameterType="java.lang.Long">
+        SELECT
+        a.Resource_ID
+        FROM role_authorization a LEFT JOIN role p1 ON p1.Role_ID = a.Role_ID
+        WHERE p1.Role_ID = #{0} AND p1.Role_Status_Cd >= 101
+    </select>
+
+    <!-- 删除role和 resource关联表数据 -->
+    <delete id="deleteRoleResourceInfoXref" parameterType="java.lang.Long">
+        DELETE FROM role_authorization WHERE Role_ID = #{0}
+    </delete>
+
+    <!-- 插入role和 resource关联表数据 -->
+    <insert id="insertRoleResourceInfoXref">
+        INSERT INTO role_authorization(Role_ID, Resource_ID, Operate_Time, Operator_Admin_user)
+        <foreach collection="resourceIdList" item="resourceId" separator=" union all ">
+            SELECT #{roleId}, #{resourceId}, #{operateTime}, #{operatorAdminUserId} FROM dual
+        </foreach>
+    </insert>
+
+    <!-- 删除角色 -->
+    <delete id="delete">
+        DELETE FROM role WHERE Role_ID = #{roleId}
+    </delete>
+
+    <!-- 逻辑删除 role -->
+    <update id="deleteRole">
+        UPDATE role SET
+        Role_Status_Cd = -1
+        WHERE Role_ID = #{roleId}
+    </update>
+
+    <!-- 根据角色描述获取没有被删除的role -->
+    <select id="findRoleByMap" resultType="Role" parameterType="java.util.Map">
+        SELECT
+        <include refid="allColumns"/>
+        FROM role a
+        where 1=1
+        <if test="roleDesc != null and roleDesc != ''">
+            and a.Role_desc = #{roleDesc}
+        </if>
+        <if test="roleStatusCd != null and roleStatusCd != ''">
+            and a.Role_Status_Cd != #{roleStatusCd}
+        </if>
+    </select>
+
+
+</mapper>

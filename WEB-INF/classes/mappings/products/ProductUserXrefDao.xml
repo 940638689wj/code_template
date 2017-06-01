@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductUserXrefDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Product_Id, User_Id, Create_Time, Last_Update_Time, Display_Id,Product_Status_Cd
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductUserXref" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO product_user_xref (
+	         Product_Id,User_Id,Create_Time, Last_Update_Time, Display_Id,Product_Status_Cd
+	    ) VALUES (
+	         #{productId},#{userId},#{createTime}, #{lastUpdateTime}, #{displayId},#{productStatusCd}      
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductUserXref">
+	   UPDATE product_user_xref SET
+		   Last_Update_Time = #{lastUpdateTime}, 
+		   Display_Id = #{displayId}
+	   WHERE 
+		   Product_Id = #{productId}
+		   and
+		   User_Id = #{userId}
+	</update>
+	
+		<!-- 修改 -->
+	<update id="offProduct" parameterType="ProductUserXref">
+	   UPDATE product_user_xref SET
+		  Product_Status_Cd = #{productStatusCd}
+	   WHERE 
+		   Product_Id = #{productId}
+		   and
+		   User_Id = #{userId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_user_xref where Product_Id = #{productId} and  User_Id = #{userId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="getProductUserXref" resultType="ProductUserXref" >  
+		SELECT
+		<include refid="allColumns" />
+	     FROM product_user_xref 
+	     WHERE 
+		   Product_Id = #{productId}
+		   and
+		   User_Id = #{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductUserXref">  
+	    select 
+		<include refid="allColumns" />
+	    from product_user_xref
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="ProductUserXref" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from product_user_xref a
+	    where 1=1
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="createTime != null"> and a.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and a.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="displayId != null"> and a.Display_Id = #{displayId}</if>
+	</select>
+	
+	<!-- 返回当前微店主最大displayid+1，返回值为null返回1 -->
+	<select id="getMaxDisplayIdByUserId" parameterType="Integer" resultType="int">
+		select (IFNULL(max(Display_Id),0)+1) from product_user_xref where User_Id = #{userId}
+	</select>
+	
+	<select id="findProductIdsToBeChosen" resultType="int" >
+	SELECT Product_Id FROM product WHERE Product_Id IN(
+		SELECT Product_Id FROM product_setting 
+		WHERE  
+		Product_Id NOT IN (SELECT Product_Id FROM product_user_xref WHERE User_Id = #{userId} AND Product_Status_Cd = 1) 
+		AND 
+		Is_show_M_Store_Home_Page = 0 
+		AND 
+		find_in_set('5', Shelve_Channel_Cds)
+		) 
+		<if test="condition != null and condition != '' ">
+			AND ( 
+				Product_Name LIKE CONCAT('%','${condition}','%' )
+				)
+		</if>
+	</select>
+	
+	<!-- 查询微店中符合搜索条件的上架商品 -->
+	<select id="findProductsByKeyword" resultType="cn.yr.chile.products.dto.ProductMstoreXrefDTO" parameterType="java.util.HashMap">
+		SELECT pux.User_Id, pux.Display_Id, ppi.Pic_Url, 
+			p.Product_Id, p.Product_Name, p.Product_Status_Cd, p.Category_Id, p.Brand_Id,
+			p.Product_Type_Cd, p.Basic_Unit_Type_Cd, p.Sale_Unit_Type_Cd, p.Bar_Code,
+			p.Default_Price, p.Tag_Price
+		FROM product_user_xref pux LEFT JOIN product p ON (p.Product_Id=pux.Product_Id AND p.Product_Status_Cd=1 AND pux.Product_Status_Cd=1)
+			 LEFT JOIN product_pic_info ppi ON (p.Product_Id=ppi.Product_Id)
+		WHERE pux.User_Id=#{userId} AND p.Product_Name LIKE CONCAT('%',#{q},'%') ORDER BY  p.Tag_Price, p.Default_Price ASC
+	</select>
+</mapper>

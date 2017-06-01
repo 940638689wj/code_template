@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd">
+    
+    <description>Spring MVC Configuration</description>
+
+    <context:annotation-config/>
+
+    <context:property-placeholder ignore-unresolvable="true" location="classpath*:system.properties" file-encoding="utf-8"/>
+
+    <!-- 使用Annotation自动注册Bean -->
+    <context:component-scan base-package="cn.yr" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- This resolver locates the "blStaticAssetView" ViewResolver using its bean name. -->
+    <bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+        <property name="order" value="1"/>
+    </bean>
+    <bean id="blStaticAssetView" class="cn.yr.chile.common.controller.StaticAssetView"/>
+    <bean id="blStaticAssetViewController" class="cn.yr.chile.common.controller.StaticAssetViewController">
+        <property name="staticResourceUrlPrefix" value="cmsstatic"/>
+        <property name="viewResolverName" value="blStaticAssetView"/>
+    </bean>
+    <bean id="blStaticAssetURLHandlerMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="order" value="-1"/>
+        <property name="alwaysUseFullPath" value="true"></property>
+        <property name="mappings">
+            <map>
+                <entry key="/**/cmsstatic/**" value-ref="blStaticAssetViewController"/>
+                <entry key="/cmsstatic/**" value-ref="blStaticAssetViewController"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean id="mvcViewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
+    </bean>
+
+    <!-- REST中根据URL后缀自动判定Content-Type及相应的View -->
+    <bean id="contentNegotiationManager" class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+        <property name="mediaTypes" >
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="json" value="application/json"/>
+            </map>
+        </property>
+        <property name="ignoreAcceptHeader" value="true"/>
+        <property name="favorPathExtension" value="true"/>
+    </bean>
+
+    <mvc:annotation-driven content-negotiation-manager="contentNegotiationManager">
+        <mvc:message-converters register-defaults="true">
+            <!-- 将StringHttpMessageConverter的默认编码设为UTF-8 -->
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <constructor-arg value="UTF-8" />
+            </bean>
+            <!-- 将Jackson2HttpMessageConverter的默认格式化输出为true -->
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="prettyPrint" value="true"/>
+                <property name="objectMapper">
+                    <bean class="cn.yr.chile.common.utils.json.JsonMapper"></bean>
+                </property>
+            </bean>
+            <!-- 使用XML格式输出数据 -->
+            <bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">
+                <constructor-arg>
+                    <bean class="org.springframework.oxm.xstream.XStreamMarshaller">
+                        <property name="streamDriver">
+                            <bean class="com.thoughtworks.xstream.io.xml.StaxDriver"/>
+                        </property>
+                    </bean>
+                </constructor-arg>
+                <property name="supportedMediaTypes" value="application/xml"></property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!-- 拦截器配置(过滤器) -->
+    
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**" />
+            <bean class="cn.yr.chile.common.interceptor.InitializeInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/m/**" />
+            <bean class="cn.yr.chile.common.interceptor.UserInitializeInterceptor" />
+        </mvc:interceptor>
+         <mvc:interceptor>
+            <mvc:mapping path="/m/shopper/**" />
+            <bean class="cn.yr.chile.common.interceptor.ShopperInitializeInterceptor" />
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/admin/**" />
+            <bean class="cn.yr.chile.common.interceptor.AdminInitializeInterceptor" />
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!--html视图-->
+    <bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="suffix" value=".html" />
+        <property name="contentType" value="text/html;charset=utf-8" />
+        <property name="order" value="1" />
+    </bean>
+
+    <!-- ####################Freemarker视图#################### -->
+    <bean class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="cache" value="false" />
+        <property name="suffix" value=".ftl" />
+        <property name="exposeSpringMacroHelpers" value="true" />
+        <property name="exposeRequestAttributes" value="true" />
+        <property name="exposeSessionAttributes" value="true" />
+        <property name="requestContextAttribute" value="request" />
+        <property name="contentType" value="text/html;charset=utf-8" />
+        <property name="order" value="0" />
+    </bean>
+    <bean id="freemarkerConfig" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+        <property name="templateLoaderPath" value="/WEB-INF/views/" />
+        <property name="defaultEncoding" value="utf-8" />
+        <property name="freemarkerSettings">
+            <props>
+                <prop key="template_update_delay">0</prop>
+                <prop key="default_encoding">utf-8</prop>
+                <prop key="locale">zh_CN</prop>
+                <prop key="datetime_format">yyyy-MM-dd HH:mm:ss</prop>
+                <prop key="number_format">#################.#################</prop>
+            </props>
+        </property>
+        <property name="freemarkerVariables">  
+            <map>   
+                <entry key="DICT" value-ref="dictTemplate"></entry>
+                <entry key="AREA_TEMPLATE" value-ref="areaTemplate"></entry>
+                <entry key="CATEGORY_TEMPLATE" value-ref="categoryTemplate"></entry>
+            </map>
+        </property>  
+    </bean>
+	<bean id="dictTemplate" class="cn.yr.chile.common.freemarker.DictTemplate"/>
+	<bean id="areaTemplate" class="cn.yr.chile.common.freemarker.AreaTemplate"/>
+	<bean id="categoryTemplate" class="cn.yr.chile.common.freemarker.CategoryTemplate"/>
+
+	<!-- 上传文件拦截，设置最大上传文件大小   10M=10*1024*1024(B)=10485760 bytes -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- 10M=10*1024*1024(B)=10485760 bytes -->
+        <property name="maxUploadSize" value="16777216" />
+	</bean>
+
+    <mvc:resources order="-10" location="/static/" mapping="/static/**"/>
+    <mvc:resources order="-11" location="/mp/" mapping="/mp/**"/>
+    <mvc:resources order="-10" location="/favicon.ico" mapping="favicon.ico" />
+    <mvc:resources order="-10" location="/robots.txt" mapping="robots.txt" />
+    <mvc:resources order="-10" location="/fonts/" mapping="/fonts/**" />
+    <mvc:resources order="-10" location=".txt" mapping="*.txt" />
+    <mvc:resources order="-10" location="/html/" mapping="/html/**" />
+    <mvc:resources order="-10" location="/HD/" mapping="/HD/**" />
+    <mvc:resources order="-10" location="/hd/" mapping="/hd/**" />
+    <mvc:resources order="-10" location="/userfiles/" mapping="/userfiles/**" />
+
+</beans>

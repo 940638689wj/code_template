@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.CustomerBillDao">
+
+
+    <!-- 查询列表 -->
+    <select id="findAllCustomerBill" parameterType="map" resultType="cn.yr.chile.bill.dto.CustomerBillDTO">
+    	SELECT
+				tt.Order_Number AS orderNumber,
+				tt.phone  AS phone,
+				e.Product_Point_Value*tt.Rebate_Product_Point_Percent AS rebateProductPoint,
+				tt.Rebate_Product_Point_Percent  AS rebateProductPointPercent,
+				tt.user_level_name AS userLevelName,
+				e.Product_Name AS productName,
+				e.Quantity AS quantity,
+				(e.Quantity * e.Sale_Price) AS totalPrice,
+				f.Bar_Code AS barCode
+			FROM
+				(
+					SELECT
+						t.phone,
+						t.Create_Time,
+						t.Order_Number,
+						t.Rebate_Product_Point_Percent,
+						t.user_level_name,
+						d.Order_Id
+					FROM
+						(
+							SELECT
+								a.Rebate_Product_Point_Percent,
+								a.Create_Time,
+								a.Order_Number ,
+								b.Phone,
+								c.user_level_name 
+							FROM
+								user_distribution_detail a
+							LEFT JOIN USER b ON a.User_Id = b.User_Id
+							LEFT JOIN user_level c ON b.User_Level_Id = c.User_level_Id
+							LEFT JOIN system_code g ON g.Code_Type_Cd = 'user_level'
+							AND g.Code_Id = c.Rank_Cd
+						) t
+					LEFT JOIN order_header d ON t.Order_Number = d.Order_Number
+					WHERE 1=1
+						<choose>
+							<when test="status1!=null and status1!='' and status2!=null and status2!=''">
+								AND d.Order_Status_Cd in (#{status1},#{status2})
+							</when>
+							<when test="status1!=null and status1 !=''">
+								AND d.Order_Status_Cd =#{status1}
+							</when>
+						</choose>
+				) tt
+			LEFT JOIN order_item e ON e.Order_Id = tt.Order_Id
+			LEFT JOIN product f ON f.Product_Id = e.Product_Id
+			LEFT JOIN order_extend h ON tt.order_id = h.order_id
+			WHERE
+				1 = 1
+							<if test="beginTime != null and beginTime != ''">
+			            AND DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> tt.create_time
+			        	</if>
+			        	<if test="endTime != null and endTime != ''">
+			            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> tt.create_time
+			        	</if>
+			        	<if test="condition != null and condition != ''">
+			        	and tt.phone like CONCAT('%',#{condition},'%')
+			        	</if>
+			        	<if test="userType != null and userType != ''">
+			        	and tt.user_level_name=#{userType}
+			        	</if>
+			        	<if test="originPlatformCd !=null and originPlatformCd !=''">
+			            AND h.Origin_Platform_Cd=#{originPlatformCd}
+			        	</if>  
+			ORDER BY
+				tt.Create_Time
+    </select>
+    
+    <!-- 统计结果 -->
+    <resultMap type="java.util.HashMap" id="totalMap">
+    	<result property="orderTotal" column="orderTotal"/>
+    	<result property="productTotal" column="productTotal"/>
+    	<result property="totalAmt" column="totalAmt"/>
+    	<result property="totalRebate" column="totalRebate"/>
+    </resultMap>
+    <select id="getCustomerBillTotal" parameterType="map" resultMap="totalMap">
+    	SELECT  count(*) as orderTotal, 
+    		sum(ttt.quantity) as productTotal,
+    		sum(ttt.totalPrice) as totalAmt,
+    		sum(ttt.rebateProductPoint) as  totalRebate FROM(SELECT
+				tt.Order_Number AS orderNumber,
+				tt.phone  AS phone,
+				e.Product_Point_Value*tt.Rebate_Product_Point_Percent AS rebateProductPoint,
+				tt.Rebate_Product_Point_Percent  AS rebateProductPointPercent,
+				tt.user_level_name AS userLevelName,
+				e.Product_Name AS productName,
+				e.Quantity AS quantity,
+				(e.Quantity * e.Sale_Price) AS totalPrice,
+				f.Bar_Code AS barCode
+			FROM
+				(
+					SELECT
+						t.phone,
+						t.Create_Time,
+						t.Order_Number,
+						t.Rebate_Product_Point_Percent,
+						t.user_level_name,
+						d.Order_Id
+					FROM
+						(
+							SELECT
+								a.Rebate_Product_Point_Percent,
+								a.Create_Time,
+								a.Order_Number ,
+								b.Phone,
+								c.user_level_name 
+							FROM
+								user_distribution_detail a
+							LEFT JOIN USER b ON a.User_Id = b.User_Id
+							LEFT JOIN user_level c ON b.User_Level_Id = c.User_level_Id
+							LEFT JOIN system_code g ON g.Code_Type_Cd = 'user_level'
+							AND g.Code_Id = c.Rank_Cd
+						) t
+					LEFT JOIN order_header d ON t.Order_Number = d.Order_Number
+					WHERE 1=1
+							<choose>
+							<when test="status1!=null and status1!='' and status2!=null and status2!=''">
+								AND d.Order_Status_Cd in (#{status1},#{status2})
+							</when>
+							<when test="status1!=null and status1 !=''">
+								AND d.Order_Status_Cd =#{status1}
+							</when>
+						</choose>
+				) tt
+			LEFT JOIN order_item e ON e.Order_Id = tt.Order_Id
+			LEFT JOIN product f ON f.Product_Id = e.Product_Id
+			LEFT JOIN order_extend h ON tt.order_id = h.order_id
+			WHERE
+				1 = 1
+				 <if test="beginTime != null and beginTime != ''">
+			            AND DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> tt.create_time
+			        	</if>
+			        	<if test="endTime != null and endTime != ''">
+			            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> tt.create_time
+			        	</if>
+			        	<if test="condition != null and condition != ''">
+			        	and tt.phone like CONCAT('%',#{condition},'%')
+			        	</if>
+			        	<if test="userType != null and userType != ''">
+			        	and tt.user_level_name=#{userType}
+			        	</if>
+			        	<if test="originPlatformCd !=null and originPlatformCd !=''">
+			            AND h.Origin_Platform_Cd=#{originPlatformCd}
+			        	</if>  
+			ORDER BY
+				tt.Create_Time)ttt	
+    </select>
+    
+   
+</mapper>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserCollectDetailDao">
+	<!--<resultMap id="userCollectDetailMap" type="UserCollectDetail">
+		<result property="userId" column="User_Id" />
+		<result property="collectId" column="Collect_Id" />
+		<result property="collectTypeCd" column="Collect_Type_Cd" />
+		<result property="collectTime" column="Collect_Time" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        User_Id, Collect_Id, Collect_Type_Cd, Collect_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserCollectDetail">
+	    INSERT INTO user_collect_detail (
+	         User_Id, Collect_Id, Collect_Type_Cd, Collect_Time
+	    ) VALUES (
+	    	#{userId} ,
+	    	#{collectId} ,
+	    	#{collectTypeCd} ,
+	        #{collectTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserCollectDetail">
+	   UPDATE user_collect_detail SET
+		   Collect_Time = #{collectTime}
+	   WHERE 
+		   User_Id = #{userId}, 
+		   Collect_Id = #{collectId}, 
+		   Collect_Type_Cd = #{collectTypeCd}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="java.util.HashMap">
+		DELETE FROM user_collect_detail where (User_Id = #{userId} 
+		and Collect_Id=#{collectId} and Collect_Type_Cd=#{collectTypeCd})
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserCollectDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_collect_detail 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserCollectDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_collect_detail
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserCollectDetail" parameterType="java.util.HashMap">  
+	    select 
+		*
+	    from user_collect_detail a
+	    LEFT JOIN product p on p.product_id=a.collect_id
+		LEFT JOIN product_pic_info p1 on p1.product_id=a.collect_id
+	    where 1=1
+	    and p1.Is_Default_Pic=1
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="collectId != null"> and a.Collect_Id = #{collectId}</if>
+		<if test="collectTypeCd != null"> and a.Collect_Type_Cd = #{collectTypeCd}</if>
+		<if test="collectTime != null"> and a.Collect_Time = #{collectTime}</if>
+		<if test="order_col != null"> order by ${order_col}</if>
+		<if test="start != null and pageSize !=null"> LIMIT #{start},#{pageSize}</if>
+	</select>
+	
+	<!-- 获取pageCount -->
+	<select id="getPageCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+	SELECT COUNT(*)
+		from user_collect_detail a
+	    where 1=1
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="collectTypeCd != null"> and a.Collect_Type_Cd = #{collectTypeCd}</if>
+	</select>		
+</mapper>

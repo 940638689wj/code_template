@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.User_Id, a.M_Store_Name, a.Region_Id, a.Branch_Id, a.Office_Id, a.M_Store_Level_Id, a.Audit_Time, a.Logo_Url, a.Status_Cd, (case when a.Commission_Rate>0 then a.Commission_Rate*100 else 0 end) Commission_Rate, a.Commission_Rate_StartTime, a.Commission_Rate_EndTime
+	</sql>
+	<!-- User表 -->
+	<sql id="userColumns">
+        b.User_Id, 
+        b.User_Name, 
+        b.Phone, 
+        b.Sex_Cd, 
+        b.Head_Portrait_Url, 
+        b.Birthday, 
+        b.Identity_Id, 
+        b.Email_Address, 
+        b.Province_Id, 
+        b.City_Id, 
+        b.County_Id, 
+        b.Street, 
+        b.Status_Cd, 
+        b.Register_Platform_Cd, 
+        b.M_Store_Status_Cd, 
+        b.M_Store_Apply_Time, 
+        b.Source_Store_Id, 
+        b.Parent_User_Id, 
+        b.Pay_Password, 
+        b.Register_Time, 
+        b.User_Level_Id, 
+        b.User_Type_Id, 
+        b.Qr_Code_Param, 
+        b.Last_Login_Time, 
+        b.Last_Login_IP, 
+        b.Last_Update_Time, 
+        b.openid, 
+        b.Create_Time 
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstore" useGeneratedKeys="true" keyProperty="User_Id">
+	    INSERT INTO user_m_store (
+	        User_Id,M_Store_Name, Region_Id, Branch_Id, Office_Id, M_Store_Level_Id, Audit_Time, Logo_Url, Status_Cd, Commission_Rate, Commission_Rate_StartTime, Commission_Rate_EndTime
+	    ) VALUES (
+	        #{userId},#{mstoreName}, #{regionId}, #{branchId}, #{officeId}, #{mstoreLevelId}, #{auditTime}, #{logoUrl}, #{statusCd}, #{commissionRate}, #{commissionRateStartTime}, #{commissionRateEndTime}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstore">
+	   UPDATE user_m_store SET
+		   M_Store_Name = #{mstoreName}, 
+		   Region_Id = #{regionId}, 
+		   Branch_Id = #{branchId}, 
+		   Office_Id = #{officeId}, 
+		   M_Store_Level_Id = #{mstoreLevelId}, 
+		   Audit_Time = #{auditTime}, 
+		   Logo_Url = #{logoUrl}, 
+		   Status_Cd = #{statusCd}, 
+		   <if test="commissionRate !=null and commissionRate != ''">
+		    Commission_Rate = #{commissionRate}, 
+		   </if>
+		   Commission_Rate_StartTime = #{commissionRateStartTime}, 
+		   Commission_Rate_EndTime = #{commissionRateEndTime}
+	   WHERE 
+		   User_Id = #{userId}
+	</update>
+	
+	<!-- 更新微店logo -->
+	<update id="updateLogo">
+		 UPDATE user_m_store SET
+		   Logo_Url = #{logoUrl} 
+	   WHERE 
+		   User_Id = #{userId}
+	</update>
+	
+		<!-- 更新微店名称 -->
+	<update id="updateMStoreName">
+		 UPDATE user_m_store SET
+		   M_Store_Name = #{mStoreName} 
+	   WHERE 
+		   User_Id = #{userId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store where User_Id = #{userId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstore" parameterType="Integer">  
+		SELECT
+		  a.User_Id, a.M_Store_Name, a.Region_Id, a.Branch_Id, a.Office_Id, a.M_Store_Level_Id, a.Audit_Time, a.Logo_Url, a.Status_Cd, a.Commission_Rate, a.Commission_Rate_StartTime, a.Commission_Rate_EndTime
+	     FROM user_m_store a
+	     WHERE 
+			  a.User_Id=#{userId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstore">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store a
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="UserMstore" parameterType="UserMstore">  
+	    select <include refid="allColumns" /> from user_m_store a 
+		left join user b on a.User_Id=b.User_Id 
+	    <where>
+		<if test="userId != null and userId != ''"> and a.User_Id = #{userId}</if>
+		<if test="mstoreName != null and mstoreName != ''"> and a.M_Store_Name = #{mstoreName}</if>
+		<if test="regionId != null and regionId != ''"> and a.Region_Id = #{regionId}</if>
+		<if test="branchId != null and branchId != ''"> and a.Branch_Id = #{branchId}</if>
+		<if test="officeId != null and officeId != ''"> and a.Office_Id = #{officeId}</if>
+		<if test="mstoreLevelId != null and mstoreLevelId != ''"> and a.M_Store_Level_Id = #{mstoreLevelId}</if>
+		<if test="statusCd != null"> and a.Status_Cd = #{statusCd}</if>
+		<if test="phone != null and phone != ''"> and b.Phone = #{phone}</if>
+		<if test="parentUserId != null and parentUserId != ''"> and b.Parent_User_Id = #{parentUserId}</if>
+		</where>
+	</select>
+	
+	<!-- 根据条件查询微店主信息列表 -->
+	<select id="findMstoreListByCondition"  resultType="cn.yr.chile.user.dto.MstoreDTO" parameterType="cn.yr.chile.user.dto.MstoreDTO">
+	select 
+	a.User_Id,
+	a.M_Store_Name,
+	a.Region_Id,
+	a.Branch_Id,
+	a.Office_Id,
+	a.M_Store_Level_Id,
+	a.Audit_Time,
+	c.Sale_Total_Amt as Total_Sales_Amt,
+	a.Logo_Url,
+	a.Status_Cd,
+	(case when a.Commission_Rate>0 then a.Commission_Rate*100 else 0 end)Commission_Rate ,
+	a.Commission_Rate_StartTime,
+	a.Commission_Rate_EndTime,
+	b.Phone,
+	b.User_Name,
+	b.Head_Portrait_Url,
+	b.Identity_Id,
+	b.Parent_User_Id,
+	b.M_Store_Apply_Time,
+	b.Province_Id,
+	b.City_Id,
+	b.County_Id,
+	b.Street,
+	c.Commission_Total_Amt,
+	c.First_Order_Reward_Total_Amt,
+	c.Rebate_Total_Amt,
+	(select Org_Full_Name from organization where Org_Id=a.Region_Id) Region_Name,
+	(select Org_Full_Name from organization where Org_Id=a.Branch_Id) Branch_Name,
+	(select Org_Full_Name from organization where Org_Id=a.Office_Id) Office_Name,
+	(select M_Store_Level_Name from user_m_store_level where M_Store_Level_Id=a.M_Store_Level_Id) M_Store_Level_Name,
+	(case when a.Status_Cd=1 then '启用' else '禁用' end ) M_Store_Status_Text,
+	(select phone from user where User_Id=b.Parent_User_Id) Parent_User_Phone,
+	(case (select M_Store_Status_Cd from user where User_Id=b.Parent_User_Id)
+	 when 3 then '是' else '否' end) Parent_Is_M_Store,
+	(select Area_Name from area where Id=b.Province_Id) Province_Name,
+	(select Area_Name from area where Id=b.City_Id) City_Name,
+	(select Area_Name from area where Id=b.County_Id) County_Name 
+	from user_m_store a 
+	left join user b on a.User_Id=b.User_Id 
+	left join user_m_store_sales_calc c on a.User_Id=c.User_Id 
+	<where>
+	<if test="userId != null and userId != ''"> and a.User_Id = #{userId} </if>
+	<if test="mstoreName != null and mstoreName != ''"> and a.M_Store_Name LIKE CONCAT('%',#{mstoreName},'%') </if>
+	<if test="regionId != null and regionId != ''"> and a.Region_Id = #{regionId} </if>
+	<if test="branchId != null and branchId != ''"> and a.Branch_Id = #{branchId} </if>
+	<if test="officeId != null and officeId != ''"> and a.Office_Id = #{officeId} </if>
+	<if test="mstoreLevelId != null and mstoreLevelId != ''"> and a.M_Store_Level_Id = #{mstoreLevelId} </if>
+	<if test="statusCd != null"> and a.Status_Cd = #{statusCd}</if>
+	<if test="phone != null and phone != ''"> and b.Phone LIKE CONCAT('%',#{phone},'%') </if>
+	<if test="parentUserId != null and parentUserId != ''"> and b.Parent_User_Id = #{parentUserId} </if>
+	</where> 
+	order by b.M_Store_Apply_Time DESC
+	</select>
+	
+	<!-- 查询微店订单 -->
+	<select id="findMstoreOrderList" resultType="cn.yr.chile.user.dto.MstoreOrderDTO" parameterType="cn.yr.chile.user.dto.MstoreOrderDTO">
+		select 
+		a.Order_Id,
+		c.Order_Number,
+		c.Order_Status_Cd, 
+		(select Code_Cn_Name from system_code where Code_Type_Cd='ORDER_STATUS_CD' and Code_Id=c.Order_Status_Cd)Order_Status_Text,
+		b.User_Id,
+		b.M_Store_Name,
+		c.Order_Pay_Status_Cd,
+		c.Create_Time,
+		c.Order_Total_Amt,
+		c.Order_Discount_Amt ,
+		d.Commission_Amt,
+		e.Rebate_Amt,
+		f.Reward_Amt,
+		g.phone,
+		(select t.phone from user t where t.User_Id=g.Parent_User_Id) parentPhone,
+		(case (select M_Store_Status_Cd from user where User_Id=g.Parent_User_Id)
+		 when 3 then '是' else '否' end) Parent_Is_M_Store,
+		b.Region_Id,
+		(select t.Org_Full_Name from organization t where t.Org_Id=b.Region_Id) regionName,
+		b.Branch_Id,
+		(select t.Org_Full_Name from organization t where t.Org_Id=b.Branch_Id) branchName,
+		b.Office_Id,
+		(select t.Org_Full_Name from organization t where t.Org_Id=b.Office_Id) officeName    
+		from order_origin_info a 
+		left join user_m_store b on a.Order_From_M_Store_User_Id=b.User_Id 
+		left join order_header c on a.Order_Id=c.Order_Id 
+		left join user_m_store_commission_detail d on a.Order_From_M_Store_User_Id=d.User_Id and a.Order_Id=(select Order_Id from order_header where Order_Number=d.Order_Number)
+		left join user_distribute_detail e on a.Order_From_M_Store_User_Id=e.User_Id and d.Order_Number=e.Order_Number 
+		left join user_m_store_reward_detail f on a.Order_From_M_Store_User_Id=f.User_Id and a.Order_Id=(select Order_Id from order_header where Order_Number=f.Order_Number)
+		left join user g on a.Order_From_M_Store_User_Id=g.User_Id 
+		<where>
+		a.Order_From_M_Store_User_Id is not null and b.User_Id is not null 
+		<if test="null!=phone and ''!=phone"> and g.phone LIKE CONCAT('%',#{phone},'%') </if>
+		<if test="null!=mstoreName and ''!=mstoreName"> and b.M_Store_Name LIKE CONCAT('%',#{mstoreName},'%')</if>
+		<if test="null!=regionId and ''!=regionId"> and b.Region_Id=#{regionId} </if>
+		<if test="null!=branchId and ''!=branchId"> and b.Branch_Id=#{branchId} </if>
+		<if test="null!=officeId and ''!=officeId"> and b.Office_Id=#{officeId} </if>
+		<if test="null != startDate and '' != startDate"> and DATE_FORMAT(c.Create_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+		<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(c.Create_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+		</where> 
+		order by c.Create_Time DESC
+	</select>
+	
+	<select id="findChildrenSalesRanking" parameterType="java.lang.Integer" resultType="cn.yr.chile.user.dto.MstoreRankingDTO">
+		select a.User_Id,a.User_Name,a.Head_Portrait_Url,c.Ranking,
+		d.Sale_Total_Amt as Total_Sales_Amt 
+		from user a 
+		left join user_m_store b on a.User_Id=b.User_Id 
+		left join user_m_store_ranking c on a.User_Id=c.User_Id 
+		left join user_m_store_sales_calc d on a.User_Id=d.User_Id 
+		where a.Parent_User_Id =#{userId} and a.M_Store_Status_Cd=3 
+		order by d.Sale_Total_Amt DESC
+	</select>
+
+</mapper>

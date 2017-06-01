@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PreSaleOrderInfoDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        a.Order_ID,
+        a.Is_Pay_Completed,
+        a.Promotion_Id,
+        a.Create_Time,
+        a.Last_Update_Time,
+        a.Refund_Amt_Status_Cd
+    </sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="PreSaleOrderInfo">
+        INSERT INTO pre_sale_order_info(
+        Order_ID,
+        Is_Pay_Completed,
+        Promotion_Id,
+        Create_Time,
+        Last_Update_Time,
+        Refund_Amt_Status_Cd
+        ) VALUES (
+        #{orderId},
+        #{isPayCompleted},
+        #{promotionId},
+        #{createTime},
+        #{lastUpdateTime},
+        #{refundAmtStatusCd}
+        )
+    </insert>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+        DELETE FROM pre_sale_order_info
+        WHERE Order_ID = #{orderId}
+    </delete>
+
+    <!-- 更新 -->
+    <update id="update" parameterType="PreSaleOrderInfo">
+        UPDATE pre_sale_order_info SET
+        <if test="isPayCompleted != null">
+            Is_Pay_Completed = #{isPayCompleted},
+        </if>
+        <if test="promotionId != null">
+            Promotion_Id = #{promotionId},
+        </if>
+        <if test="createTime != null">
+            Create_Time = #{createTime},
+        </if>
+        <if test="refundAmtStatusCd != null">
+            Refund_Amt_Status_Cd = #{refundAmtStatusCd},
+        </if>
+            Last_Update_Time = #{lastUpdateTime}
+        WHERE
+        Order_ID = #{orderId}
+    </update>
+    
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="PreSaleOrderInfo" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM pre_sale_order_info a
+        WHERE Order_ID=#{orderId}
+    </select>
+
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.UserTotalBillDao">
+
+
+
+    <!-- 查询列表 -->
+    <select id="findAllUserTotalBill" parameterType="map" resultType="cn.yr.chile.bill.dto.UserTotalBillDTO">
+    	SELECT
+    		 t.rebateProductPoint,t.Phone ,t.create_time 
+    	FROM(SELECT
+				sum(a.rebate_product_point) as rebateProductPoint,
+				b.Phone,
+				a.create_time,
+				a.Order_Number
+			FROM
+				user_distribution_detail a
+			LEFT JOIN 
+				USER b 
+			ON 
+				a.user_id = b.User_Id
+			GROUP BY
+				a.user_id 
+			HAVING 
+				<if test="beginTime != null and beginTime != ''">
+            	 DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> a.create_time
+        		</if>
+       			 <if test="endTime != null and endTime != ''">
+            	and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> a.create_time
+        		</if>
+        		<if test="loginName != null and loginName != ''">
+           		 and b.phone like CONCAT('%',#{loginName},'%')
+        		</if>
+			) t
+		LEFT JOIN order_header c ON t.Order_Number=c.order_number
+		LEFT JOIN order_extend d ON d.Order_Id=c.Order_Id
+		LEFT JOIN system_code e ON e.Code_Type_Cd='Origin_Platform_Cd' AND e.Code_Id=d.Origin_Platform_Cd
+    	
+        WHERE 1=1
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            AND d.Origin_Platform_Cd=#{originPlatformCd}
+        </if>
+        ORDER BY
+        	t.create_time desc
+    </select>
+        
+     <!-- 查询所有的绩效点 -->
+     <resultMap type="java.util.HashMap" id="resultMaps">
+     	<result property="rebateProductPoint" column="rebateProductPoint"/>
+     </resultMap>
+     <select id="getAllPointTotal" parameterType="map" resultMap="resultMaps">
+     	SELECT
+    		 sum(t.rebateProductPoint) as rebateProductPoint
+    	FROM(SELECT
+				sum(a.rebate_product_point) as rebateProductPoint,
+				b.Phone,
+				a.create_time,
+				a.Order_Number
+			FROM
+				user_distribution_detail a
+			LEFT JOIN 
+				USER b 
+			ON 
+				a.user_id = b.User_Id
+			GROUP BY
+				a.user_id 
+			HAVING 1=1
+				<if test="beginTime != null and beginTime != ''">
+            	 	 <![CDATA[and DATE_FORMAT(#{beginTime},'%Y%m%d') <= DATE_FORMAT(a.create_time,'%Y%m%d')]]> 
+        		</if>
+       			 <if test="endTime != null and endTime != ''">
+            	 	<![CDATA[ and DATE_FORMAT(#{endTime},'%Y%m%d') >= DATE_FORMAT(a.create_time,'%Y%m%d')]]> 
+        		</if>
+        		<if test="loginName != null and loginName != ''">
+           		 and b.phone like CONCAT('%',#{loginName},'%')
+        		</if>
+			) t
+		LEFT JOIN order_header c ON t.Order_Number=c.order_number
+		LEFT JOIN order_extend d ON d.Order_Id=c.Order_Id
+		LEFT JOIN system_code e ON e.Code_Type_Cd='Origin_Platform_Cd' AND e.Code_Id=d.Origin_Platform_Cd
+    	
+        WHERE 1=1
+        <if test="originPlatformCd !=null and originPlatformCd !=''">
+            AND d.Origin_Platform_Cd=#{originPlatformCd}
+        </if>        
+     </select>
+</mapper>

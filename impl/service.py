@@ -1,3 +1,4 @@
+#-*- coding: UTF-8 -*-
 def service(param):
 
   text = '\n'
@@ -37,7 +38,7 @@ def service(param):
     text += '    void save(' + param['table_name_convert_type'] + \
         ' ' + param['table_name_convert'] + ');\n'
     text += '\n'
-  text += '    void insert(Integer id);\n'
+  text += '    void insert(' + param['table_name_convert_type'] + ' ' + param['table_name_convert'] + ');\n'
   text += '\n'
   text += '    void delete(Integer id);\n'
   text += '\n'
@@ -48,5 +49,5 @@ def service(param):
   text += '\n'
   text += '}\n'
 
-  with open('E:\\sublimeWorkspace\\auto_code\\impl\\template\\' + param['table_name_convert_type'] + 'Service.java', 'wb') as f:
+  with open(param['path'] + param['table_name_convert_type'] + 'Service.java', 'wb') as f:
     f.write(text.encode('utf-8'))

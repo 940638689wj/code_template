@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserMstoreRewardDetailDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		Reward_Detail_Id, Reward_Amt, Create_Time, Order_Number, User_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="UserMstoreRewardDetail" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO user_m_store_reward_detail (
+	        Reward_Amt, Create_Time, Order_Number, User_Id
+	    ) VALUES (
+	        #{rewardAmt}, #{createTime}, #{orderNumber}, #{userId}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="UserMstoreRewardDetail">
+	   UPDATE user_m_store_reward_detail SET
+		   Reward_Amt = #{rewardAmt}, 
+		   Create_Time = #{createTime}, 
+		   Order_Number = #{orderNumber}, 
+		   User_Id = #{userId}
+	   WHERE 
+		   Reward_Detail_Id = #{rewardDetailId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM user_m_store_reward_detail where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="UserMstoreRewardDetail" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM user_m_store_reward_detail 
+	     WHERE 
+			  Reward_Detail_Id = #{rewardDetailId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="UserMstoreRewardDetail">  
+	    select 
+		<include refid="allColumns" />
+	    from user_m_store_reward_detail
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="cn.yr.chile.user.dto.UserMstoreRewardDetailDTO" parameterType="cn.yr.chile.user.dto.UserMstoreRewardDetailDTO">  
+	    select 
+		a.Reward_Detail_Id, a.Reward_Amt, a.Create_Time, a.Order_Number, a.User_Id,b.Phone, c.Order_Id
+	    from user_m_store_reward_detail a 
+	    left join user b on a.User_Id=b.User_Id 
+	    left join order_header c on a.Order_Number=c.Order_Number
+	    <where> 
+	    1=1 
+		<if test="rewardDetailId != null"> and a.Reward_Detail_Id = #{rewardDetailId}</if>
+		<if test="rewardAmt != null"> and a.Reward_Amt = #{rewardAmt}</if>
+		<if test="orderNumber != null"> and a.Order_Number = #{orderNumber}</if>
+		<if test="userId != null"> and a.User_Id = #{userId}</if>
+		<if test="null != startDate and '' != startDate"> and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') >= DATE_FORMAT(#{startDate},'%Y-%m-%d') </if>
+		<if test="null != endDate and '' != endDate"><![CDATA[ and DATE_FORMAT(a.Create_Time,'%Y-%m-%d') <= DATE_FORMAT(#{endDate},'%Y-%m-%d') ]]></if>
+		</where> 
+		order by a.Create_Time DESC
+	</select>
+	
+	<!-- 查询微店主的首单奖励明细  2016.06.16 By Caobr -->
+	<select id="findRewardDetailListByMstoreUserId" resultType="UserMstoreRewardDetail" parameterType="UserMstoreRewardDetail">
+		SELECT ur.Reward_Detail_Id, ur.Reward_Amt, ur.Create_Time, ur.Order_Number, ur.User_Id, us.User_Name as customerName
+		FROM user_m_store_reward_detail ur LEFT JOIN order_header o ON ur.Order_Number=o.Order_Number LEFT JOIN user us on o.User_Id=us.User_Id
+		WHERE ur.User_Id=#{userId} AND o.Order_Status_Cd=5
+		ORDER BY Create_Time DESC
+	</select>
+	
+	<!-- 通过订单号查找该订单再微店内的首单奖励 -->
+	<select id="getRewardDetailByOrderNo" parameterType="String" resultType="UserMstoreRewardDetail">
+		select <include refid="allColumns" />
+		from user_m_store_reward_detail
+	    where Order_Number=#{orderNo}
+	</select>
+	
+	<!-- 今日的首单奖励收益 2016.07.19 By caobr -->
+	<select id="getSumRewardToday" parameterType="java.lang.Integer" resultType="java.math.BigDecimal">
+		SELECT sum(u.Reward_Amt) FROM user_m_store_reward_detail u LEFT JOIN order_header o ON u.Order_Number=o.Order_Number 
+		WHERE DATE_FORMAT(u.Create_Time,'%Y-%m-%d')=DATE_FORMAT(now(),'%Y-%m-%d') AND u.User_Id=#{userId} AND o.Order_Status_Cd=5 
+	</select>
+	
+	<!-- 每月首单奖励收益 2016.08.05 By csw  -->
+	<select id="getSumRewardMonth" parameterType="java.lang.Integer" resultType="java.math.BigDecimal">
+		SELECT sum(Reward_Amt) FROM user_m_store_reward_detail 
+		WHERE DATE_FORMAT(Create_Time,'%Y-%m')=DATE_FORMAT(now(),'%Y-%m') AND User_Id=#{userId}
+	</select>
+	
+</mapper>

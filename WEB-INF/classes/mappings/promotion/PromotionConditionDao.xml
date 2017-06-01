@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionConditionDao">
+	<!--<resultMap id="promotionConditionMap" type="PromotionCondition">
+		<result property="conditionId" column="Condition_Id" />
+		<result property="promotionId" column="Promotion_Id" />
+		<result property="promotionRuleTypeCd" column="Promotion_Rule_Type_Cd" />
+		<result property="isRuleAdded" column="Is_Rule_Added" />
+		<result property="conditionExpression" column="Condition_Expression" />
+		<result property="createTime" column="Create_Time" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Condition_Id,
+			p1.Promotion_Id,
+			p1.Promotion_Rule_Type_Cd,
+			p1.Is_Rule_Added,
+			p1.Condition_Expression,
+			p1.Create_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionCondition" useGeneratedKeys="true" keyProperty="conditionId">
+	    INSERT INTO promotion_condition (
+			Promotion_Id, 
+			Promotion_Rule_Type_Cd, 
+			Is_Rule_Added, 
+			Condition_Expression, 
+			Create_Time
+	    ) VALUES (
+			#{promotionId}, 
+			#{promotionRuleTypeCd}, 
+			#{isRuleAdded}, 
+			#{conditionExpression}, 
+			#{createTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionCondition">
+	   UPDATE promotion_condition SET
+	   		Promotion_Id = #{promotionId}, 
+	   		Promotion_Rule_Type_Cd = #{promotionRuleTypeCd}, 
+	   		Is_Rule_Added = #{isRuleAdded}, 
+	   		Condition_Expression = #{conditionExpression}, 
+	   		Create_Time = #{createTime}
+	   WHERE 
+			Condition_Id = #{conditionId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM promotion_condition where Condition_Id = #{conditionId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="PromotionCondition" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM promotion_condition p1
+	     WHERE
+			p1.Condition_Id=#{conditionId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionCondition">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_condition p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="PromotionCondition" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from promotion_condition p1
+	    where 1=1 
+		<if test="conditionId != null"> and p1.Condition_Id = #{conditionId}</if>
+		<if test="promotionId != null"> and p1.Promotion_Id = #{promotionId}</if>
+		<if test="promotionRuleTypeCd != null"> and p1.Promotion_Rule_Type_Cd = #{promotionRuleTypeCd}</if>
+		<if test="isRuleAdded != null"> and p1.Is_Rule_Added = #{isRuleAdded}</if>
+		<if test="conditionExpression != null"> and p1.Condition_Expression = #{conditionExpression}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<select id="findPromotionConditionRuleDTO" resultType="cn.yr.chile.promotion.dto.PromotionConditionRuleDTO" parameterType="java.util.Map">
+		select
+			p1.Promotion_Id,
+			p1.Condition_Id,
+			p1.Promotion_Rule_Type_Cd AS promotionRuleType,
+			p1.Condition_Expression,
+			p1.Is_Rule_Added AS isRuleAdded,
+			p2.Discount_Type_Cd AS discountType,
+			p2.Discount_Value,
+			p2.Discount_Desc,
+			p2.Id AS promotionDiscountRuleId
+		from promotion_condition p1
+		left join promotion_discount_rule p2 on p2.Promotion_Condition_Id = p1.Condition_Id
+		where
+			p1.Promotion_Id = #{promotionId}
+			AND p1.Promotion_Rule_Type_Cd = #{promotionRuleTypeCd}
+		  	ORDER BY p1.Condition_Id
+	</select>
+
+	<!-- 根据活动Id，查询促销条件与赠品 -->
+	<select id="findConditionGiftDTO" resultType="ConditionGiftDTO" parameterType="Integer">
+		select
+			p1.Condition_Id,
+			p1.Promotion_Id,
+			p1.Promotion_Rule_Type_Cd,
+			p1.Condition_Expression,
+			p2.Product_ID
+		from
+			promotion_condition p1
+			left join promotion_gift_xref p2 on p1.Condition_Id = p2.promo_condition_id
+		where
+			p1.Promotion_Id = #{promotionId}
+			AND p1.Promotion_Rule_Type_Cd = 4
+			ORDER BY p1.Condition_Id
+	</select>
+	
+	<!-- 根据活动Id与条件类型，查询条件促销条件与折扣信息 -->
+	<select id="findPromotionConditionDTO" resultType="PromotionConditionDTO" parameterType="java.util.HashMap">
+		select
+			p1.Promotion_Id,
+			p1.Condition_Id,
+			p1.Promotion_Rule_Type_Cd,
+			p1.Is_Rule_Added,
+			p1.Condition_Expression,
+			p2.Id,
+			p2.Discount_Type_Cd,
+			p2.Discount_Desc,
+			p2.Discount_Value
+		from
+			promotion_condition p1
+			left join promotion_discount_rule p2 on p1.Condition_Id = p2.Promotion_Condition_Id
+		where
+			p1.Promotion_Id = #{promotionId}
+			<if test="promotionRuleTypeCd != null">AND p1.Promotion_Rule_Type_Cd = #{promotionRuleTypeCd}</if>
+			ORDER BY p1.Condition_Id
+	</select>
+	
+	<!-- 根据活动Id查询对应的活动描述(满足金额和数量) -->
+	<select id="getConditionByPromotionId" resultType="String" parameterType="Integer">
+		select 
+			Condition_Expression
+		from 
+			promotion_condition
+		where 
+			Promotion_Id = #{promotionId}
+			and Promotion_Rule_Type_Cd = 4
+	</select>
+	
+	<!-- 根据活动Id查询和活动类型查询对应的条件信息 -->
+	<select id="getByPromotionIdAndType" resultType="PromotionCondition" parameterType="Integer">
+		select 
+			p1.Condition_Id,
+			p1.Promotion_Id,
+			p1.Promotion_Rule_Type_Cd,
+			p1.Is_Rule_Added,
+			p1.Condition_Expression,
+			p1.Create_Time
+		from 
+			promotion_condition p1
+		left join promotion p2 on p1.Promotion_Id = p2.Promotion_Id
+		where 
+			p2.Promotion_Id = #{promotionId}
+			and p2.Promotion_Type_Cd = #{promotionTypeCd}
+			and (p1.Promotion_Rule_Type_Cd = 4 or p1.Promotion_Rule_Type_Cd = 5)
+			
+	</select>
+
+
+	<!-- 2016.8.29 By caobr 查询预生成优惠码优惠面额优惠条件信息-->
+	<select id="findPreGenerateConditionRuleDTO" resultType="cn.yr.chile.promotion.dto.PromotionConditionRuleDTO" parameterType="cn.yr.chile.promotion.dto.PromotionConditionRuleDTO">
+		select  pcc.Coupon_Code, 
+			p1.Promotion_Id,
+			p1.Condition_Id,
+			p1.Promotion_Rule_Type_Cd AS promotionRuleType,
+			p1.Condition_Expression,
+			p1.Is_Rule_Added AS isRuleAdded,
+			p2.Discount_Type_Cd AS discountType,
+			p2.Discount_Value,
+			p2.Discount_Desc,
+			p2.Id AS promotionDiscountRuleId
+		from promotion_coupon_code pcc 
+		left join promotion_discount_rule p2 on (pcc.Promotion_Id=p2.Promotion_Id and pcc.promotion_dis_rule_id=p2.Id)
+		left join promotion_condition p1 on (pcc.Promotion_Id=p1.Promotion_Id and p2.Promotion_Condition_Id = p1.Condition_Id)
+		where pcc.Promotion_Id = #{promotionId} 
+			  AND p1.Promotion_Rule_Type_Cd = #{promotionRuleType}
+			  AND pcc.Coupon_Status_Cd=1
+			ORDER BY p1.Condition_Id
+	</select>
+	
+	<!-- 根据活动Id与活动规则id，查询对应的促销条件信息 -->
+	<select id="getByPromotionIdAndId" resultType="PromotionCondition" parameterType="java.util.HashMap">
+		select
+			<include refid="allColumns" />
+		from
+			promotion_condition p1
+			left join promotion_discount_rule p2 on p1.Condition_Id = p2.Promotion_Condition_Id
+		where
+			p1.Promotion_Id = #{promotionId}
+			and p2.Id = #{Id}
+			limit 1
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	<!-- 根据活动Id查询 -->
+	<select id="getByPromotionId" resultType="PromotionCondition" parameterType="int">
+		select 
+			<include refid="allColumns" />
+		from 
+			promotion_condition p1
+		where 
+			p1.Promotion_Id = #{promotionId}
+	</select>
+
+	<!-- 根据活动Id和条件类型查询 -->
+	<select id="getByPromotionIdAndTypeCd" resultType="PromotionCondition" parameterType="java.util.Map">
+		select
+		<include refid="allColumns" />
+		from
+		promotion_condition p1
+		where 1=1
+		<if test="promotionId != null and promotionId != ''">
+			AND p1.Promotion_Id = #{promotionId}
+		</if>
+		<if test="promotionRuleTypeCd != null and promotionRuleTypeCd != ''">
+			AND p1.Promotion_Rule_Type_Cd = #{promotionRuleTypeCd}
+		</if>
+	</select>
+
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.InvoiceStatisticsDao">
+
+    <!-- 查询发货统计数据 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.InvoiceStatistics">
+        SELECT
+        o.Order_Id AS orderId,
+        o.Order_Number AS orderNumber,
+        o.Order_Express_Amt AS orderExpressAmt,
+        ori.Send_Time AS sendTime,
+        ooi.Oper_User_Id AS operUserId,
+        au.User_Name AS operUserName,
+        e.Express_Name AS expressName,
+        ori.Order_Express_Num AS orderExpressNum,
+        ori.Receive_Name AS receiveName,
+        u.Login_Name AS userLoginName
+        FROM
+        order_header o
+        LEFT JOIN order_receive_info ori ON ori.Order_Id = o.Order_Id
+        LEFT JOIN order_operation_info ooi ON ooi.Order_Id = o.Order_Id AND ooi.Oper_Type_Cd = 5
+        LEFT JOIN express e ON e.Express_Id = ori.Express_ID
+        LEFT JOIN user u ON u.User_Id = o.User_Id
+        LEFT JOIN admin_user au ON au.Admin_User_Id = ooi.Oper_User_Id
+        WHERE o.ORDER_STATUS_CD in(3,5)
+    </select>
+
+    <!-- 查询发货总数 -->
+    <select id="getTotal" resultType="cn.yr.chile.analysis.domain.InvoiceStatistics">
+        SELECT
+        COUNT(*) AS orderQuantity,
+        SUM(o.Order_Express_Amt) AS expressTotalAmt
+        FROM
+        order_header o
+        LEFT JOIN order_receive_info ori ON ori.Order_Id = o.Order_Id
+        LEFT JOIN order_operation_info ooi ON ooi.Order_Id = o.Order_Id AND ooi.Oper_Type_Cd = 5
+        LEFT JOIN express e ON e.Express_Id = ori.Express_ID
+        LEFT JOIN user u ON u.User_Id = o.User_Id
+        LEFT JOIN admin_user au ON au.Admin_User_Id = ooi.Oper_User_Id
+        WHERE o.ORDER_STATUS_CD in(3,5)
+        ORDER BY ori.Send_Time
+    </select>
+
+</mapper>

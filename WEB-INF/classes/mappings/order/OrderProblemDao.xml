@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderProblemDao">
+	<!--<resultMap id="orderProblemMap" type="OrderProblem">
+		<result property="id" column="Id" />
+		<result property="orderProblemDesc" column="Order_Problem_Desc" />
+	</resultMap>-->
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Id, Order_Problem_Desc,Problem_Src_User_Type_Cd
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderProblem" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_problem (
+	        Order_Problem_Desc,Problem_Src_User_Type_Cd
+	    ) VALUES (
+	        #{orderProblemDesc},#{problemSrcUserTypeCd}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderProblem">
+	   UPDATE order_problem SET
+		   Order_Problem_Desc = #{orderProblemDesc},
+		   Problem_Src_User_Type_Cd = #{problemSrcUserTypeCd}
+	   WHERE 
+		   Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_problem where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderProblem" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_problem 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderProblem">  
+	    select 
+		<include refid="allColumns" />
+	    from order_problem
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderProblem" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from order_problem a
+	    where 1=1
+		<if test="id != null"> and a.Id = #{id}</if>
+		<if test="orderProblemDesc != null"> and a.Order_Problem_Desc = #{orderProblemDesc}</if>
+		<if test="problemSrcUserTypeCd != null"> and a.Problem_Src_User_Type_Cd = #{problemSrcUserTypeCd}</if>
+	</select>
+
+</mapper>

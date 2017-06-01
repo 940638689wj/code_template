@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderReceiveInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.Order_Id,
+        a.Receive_Name,
+        a.Receive_Tel,
+        a.Receive_Province_Id,
+        a.Receive_City_Id,
+        a.Receive_County_Id,
+        a.Receive_Town_ID,
+        a.Receive_Village_ID,
+        a.Receive_Addr,
+        a.Receive_Addr_Combo,
+        a.Company_Name,
+        a.Company_Taxpayer_identify_code,
+        a.Company_Opening_Bank_Name,
+        a.Company_Register_Addr,
+        a.Company_Register_Tel,
+        a.Company_Bank_Account,
+        a.Invoice_Title,
+        a.Invoice_Type_Cd,
+        a.Invoice_For_Cd,
+        a.Invoice_Receive_Name,
+        a.Invoice_Receive_Tel,
+        a.Invoice_Receive_Addr,
+        a.Invoice_Province_Id,
+        a.Invoice_City_Id,
+        a.Invoice_County_Id,
+        a.Invoice_Billing_Time,
+        a.Invoice_Number,
+        a.Distrbute_Store_Id,
+        a.Last_Update_Time,
+        a.Distribute_Shopper_ID,
+        a.Distribute_Time,
+        a.Shopper_Taking_Time,
+        a.Send_Time,
+        a.Required_Start_Time,
+        a.Required_End_Time,
+        a.Order_Distrbute_Type_Cd,
+        a.Order_Express_Num,
+        a.Express_ID,
+        a.Express_Time,
+        a.Invoice_Delete_Status_Cd
+	</sql>
+	
+	<sql id="area">
+		ar.Area_Name as Receive_City
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderReceiveInfo" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_receive_info (
+	        Order_Id,
+	        Receive_Name,
+	        Receive_Tel,
+	        Receive_Province_Id,
+	        Receive_City_Id,
+	        Receive_County_Id,
+	        Receive_Town_ID,
+	        Receive_Village_ID,
+	        Receive_Addr,
+	        Receive_Addr_Combo,
+	        Company_Name,
+	        Company_Taxpayer_identify_code,
+	        Company_Opening_Bank_Name,
+	        Company_Register_Addr,
+	        Company_Register_Tel,
+	        Company_Bank_Account,
+	        Invoice_Title,
+	        Invoice_Type_Cd,
+	        Invoice_For_Cd,
+	        Invoice_Receive_Name,
+	        Invoice_Receive_Tel,
+	        Invoice_Receive_Addr,
+	        Invoice_Province_Id,
+	        Invoice_City_Id,
+	        Invoice_County_Id,
+	        Invoice_Billing_Time,
+	        Invoice_Number,
+	        Distrbute_Store_Id,
+	        Last_Update_Time,
+	        Distribute_Shopper_ID,
+	        Distribute_Time,
+	        Shopper_Taking_Time,
+	        Send_Time,
+	        Required_Start_Time,
+	        Required_End_Time,
+	        Order_Distrbute_Type_Cd,
+	        Order_Express_Num,
+	        Express_ID,
+	        Express_Time
+	    ) VALUES (
+	        #{orderId},
+	        #{receiveName},
+        #{receiveTel},
+        #{receiveProvinceId},
+        #{receiveCityId},
+        #{receiveCountyId},
+        #{receiveTownId},
+        #{receiveVillageId},
+        #{receiveAddr},
+        #{receiveAddrCombo},
+        #{companyName},
+        #{companyTaxpayerIdentifyCode},
+        #{companyOpeningBankName},
+        #{companyRegisterAddr},
+        #{companyRegisterTel},
+        #{companyBankAccount},
+        #{invoiceTitle},
+        #{invoiceTypeCd},
+        #{invoiceForCd},
+        #{invoiceReceiveName},
+        #{invoiceReceiveTel},
+        #{invoiceReceiveAddr},
+        #{invoiceProvinceId},
+        #{invoiceCityId},
+        #{invoiceCountyId},
+        #{invoiceBillingTime},
+        #{invoiceNumber},
+        #{distrbuteStoreId},
+        #{lastUpdateTime},
+        #{distributeShopperId},
+        #{distributeTime},
+        #{shopperTakingTime},
+        #{sendTime},
+        #{requiredStartTime},
+        #{requiredEndTime},
+        #{orderDistrbuteTypeCd},
+        #{orderExpressNum},
+        #{expressId},
+        #{expressTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderReceiveInfo">
+		UPDATE order_receive_info SET
+		<if test="receiveName != null and receiveName != ''">
+			Receive_Name = #{receiveName},
+		</if>
+		<if test="receiveTel != null and receiveTel != ''">
+			Receive_Tel = #{receiveTel},
+		</if>
+		<if test="receiveProvinceId != null">
+			Receive_Province_Id = #{receiveProvinceId},
+		</if>
+		<if test="receiveCityId != null">
+			Receive_City_Id = #{receiveCityId},
+		</if>
+		<if test="receiveCountyId != null">
+			Receive_County_Id = #{receiveCountyId},
+		</if>
+		<if test="receiveTownId != null">
+			Receive_Town_ID = #{receiveTownId},
+		</if>
+		<if test="receiveVillageId != null">
+			Receive_Village_ID = #{receiveVillageId},
+		</if>
+		<if test="receiveAddr != null and receiveAddr != ''">
+			Receive_Addr = #{receiveAddr},
+		</if>
+		<if test="receiveAddrCombo != null and receiveAddrCombo != ''">
+			Receive_Addr_Combo = #{receiveAddrCombo},
+		</if>
+		<if test="companyName != null and companyName != ''">
+			Company_Name = #{companyName},
+		</if>
+		<if test="companyTaxpayerIdentifyCode != null and companyTaxpayerIdentifyCode != ''">
+			Company_Taxpayer_identify_code = #{companyTaxpayerIdentifyCode},
+		</if>
+		<if test="companyOpeningBankName != null and companyOpeningBankName != ''">
+			Company_Opening_Bank_Name = #{companyOpeningBankName},
+		</if>
+		<if test="companyRegisterAddr != null and companyRegisterAddr != ''">
+			Company_Register_Addr = #{companyRegisterAddr},
+		</if>
+		<if test="companyRegisterTel != null and companyRegisterTel != ''">
+			Company_Register_Tel = #{companyRegisterTel},
+		</if>
+		<if test="companyBankAccount != null and companyBankAccount != ''">
+			Company_Bank_Account = #{companyBankAccount},
+		</if>
+		<if test="invoiceTitle != null and invoiceTitle != ''">
+			Invoice_Title = #{invoiceTitle},
+		</if>
+		<if test="invoiceTypeCd != null">
+			Invoice_Type_Cd = #{invoiceTypeCd},
+		</if>
+		<if test="invoiceForCd != null">
+			Invoice_For_Cd = #{invoiceForCd},
+		</if>
+		<if test="invoiceReceiveName != null and invoiceReceiveName != ''">
+			Invoice_Receive_Name = #{invoiceReceiveName},
+		</if>
+		<if test="invoiceReceiveTel != null and invoiceReceiveTel != ''">
+			Invoice_Receive_Tel = #{invoiceReceiveTel},
+		</if>
+		<if test="invoiceReceiveAddr != null and invoiceReceiveAddr != ''">
+			Invoice_Receive_Addr = #{invoiceReceiveAddr},
+		</if>
+		<if test="invoiceProvinceId != null">
+			Invoice_Province_Id = #{invoiceProvinceId},
+		</if>
+		<if test="invoiceCityId != null">
+			Invoice_City_Id = #{invoiceCityId},
+		</if>
+		<if test="invoiceCountyId != null">
+			Invoice_County_Id = #{invoiceCountyId},
+		</if>
+		<if test="invoiceBillingTime != null">
+			Invoice_Billing_Time = #{invoiceBillingTime},
+		</if>
+		<if test="invoiceNumber != null and invoiceNumber != ''">
+			Invoice_Number = #{invoiceNumber},
+		</if>
+		<if test="distrbuteStoreId != null">
+			Distrbute_Store_Id = #{distrbuteStoreId},
+		</if>
+		<if test="distributeShopperId != null">
+			Distribute_Shopper_ID = #{distributeShopperId},
+		</if>
+		<if test="distributeTime != null">
+			Distribute_Time = #{distributeTime},
+		</if>
+		<if test="shopperTakingTime != null">
+			Shopper_Taking_Time = #{shopperTakingTime},
+		</if>
+		<if test="sendTime != null">
+			Send_Time = #{sendTime},
+		</if>
+		<if test="requiredStartTime != null">
+			Required_Start_Time = #{requiredStartTime},
+		</if>
+		<if test="requiredEndTime != null">
+			Required_End_Time = #{requiredEndTime},
+		</if>
+		<if test="orderDistrbuteTypeCd != null">
+			Order_Distrbute_Type_Cd = #{orderDistrbuteTypeCd},
+		</if>
+		<if test="orderExpressNum != null and orderExpressNum != ''">
+			Order_Express_Num = #{orderExpressNum},
+		</if>
+		<if test="expressId != null">
+			Express_ID = #{expressId},
+		</if>
+		<if test="expressTime != null">
+			Express_Time = #{expressTime},
+		</if>
+		<if test="invoiceDeleteStatusCd != null">
+			Invoice_Delete_Status_Cd = #{invoiceDeleteStatusCd},
+		</if>
+		Last_Update_Time = #{lastUpdateTime}
+		WHERE
+		Order_Id = #{orderId}
+	</update>
+	
+	<update id="distributionStore">
+		UPDATE order_receive_info SET
+		Distrbute_Store_Id = #{storeId},
+		Distribute_Time = now(),
+		Last_Update_Time = now()
+		WHERE
+		Order_Id = #{orderId}	
+	</update>
+	
+	<update id="distributionShopper">
+		UPDATE order_receive_info SET
+		Distribute_Shopper_ID = #{shopperId},
+		Distribute_Time = now(),
+		Last_Update_Time = now()
+		WHERE
+		Order_Id = #{orderId}	
+	</update>
+	
+    <update id="setdistributionTime">
+		UPDATE order_receive_info SET
+		Distribute_Time = now(),
+		Last_Update_Time = now()
+		WHERE
+		Order_Id = #{orderId}	
+	</update>
+    
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_receive_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderReceiveInfo" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_receive_info a 
+	     WHERE 
+			  a.id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderReceiveInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from order_receive_info a
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderReceiveInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />,
+		<include refid="area"/>
+	    from order_receive_info a
+	    where 1=1
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="receiveName != null"> and a.Receive_Name = #{receiveName}</if>
+		<if test="receiveTel != null"> and a.Receive_Tel = #{receiveTel}</if>
+		<if test="receiveProvinceId != null"> and a.Receive_Province_Id = #{receiveProvinceId}</if>
+		<if test="receiveCityId != null"> and a.Receive_City_Id = #{receiveCityId}</if>
+		<if test="receiveCountyId != null"> and a.Receive_County_Id = #{receiveCountyId}</if>
+		<if test="receiveAddr != null"> and a.Receive_Addr = #{receiveAddr}</if>
+		<if test="receiveAddrCombo != null"> and a.Receive_Addr_Combo = #{receiveAddrCombo}</if>
+		<if test="companyName != null"> and a.Company_Name = #{companyName}</if>
+		<if test="companyTaxpayerIdentifyCode != null"> and a.Company_Taxpayer_identify_code = #{companyTaxpayerIdentifyCode}</if>
+		<if test="companyOpeningBankName != null"> and a.Company_Opening_Bank_Name = #{companyOpeningBankName}</if>
+		<if test="companyRegisterAddr != null"> and a.Company_Register_Addr = #{companyRegisterAddr}</if>
+		<if test="companyRegisterTel != null"> and a.Company_Register_Tel = #{companyRegisterTel}</if>
+		<if test="companyBankAccount != null"> and a.Company_Bank_Account = #{companyBankAccount}</if>
+		<if test="invoiceTitle != null"> and a.Invoice_Title = #{invoiceTitle}</if>
+		<if test="invoiceTypeCd != null"> and a.Invoice_Type_Cd = #{invoiceTypeCd}</if>
+		<if test="invoiceForCd != null"> and a.Invoice_For_Cd = #{invoiceForCd}</if>
+		<if test="invoiceReceiveName != null"> and a.Invoice_Receive_Name = #{invoiceReceiveName}</if>
+		<if test="invoiceReceiveTel != null"> and a.Invoice_Receive_Tel = #{invoiceReceiveTel}</if>
+		<if test="invoiceReceiveAddr != null"> and a.Invoice_Receive_Addr = #{invoiceReceiveAddr}</if>
+		<if test="invoiceNumber != null"> and a.Invoice_Number = #{invoiceNumber}</if>
+		<if test="distrbuteStoreId != null"> and a.Distrbute_Store_Id = #{distrbuteStoreId}</if>
+	   <if test="distributeShopperId != null"> and a.Distribute_Shopper_ID = #{distributeShopperId}</if>
+	</select>
+	
+	<select id="getOrderReceiveInfoByOrderId" parameterType="int" resultType="OrderReceiveInfo">
+		 select 
+		<include refid="allColumns" />,
+		<include refid="area"/>
+		,
+		st.Detail_Address,
+		s1.Code_Cn_Name AS invoiceTypeName,
+		s2.Code_Cn_Name AS invoiceForName,
+		e.Express_Name AS expressName
+	    FROM order_receive_info a
+		LEFT JOIN express e ON e.Express_Id = a.Express_ID
+	    LEFT JOIN area ar ON a.Receive_City_Id = ar.Id
+		LEFT JOIN store st ON a.Distrbute_Store_Id = st.store_Id
+		LEFT JOIN system_code s1 ON a.Invoice_Type_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Invoice_Type_Cd'
+		LEFT JOIN system_code s2 ON a.Invoice_For_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Invoice_For_Cd'
+	    where a.order_Id = #{orderId}
+	</select>
+	
+
+
+</mapper>

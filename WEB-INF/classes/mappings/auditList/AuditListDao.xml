@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.audit.dao.AuditListDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		a.ID,
+		a.ORDER_ID,
+		a.Order_Item_ID,
+		a.Pickup_Coupon_ID,
+		a.OLD_PRICE,
+		a.NEW_PRICE,
+		a.OLD_VALUE,
+		a.NEW_VALUE,
+		a.AUDIT_STATUS_CD,
+		a.AUDIT_TYPE_CD,
+		a.Apply_Src_User_Type_Cd,
+		a.Apply_Src_User_ID,
+		a.Apply_Time,
+		a.OPERATOR_User_ID,
+		a.OPERATOR,
+		a.CHANGE_TIME,
+		a.DESCTIPTION,
+		a.promotion_id
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="cn.yr.chile.audit.domain.AuditList" useGeneratedKeys="true"
+            keyProperty="ID">
+		INSERT INTO audit_list (
+			ORDER_ID,
+			Order_Item_ID,
+			Pickup_Coupon_ID,
+			OLD_PRICE,
+			NEW_PRICE,
+			OLD_VALUE,
+			NEW_VALUE,
+			AUDIT_STATUS_CD,
+			AUDIT_TYPE_CD,
+			Apply_Src_User_Type_Cd,
+			Apply_Src_User_ID,
+			Apply_Time,
+			OPERATOR_User_ID,
+			OPERATOR,
+			CHANGE_TIME,
+			DESCTIPTION,
+			promotion_id
+		) VALUES (
+			#{orderId},
+			#{orderItemId},
+			#{pickupCouponId},
+			#{oldPrice},
+			#{newPrice},
+			#{oldValue},
+			#{newValue},
+			#{auditStatusCd},
+			#{auditTypeCd},
+			#{applySrcUserTypeCd},
+			#{applySrcUserId},
+			#{applyTime},
+			#{operatorUserId},
+	        #{operator},
+	        #{changeTime},
+	        #{desctiption},
+	        #{promotionId}
+		)
+	</insert>
+
+    <!-- 更新数据 -->
+    <update id="update" parameterType="cn.yr.chile.audit.domain.AuditList">
+		UPDATE audit_list
+		SET ORDER_ID=#{orderId},
+			Order_Item_ID=#{orderItemId},
+			Pickup_Coupon_ID=#{pickupCouponId},
+			OLD_PRICE=#{oldPrice},
+			NEW_PRICE=#{newPrice},
+			OLD_VALUE=#{oldValue},
+			NEW_VALUE=#{newValue},
+			AUDIT_STATUS_CD=#{auditStatusCd},
+			AUDIT_TYPE_CD=#{auditTypeCd},
+			Apply_Src_User_Type_Cd=#{applySrcUserTypeCd},
+			Apply_Src_User_ID=#{applySrcUserId},
+			Apply_Time=#{applyTime},
+			OPERATOR_User_ID=#{operatorUserId},
+			OPERATOR=#{operator},
+			CHANGE_TIME=#{changeTime},
+			DESCTIPTION=#{desctiption},
+			promotion_id=#{promotionId}
+		WHERE ID = #{id}
+	</update>
+
+    <!-- 根据审核类型查询未通过审核数据 -->
+    <select id="findList" resultType="cn.yr.chile.audit.dto.AuditListDTO"
+            parameterType="cn.yr.chile.audit.dto.AuditListDTO">
+        SELECT
+        <include refid="allColumns"/>,
+        b.product_name,
+        o.Order_Number,
+        ori.Receive_Name,
+        ori.Receive_Tel,
+        u.Login_Name AS applySrcUserName,
+        p.Return_Order_Number
+        FROM audit_list a
+        LEFT JOIN order_header o ON o.Order_Id = a.Order_Id
+        LEFT JOIN order_receive_info ori ON ori.Order_Id = a.Order_Id
+        LEFT JOIN product b on a.Order_Item_ID = b.product_id
+        LEFT JOIN user u ON u.User_Id = a.Apply_Src_User_ID
+        LEFT JOIN order_return_info p ON p.Order_Item_ID = a.Order_Item_ID
+        WHERE 1=1
+        <if test="auditStatusCds !='' and auditStatusCds !=null">
+            and a.AUDIT_STATUS_CD = #{auditStatusCds}
+        </if>
+        <if test="auditTypeCd !='' and auditTypeCd !=null">
+            and a.AUDIT_TYPE_CD = #{auditTypeCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="keywords !='' and keywords !=null">
+            and (o.Order_Number LIKE ('%${keywords}%')
+            OR ori.Receive_Name LIKE ('%${keywords}%')
+            OR ori.Receive_Tel LIKE ('%${keywords}%'))
+        </if>
+        <if test="applySrcUserName !='' and applySrcUserName !=null">
+            and u.Login_Name LIKE ('%${applySrcUserName}%')
+        </if>
+        ORDER BY a.ID DESC
+        LIMIT #{start},#{pageSize}
+    </select>
+
+    <!-- 查询审核数据 -->
+    <select id="findDoneList" resultType="cn.yr.chile.audit.dto.AuditListDTO" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>,
+        o.Order_Number,
+        ori.Receive_Name,
+        ori.Receive_Tel,
+        u.Login_Name AS applySrcUserName,
+        p.Promotion_Name AS promotionName,
+        orei.Return_Order_Number
+        FROM audit_list a
+        LEFT JOIN order_header o ON o.Order_Id = a.Order_Id
+        LEFT JOIN order_receive_info ori ON ori.Order_Id = a.Order_Id
+        LEFT JOIN user u ON u.User_Id = a.Apply_Src_User_ID
+        LEFT JOIN promotion p ON p.Promotion_ID = a.promotion_id
+        LEFT JOIN order_return_info orei ON orei.Order_Item_ID = a.Order_Item_ID
+        WHERE 1=1
+        <if test="auditStatusCds !='' and auditStatusCds !=null">
+            and a.AUDIT_STATUS_CD in (${auditStatusCds})
+        </if>
+        <if test="auditTypeCd !='' and auditTypeCd !=null">
+            and a.AUDIT_TYPE_CD = #{auditTypeCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="keywords !='' and keywords !=null">
+            and (o.Order_Number LIKE ('%${keywords}%')
+            OR ori.Receive_Name LIKE ('%${keywords}%')
+            OR ori.Receive_Tel LIKE ('%${keywords}%'))
+        </if>
+        <if test="applySrcUserName !='' and applySrcUserName !=null">
+            and u.Login_Name LIKE ('%${applySrcUserName}%')
+        </if>
+        ORDER BY a.CHANGE_TIME DESC
+    </select>
+
+    <!-- 获取商品审核日志 -->
+    <select id="findProductDoneList" resultType="cn.yr.chile.audit.dto.AuditListDTO" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>,
+        b.User_Name as applySrcUserName,
+        p.Product_Name as productName
+        FROM audit_list a
+        LEFT JOIN admin_user b on a.Apply_Src_User_ID = b.Admin_User_Id
+        LEFT JOIN product p on p.Product_Id = a.Order_Item_ID
+        WHERE a.AUDIT_TYPE_CD in (8,9)
+        <if test="auditStatusCds !='' and auditStatusCds !=null">
+            and a.AUDIT_STATUS_CD in (${auditStatusCds})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="keywords !='' and keywords !=null">
+            and (a.Order_Item_ID = #{keywords}
+            OR  b.User_Name LIKE ('%${keywords}%'))
+        </if>
+        ORDER BY a.CHANGE_TIME DESC
+    </select>
+
+    <!-- 根据id获取数据 -->
+    <select id="get" resultType="cn.yr.chile.audit.domain.AuditList" parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM audit_list a
+        WHERE a.ID = #{id}
+    </select>
+
+    <!--通过订单ID和商品ID以及审核类型获取未审核数据-->
+    <select id="getByOrderIdAndProductId" resultType="cn.yr.chile.audit.domain.AuditList"
+            parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>
+        FROM audit_list a
+        WHERE a.Order_Id = #{orderId} and a.AUDIT_TYPE_CD = #{auditTypeCd} and a.AUDIT_STATUS_CD = 0
+        <if test="orderItemId !='' and orderItemId !=null">
+            and a.Order_Item_ID = #{orderItemId}
+        </if>
+
+    </select>
+
+    <!-- 根据审核类型查询审核数据记录数 -->
+    <select id="findCount" resultType="java.lang.Integer" parameterType="cn.yr.chile.audit.dto.AuditListDTO">
+        SELECT
+        COUNT(*)
+        FROM audit_list
+        WHERE 1=1
+        <if test="auditStatusCds !='' and auditStatusCds !=null">
+            and AUDIT_STATUS_CD = #{auditStatusCds}
+        </if>
+        <if test="auditTypeCd !='' and auditTypeCd !=null">
+            and AUDIT_TYPE_CD = #{auditTypeCd}
+        </if>
+    </select>
+
+    <!-- 根据审核类型查询审核数据记录数 -->
+    <select id="getCount" resultType="java.lang.Integer" parameterType="java.util.Map">
+        SELECT
+        COUNT(*)
+        FROM audit_list
+        WHERE 1=1
+        <if test="auditStatusCd !='' and auditStatusCd !=null">
+            and AUDIT_STATUS_CD = #{auditStatusCd}
+        </if>
+        <if test="auditTypeCd !='' and auditTypeCd !=null">
+            and AUDIT_TYPE_CD in (${auditTypeCd})
+        </if>
+        <if test="orderId !='' and orderId !=null">
+            and ORDER_ID = #{orderId}
+        </if>
+        <if test="orderItemId !='' and orderItemId !=null">
+            and Order_Item_ID = #{orderItemId}
+        </if>
+    </select>
+
+    <!--通过操作类型和申请来源id查询未审核记录-->
+    <select id="getByTypeAndUserId" resultType="cn.yr.chile.audit.domain.AuditList" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>
+        FROM audit_list a
+        WHERE a.AUDIT_STATUS_CD = 0
+        <if test="auditTypeCd !='' and auditTypeCd !=null">
+            and a.AUDIT_TYPE_CD = #{auditTypeCd}
+        </if>
+        <if test="applySrcUserId !='' and applySrcUserId !=null">
+            and a.Apply_Src_User_ID = #{applySrcUserId}
+        </if>
+        <if test="productId !='' and productId !=null">
+            and a.Order_Item_ID = #{productId}
+        </if>
+    </select>
+
+    <!-- 查询待审核的优惠券 -->
+    <select id="findCouponAuditList" resultType="cn.yr.chile.promotion.dto.CouponDTO" parameterType="java.util.HashMap">
+        SELECT
+        a1.ID AS auditId,
+        p1.promotion_id,
+        p1.Promotion_Name,
+        p1.Promotion_Desc,
+        p1.Status_Cd,
+        p1.Enable_Start_Time,
+        p1.Enable_End_Time,
+        p1.Encrypt_Code,
+        s.Code_Cn_Name AS auditStatus
+        FROM audit_list a1
+        LEFT JOIN promotion p1 ON a1.Promotion_ID = p1.promotion_id
+        LEFT JOIN system_code s ON s.Code_Type_Cd = 'Promotion_Audit_Status_Cd' AND s.Code_Id = p1.Promotion_Audit_Status_Cd
+        WHERE
+            p1.Status_Cd = 1
+            AND a1.AUDIT_STATUS_CD = 0
+            and a1.AUDIT_TYPE_CD = 4
+        <if test="keywords !='' and keywords !=null">
+            and (p1.Promotion_ID LIKE ('%${keywords}%')
+            OR p1.Promotion_Name LIKE ('%${keywords}%'))
+        </if>
+        ORDER BY a1.ID DESC
+    </select>
+
+    <!-- 查询票券已审核数据 -->
+    <select id="findCouponDoneList" resultType="cn.yr.chile.audit.dto.AuditListDTO" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>,
+        p.Promotion_Name AS promotionName,
+        p2.Real_Name as applySrcUserName
+        FROM audit_list a
+        LEFT JOIN promotion p ON p.Promotion_ID = a.promotion_id
+        LEFT JOIN admin_user p2 ON p2.Admin_User_Id = a.Apply_Src_User_ID
+        WHERE 1=1
+        <if test="auditStatusCds !='' and auditStatusCds !=null">
+            and a.AUDIT_STATUS_CD in (${auditStatusCds})
+        </if>
+        <if test="auditTypeCd !='' and auditTypeCd !=null">
+            and a.AUDIT_TYPE_CD = #{auditTypeCd}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="keywords !='' and keywords !=null">
+            and (p.Promotion_ID LIKE ('%${keywords}%')
+            OR p.Promotion_Name LIKE ('%${keywords}%'))
+        </if>
+        ORDER BY a.CHANGE_TIME DESC
+    </select>
+
+    <!-- 查询待审核的团购 -->
+    <select id="findGrouponAuditList" resultType="PromotionGrouponDTO" parameterType="java.util.Map">
+        select
+        a1.ID AS auditId,
+        p1.Promotion_Id,
+        p1.Groupon_Init_Sale_Num,
+        p1.Groupon_Min_Sale_Num,
+        p1.Groupon_Max_Sale_Num,
+        p1.Groupon_Person_Quota_Num,
+        p1.Groupon_Price,
+        p1.Create_Time,
+        p1.Last_Update_Time,
+        p1.GroupCoupon_Desc,
+        p1.Allow_Use_Start_Time,
+        p1.Allow_Use_End_Time,
+        p2.Promotion_Audit_Status_Cd AS auditStatusCd,
+        p2.Status_Cd,
+        p2.promotion_Name,
+        p2.enable_Start_Time,
+        p2.enable_End_Time,
+        s1.Code_Cn_Name AS auditStatusName,
+        s2.Code_Cn_Name AS statusName
+        from audit_list a1
+        LEFT JOIN promotion_groupon p1 on p1.promotion_Id = a1.Promotion_ID
+        LEFT JOIN promotion p2 on p1.promotion_Id = p2.promotion_Id
+        LEFT JOIN system_code s1 ON p2.Promotion_Audit_Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Promotion_Audit_Status_Cd'
+        LEFT JOIN system_code s2 ON p2.Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'Status_Cd'
+        WHERE
+            p2.Status_Cd = 1
+            AND a1.AUDIT_STATUS_CD = 0
+            AND a1.AUDIT_TYPE_CD = 5
+        <if test="keywords !='' and keywords !=null">
+            and (p2.Promotion_ID LIKE ('%${keywords}%')
+            OR p2.Promotion_Name LIKE ('%${keywords}%'))
+        </if>
+        ORDER BY a1.ID DESC
+    </select>
+
+    <!-- 查询待审核的提货券 -->
+    <select id="findPickUpCouponAuditList" resultType="PickupcouponListDTO" parameterType="java.util.Map">
+        select
+        a1.ID AS auditId,
+        p1.Pickup_Coupon_ID,
+        p1.Pickup_Coupon_Name,
+        p1.Pickup_Coupon_Desc,
+        p1.Pickup_Amt,
+        p1.Pickup_Cnt,
+        p1.Card_Prefix,
+        p1.Allow_Use_Start_Time,
+        p1.Allow_Use_End_Time,
+        p1.Status_Cd,
+        p1.Audit_Status_Cd,
+        p1.Create_Time,
+        p1.Last_Update_Time,
+        p3.Store_Name,
+        s1.Code_Cn_Name AS statusName,
+        s2.Code_Cn_Name AS auditStatusName
+        from audit_list a1
+        LEFT JOIN pickupcoupon_list p1 on p1.Pickup_Coupon_ID = a1.Pickup_Coupon_ID
+        LEFT JOIN pickupcoupon_list_store_xref p2 ON p2.Pickup_Coupon_ID = p1.Pickup_Coupon_ID
+        LEFT JOIN store p3 ON p3.Store_Id = p2.Pickup_Store_ID
+        LEFT JOIN system_code s1 ON p1.Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Status_Cd'
+        LEFT JOIN system_code s2 ON p1.Audit_Status_Cd = s2.Code_Id AND s2.Code_Type_Cd = 'AUDIT_STATUS_CD'
+        WHERE
+            p1.Status_Cd IN (0,1)
+        AND a1.AUDIT_STATUS_CD = 0
+        AND a1.AUDIT_TYPE_CD = 6
+        <if test="keywords !='' and keywords !=null">
+            and (p1.Pickup_Coupon_ID LIKE ('%${keywords}%')
+            OR p1.Pickup_Coupon_Name LIKE ('%${keywords}%'))
+        </if>
+        ORDER BY a1.ID DESC
+    </select>
+
+    <!-- 查询提货券已审核数据 -->
+    <select id="findPickUpCouponAuditDoneList" resultType="cn.yr.chile.audit.dto.AuditListDTO" parameterType="java.util.HashMap">
+        SELECT
+        <include refid="allColumns"/>,
+        p.Pickup_Coupon_Name,
+        p2.Real_Name as applySrcUserName
+        FROM audit_list a
+        LEFT JOIN pickupcoupon_list p ON p.Pickup_Coupon_ID = a.Pickup_Coupon_ID
+        LEFT JOIN admin_user p2 ON p2.Admin_User_Id = a.Apply_Src_User_ID
+        WHERE
+          a.AUDIT_TYPE_CD = 6
+          AND p.Status_Cd IN (0,1)
+        <if test="auditStatusCds !='' and auditStatusCds !=null">
+            and a.AUDIT_STATUS_CD in (${auditStatusCds})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            and DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="endTime != '' and endTime != null">
+            and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> DATE_FORMAT(a.Apply_Time,'%Y%m%d')
+        </if>
+        <if test="keywords !='' and keywords !=null">
+            and (p.Pickup_Coupon_ID LIKE ('%${keywords}%')
+            OR p.Pickup_Coupon_Name LIKE ('%${keywords}%'))
+        </if>
+        ORDER BY a.CHANGE_TIME DESC
+    </select>
+</mapper>

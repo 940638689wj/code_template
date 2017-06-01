@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.yr.chile.decorate.dao.DefinedModuleLinkDao">
+	<sql id="allColumns">
+		d.id,
+		d.module_id,
+		d.module_item_id,
+		d.img_path,
+		d.href,
+		d.name,
+		d.target,
+		d.alt,
+		d.seq
+	</sql>
+	<!-- 新增 -->
+	<insert id="insert" parameterType="DefinedModuleLink"
+		useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO defined_module_link (
+		module_id,
+		module_item_id,
+		img_path,
+		href,
+		name,
+		target,
+		alt,
+		seq
+		) VALUES (
+		#{moduleId},
+		#{moduleItemId},
+		#{imgPath},
+		#{href},
+		#{name},
+		#{target},
+		#{alt},
+		#{seq}
+		)
+	</insert>
+
+	<!-- 更新 -->
+	<update id="update" parameterType="DefinedModuleLink">
+		UPDATE defined_module_link SET
+		module_id = #{moduleId},
+		module_item_id = #{moduleItemId},
+		img_path = #{imgPath},
+		href = #{href},
+		name = #{name},
+		target = #{target},
+		alt = #{alt},
+		seq = #{seq}
+		WHERE
+		id = #{id}
+	</update>
+
+	<!-- 根据id获取 -->
+	<select id="findById" resultType="DefinedModuleLink"
+		parameterType="long">
+		SELECT
+		<include refid="allColumns" />
+		FROM defined_module_link d
+		WHERE
+		d.id = #{id}
+	</select>
+
+	<!-- 根据module_Id获取 -->
+	<select id="findLinkByModuleId" resultType="DefinedModuleLink"
+		parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+		FROM defined_module_link d
+		WHERE
+		d.module_id = #{moduleId}
+	</select>
+
+	<!-- 根据module_item_id获取 -->
+	<select id="findLinkByModuleItemId" resultType="DefinedModuleLink"
+		parameterType="long">
+		SELECT
+		<include refid="allColumns" />
+		FROM defined_module_link d
+		WHERE
+		d.module_item_id = #{moduleItemId}
+	</select>
+
+	<!-- 根据id删除 -->
+	<select id="delete" parameterType="long">
+		DELETE
+		FROM defined_module_link
+		WHERE
+		id = #{id}
+	</select>
+	
+	<!-- 根据moduleItem删除 -->
+	<select id="deleteByItemId" parameterType="long">
+		DELETE
+		FROM defined_module_link
+		WHERE
+		module_item_id = #{moduleItemId}
+	</select>
+</mapper>
+	

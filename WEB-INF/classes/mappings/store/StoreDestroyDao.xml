@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.store.dao.StoreDestroyDao">
+
+    <!-- 待核销团购列表 -->
+    <select id="findPromotionGrouponPageList" resultType="DestroyPromotionGrouponDTO" parameterType="java.util.Map">
+        SELECT
+        p1.Coupon_Code_Id,
+        p1.Used_Time,
+        p2.Promotion_Name,
+        p3.Allow_Use_Start_Time,
+        p3.Allow_Use_End_Time,
+        u.Nick_Name,
+        u.Phone,
+        p3.Groupon_Price AS couponCodeValue,
+        s1.Code_Cn_Name AS couponStatusName
+        FROM promotion_coupon_code p1
+        LEFT JOIN promotion p2 ON p1.Promotion_Id = p2.Promotion_Id
+        LEFT JOIN promotion_groupon p3 ON p1.Promotion_Id = p3.Promotion_Id
+        LEFT JOIN user u ON p1.User_Id = u.User_Id
+        LEFT JOIN system_code s1 ON p1.Coupon_Status_Cd = s1.Code_Id AND s1.Code_Type_Cd = 'Coupon_Status_Cd'
+        WHERE
+        p2.Promotion_Type_Cd = 70
+        AND p2.Status_Cd = 1
+        AND p1.Coupon_Status_Cd = #{couponStatusCd}
+        <if test="couponCodeOrPhone !=null and couponCodeOrPhone!=''">
+            AND (p1.Coupon_Code LIKE CONCAT('%',#{couponCodeOrPhone},'%') OR u.Phone LIKE CONCAT('%',#{couponCodeOrPhone},'%'))
+        </if>
+        ORDER BY p1.Coupon_Code_Id DESC
+    </select>
+
+    <!-- 待核销提货券列表 -->
+    <select id="findPickupcouponPageList" resultType="DestroyPickupcouponDTO" parameterType="java.util.Map">
+        SELECT
+        p1.Pickup_Coupon_Code_ID,
+        p2.Pickup_Coupon_Name,
+        st.Store_Name,
+        p2.Allow_Use_Start_Time,
+        p2.Allow_Use_End_Time,
+        p2.Pickup_Amt,
+        p1.Phone,
+        p1.Order_ID,
+        p1.Is_Pickup_Package,
+        p1.used_time
+        FROM pickupcoupon_code p1
+        LEFT JOIN pickupcoupon_list p2 ON p1.Pickup_Coupon_List_Id = p2.Pickup_Coupon_ID
+        LEFT JOIN pickupcoupon_list_store_xref ps ON p2.Pickup_Coupon_ID = ps.Pickup_Coupon_ID
+        LEFT JOIN store st ON ps.Pickup_Store_ID = st.Store_Id
+        WHERE
+        p2.Audit_Status_Cd = 1
+        AND p2.Status_Cd = 1
+        AND(
+        <if test="usedStatusCd == 1">
+            p1.Used_Status_Cd = 1
+            OR (
+            p1.Used_Status_Cd = 2
+            AND p1.Order_Id IS NOT NULL
+            AND p1.Is_Pickup_Package = 1
+            )
+        </if>
+        <if test="usedStatusCd == 2">
+            p1.Used_Status_Cd = 2
+            AND (
+            p1.Order_Id IS NULL
+            OR p1.Is_Pickup_Package = 2
+            )
+        </if>
+        )
+        <if test="pickupCouponCodeNumOrPhone!=null and pickupCouponCodeNumOrPhone!=''">
+            AND (p1.Pickup_Coupon_Code_Num LIKE CONCAT('%',#{pickupCouponCodeNumOrPhone},'%') OR p1.Phone LIKE CONCAT('%',#{pickupCouponCodeNumOrPhone},'%'))
+        </if>
+        ORDER BY p1.Pickup_Coupon_Code_ID DESC
+    </select>
+
+    <!--核销团购-->
+    <update id="destroyPromotionGroupon" parameterType="java.lang.Integer">
+		update promotion_coupon_code
+		SET Coupon_Status_Cd = 2,
+		Used_Time = NOW()
+		WHERE Coupon_Code_Id = #{couponCodeId}
+	</update>
+
+    <!--核销提货券-->
+    <update id="destroyPickupcoupon" parameterType="java.lang.Integer">
+		update pickupcoupon_code
+		SET
+		Used_Status_Cd = 2,
+		Is_Pickup_Package = 2,
+		used_time = NOW()
+		WHERE Pickup_Coupon_Code_ID = #{pickupCouponCodeId}
+	</update>
+
+</mapper>

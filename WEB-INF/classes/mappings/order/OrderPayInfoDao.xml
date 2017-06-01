@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderPayInfoDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        Id, Order_Id, Pay_Type_Code, Consume, Discount
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="OrderPayInfo" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO order_pay_info (
+	        Order_Id, Pay_Type_Code, Consume, Discount
+	    ) VALUES (
+	        #{orderId}, #{payTypeCode}, #{consume}, #{discount}        
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="OrderPayInfo">
+	   UPDATE order_pay_info SET
+		   Order_Id = #{orderId}, 
+		   Pay_Type_Code = #{payTypeCode}, 
+		   Consume = #{consume}, 
+		   Discount = #{discount}
+	   WHERE 
+		   Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM order_pay_info where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="OrderPayInfo" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_pay_info 
+	     WHERE 
+			  id=#{id}
+	</select>
+	
+	<!-- 根据OrderId获取 -->
+    <select id="getByOrderId" resultType="OrderPayInfo" parameterType="Integer">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM order_pay_info 
+	     WHERE 
+			  order_id=#{orderId}
+	</select>
+
+	<!-- 根据OrderId和payTypeCode获取 -->
+	<select id="getSpecifyOrderPayInfo" resultType="OrderPayInfo" parameterType="Map">
+		SELECT
+		<include refid="allColumns" />
+		FROM order_pay_info
+		WHERE
+		order_id=#{orderId}
+		AND Pay_Type_Code = #{payTypeCode}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="OrderPayInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from order_pay_info
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findList" resultType="OrderPayInfo" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from order_pay_info a
+	    where a.deleted=0
+		<if test="id != null"> and a.Id = #{id}</if>
+		<if test="orderId != null"> and a.Order_Id = #{orderId}</if>
+		<if test="payTypeCode != null"> and a.Pay_Type_Code = #{payTypeCode}</if>
+		<if test="consume != null"> and a.Consume = #{consume}</if>
+		<if test="discount != null"> and a.Discount = #{discount}</if>
+		<if test="order_col != null"> order by ${order_col}</if>
+	</select>
+	
+	<select id="findOrderPayInfosByOrderId" parameterType="int" resultType="OrderPayInfo">
+		SELECT Pay_Type_Code, Discount FROM order_pay_info WHERE Pay_Type_Code IN (1,2,3,4) AND Order_Id = #{orderId}
+		UNION SELECT Pay_Type_Code, SUM(Discount) from order_pay_info WHERE Pay_Type_Code=5 AND Order_Id = #{orderId}
+	</select>
+
+	<select id="findByOrderId" parameterType="int" resultType="OrderPayInfo">  
+	    select 
+		<include refid="allColumns" />
+	    from order_pay_info
+	    where Order_Id=#{orderId}
+	</select>
+
+	<!--根据订单Id和支付类型查询订单抵扣信息-->
+	<select id="findByOrderIdAndType" resultType="OrderPayInfo">
+		SELECT
+		<include refid="allColumns" />
+		FROM order_pay_info
+		WHERE Order_Id = #{0}
+		AND Pay_Type_Code = #{1}
+	</select>
+
+</mapper>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.SmsLogsDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Id,
+			p1.Downside_Message,
+			p1.Upside_Message,
+			p1.Push_Time,
+			p1.Extension_Cn,
+			p1.Telephone,
+			p1.Sms_Status_Cd,
+			p1.Extension_Data,
+			p1.Event_Type_Cd,
+			p1.Update_Time,
+			p1.Sms_Receiver_Type_Cd,
+			p1.Receiver_Extend_Id
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="SmsLogs" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO sms_logs (
+			Downside_Message, 
+			Upside_Message, 
+			Push_Time, 
+			Extension_Cn, 
+			Telephone, 
+			Sms_Status_Cd, 
+			Extension_Data, 
+			Event_Type_Cd, 
+			Update_Time, 
+			Sms_Receiver_Type_Cd, 
+			Receiver_Extend_Id
+	    ) VALUES (
+			#{downsideMessage}, 
+			#{upsideMessage}, 
+			#{pushTime}, 
+			#{extensionCn}, 
+			#{telephone}, 
+			#{smsStatusCd}, 
+			#{extensionData}, 
+			#{eventTypeCd}, 
+			#{updateTime}, 
+			#{smsReceiverTypeCd}, 
+			#{receiverExtendId}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="SmsLogs">
+	   UPDATE sms_logs SET
+	   		Downside_Message = #{downsideMessage}, 
+	   		Upside_Message = #{upsideMessage}, 
+	   		Push_Time = #{pushTime}, 
+	   		Extension_Cn = #{extensionCn}, 
+	   		Telephone = #{telephone}, 
+	   		Sms_Status_Cd = #{smsStatusCd}, 
+	   		Extension_Data = #{extensionData}, 
+	   		Event_Type_Cd = #{eventTypeCd}, 
+	   		Update_Time = #{updateTime}, 
+	   		Sms_Receiver_Type_Cd = #{smsReceiverTypeCd}, 
+	   		Receiver_Extend_Id = #{receiverExtendId}
+	   WHERE 
+			Id = #{id}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM sms_logs where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="SmsLogs" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM sms_logs p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="SmsLogs">  
+	    select 
+		<include refid="allColumns" />
+	    from sms_logs p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="SmsLogs" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from sms_logs p1
+	    where a.deleted=0
+		<if test="id != null"> and p1.Id = #{id}</if>
+		<if test="downsideMessage != null"> and p1.Downside_Message = #{downsideMessage}</if>
+		<if test="upsideMessage != null"> and p1.Upside_Message = #{upsideMessage}</if>
+		<if test="pushTime != null"> and p1.Push_Time = #{pushTime}</if>
+		<if test="extensionCn != null"> and p1.Extension_Cn = #{extensionCn}</if>
+		<if test="telephone != null"> and p1.Telephone = #{telephone}</if>
+		<if test="smsStatusCd != null"> and p1.Sms_Status_Cd = #{smsStatusCd}</if>
+		<if test="extensionData != null"> and p1.Extension_Data = #{extensionData}</if>
+		<if test="eventTypeCd != null"> and p1.Event_Type_Cd = #{eventTypeCd}</if>
+		<if test="updateTime != null"> and p1.Update_Time = #{updateTime}</if>
+		<if test="smsReceiverTypeCd != null"> and p1.Sms_Receiver_Type_Cd = #{smsReceiverTypeCd}</if>
+		<if test="receiverExtendId != null"> and p1.Receiver_Extend_Id = #{receiverExtendId}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+	<!-- 根据 telephone查询，按 push_time/extension_cn 排序 -->
+	<select id="getLatestSmsLogsByTelephone" resultType="SmsLogs" parameterType="java.lang.String">
+		select
+		<include refid="allColumns" />
+		from sms_logs p1
+		where p1.Telephone = ${0}
+		and p1.EXTENSION_CN != '0'
+		order by p1.PUSH_TIME desc,p1.EXTENSION_CN desc
+		limit 0,1
+	</select>
+
+	<!-- 根据 telephone、extensionCn查询，按 push_time 排序 -->
+	<select id="getLatestSmsLogsByTelephoneAndExtensionCn" resultType="SmsLogs" parameterType="java.util.Map">
+		select
+		<include refid="allColumns" />
+		from sms_logs p1
+		where p1.Telephone = ${telephone}
+		and p1.EXTENSION_CN = ${extensionCn}
+		order by p1.PUSH_TIME desc
+		limit 0,1
+	</select>
+
+</mapper>

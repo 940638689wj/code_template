@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.bill.dao.SubCustomerBillDetailDao">
+
+
+    <!-- 查询列表 -->
+  	<select id="findAllSubCustomerBillByParams" parameterType="map" resultType="cn.yr.chile.bill.dto.SubCustomerBillDetailDTO">
+  			SELECT 
+				tt.Order_Number as orderNumber,
+				tt.Phone as phone,
+				sum(b.Quantity*b.Sale_Price) as orderAmt,
+				sum(b.Quantity) as quantity,
+				tt.Create_Time as createTime,
+				tt.Order_Complete_Time as completeTime
+			FROM(SELECT 
+				a.Order_Id,
+				a.Order_Number,
+				a.Create_Time,
+				a.Order_Complete_Time,
+				t.Phone
+			FROM(SELECT
+				c.user_id,
+				c.Phone
+			FROM
+				USER c
+			WHERE c.Parent_User_Id in (SELECT user_id from user where phone like 
+				<choose>
+					<when test="loginName != null and loginName != ''">
+						CONCAT('%',#{loginName},'%')
+					</when>
+					<otherwise>
+						#{loginName}
+					</otherwise>
+				</choose>
+			)     								
+				)t
+			LEFT JOIN
+			order_header a ON t.user_id=a.User_Id					
+				AND a.Order_Status_Cd=5)tt
+			LEFT JOIN order_item b
+				ON tt.Order_Id=b.Order_Id
+			GROUP BY b.order_id
+			HAVING 
+					<if test="beginTime != null and beginTime != ''">
+            			 DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> tt.create_time
+        			</if>
+       	 			<if test="endTime != null and endTime != ''">
+            			and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> tt.create_time
+       		 		</if>
+  	</select>
+     <!-- 统计 -->
+    <resultMap type="java.util.HashMap" id="subCustomerBillDetailMap">
+    	<result property="orderTotal" column="orderTotal"/>
+    	<result property="quantity" column="quantity"/>
+    	<result property="orderAmt" column="orderAmt"/>
+    </resultMap>
+    <select id="getAllSubCustomerBillTotal" parameterType="map" resultMap="subCustomerBillDetailMap">
+    	SELECT count(*) as orderTotal,
+				sum(ttt.quantity) as quantity,
+				sum(ttt.orderAmt) as orderAmt 
+		FROM
+			(SELECT 
+				tt.Order_Number as orderNumber,
+				tt.Phone as phone,
+				sum(b.Quantity*b.Sale_Price) as orderAmt,
+				sum(b.Quantity) as quantity,
+				tt.Create_Time as createTime,
+				tt.Order_Complete_Time as completeTime
+			FROM(SELECT 
+				a.Order_Id,
+				a.Order_Number,
+				a.Create_Time,
+				a.Order_Complete_Time,
+				t.Phone
+			FROM(SELECT
+				c.user_id,
+				c.Phone
+			FROM
+				USER c
+			WHERE c.Parent_User_Id in(SELECT user_id from user where phone like 
+				<choose>
+					<when test="loginName != null and loginName != ''">
+						CONCAT('%',#{loginName},'%')
+					</when>
+					<otherwise>
+						#{loginName}
+					</otherwise>
+				</choose>
+				)				
+				)t
+			LEFT JOIN
+			order_header a ON t.user_id=a.User_Id					
+				AND a.Order_Status_Cd=5)tt
+			LEFT JOIN order_item b
+				ON tt.Order_Id=b.Order_Id
+			GROUP BY b.order_id
+			HAVING 
+					<if test="beginTime != null and beginTime != ''">
+            			 DATE_FORMAT(#{beginTime},'%Y%m%d') <![CDATA[ <= ]]> tt.create_time
+        			</if>
+       	 			<if test="endTime != null and endTime != ''">
+            			and DATE_FORMAT(#{endTime},'%Y%m%d') <![CDATA[ >= ]]> tt.create_time
+       		 		</if>)ttt
+    </select>
+</mapper>

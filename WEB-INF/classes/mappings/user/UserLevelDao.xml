@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.UserLevelDao">
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+        a.User_level_Id, 
+        a.User_level_Name, 
+        a.Status_Cd, 
+        a.Is_Autoupdate, 
+        a.Rank_Cd, 
+        a.Consume_Amt, 
+        a.Consume_Cnt, 
+        a.Recharge_Amt, 
+        a.Discount, 
+        a.Front_Img_Url, 
+        a.Back_Img_Url, 
+        a.Rights_Instructions, 
+        a.Is_Default,
+        a.Develop_User_Cnt
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="UserLevel" useGeneratedKeys="true" keyProperty="User_level_Id">
+	    INSERT INTO user_level (
+	        User_level_Name,
+	        Status_Cd,
+	        Is_Autoupdate,
+	        Rank_Cd,
+	        Consume_Amt,
+	        Consume_Cnt,
+	        Recharge_Amt,
+	        Discount,
+	        Front_Img_Url,
+	        Back_Img_Url,
+	        Rights_Instructions,
+	        Is_Default,
+	        Develop_User_Cnt
+	    ) VALUES (
+	        #{userLevelName},
+	        #{statusCd},
+	        #{isAutoupdate},
+	        #{rankCd},
+	        #{consumeAmt},
+	        #{consumeCnt},
+	        #{rechargeAmt},
+	        #{discount},
+	        #{frontImgUrl},
+	        #{backImgUrl},
+	        #{rightsInstructions},
+	        #{isDefault},
+	        #{developUserCnt}
+	    )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="UserLevel">
+        UPDATE user_level
+        <set>
+            <if test="null != userLevelName and '' != userLevelName">
+                User_level_Name = #{userLevelName},
+            </if>
+            <if test="null != frontImgUrl and '' != frontImgUrl">
+                Front_Img_Url = #{frontImgUrl},
+            </if>
+            <if test="null != backImgUrl and '' != backImgUrl">
+                Back_Img_Url = #{backImgUrl},
+            </if>
+            <if test="null != rightsInstructions and '' != rightsInstructions">
+                Rights_Instructions = #{rightsInstructions},
+            </if>
+            Status_Cd = #{statusCd},
+            Is_Autoupdate = #{isAutoupdate},
+            Consume_Amt = #{consumeAmt},
+            Consume_Cnt = #{consumeCnt},
+            Recharge_Amt = #{rechargeAmt},
+            Discount = #{discount},
+            Is_Default = #{isDefault},
+            Develop_User_Cnt = #{developUserCnt}
+        </set>
+        WHERE
+        User_level_Id = #{userLevelId}
+    </update>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="UserLevel" parameterType="java.lang.Integer">
+        SELECT
+        <include refid="allColumns"/>,
+        b.Code_Cn_Name rankName
+        FROM user_level a
+        left join system_code b
+        on b.code_type_cd='RANK_CD' and a.Rank_Cd=b.Code_Id
+        WHERE
+        a.User_level_Id=#{userLevelId}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findList" resultType="UserLevel" parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>,
+        b.Code_Cn_Name rankName
+        from user_level a
+        left join system_code b
+        on b.code_type_cd='RANK_CD' and a.Rank_Cd=b.Code_Id
+        <where>
+            <if test="userLevelId != null and userLevelId != ''">and a.User_level_Id = #{userLevelId}</if>
+            <if test="userLevelName != null and userLevelName != ''">and a.User_level_Name = #{userLevelName}</if>
+            <if test="statusCd != null and statusCd != ''">and a.Status_Cd = #{statusCd}</if>
+            <if test="isAutoupdate != null and isAutoupdate != ''">and a.Is_Autoupdate = #{isAutoupdate}</if>
+            <if test="rankCd != null and rankCd != ''">and a.Rank_Cd = #{rankCd}</if>
+            <if test="consumeAmt != null and consumeAmt != ''">and a.Consume_Amt = #{consumeAmt}</if>
+            <if test="consumeCnt != null and consumeCnt != ''">and a.Consume_Cnt = #{consumeCnt}</if>
+            <if test="rechargeAmt != null and rechargeAmt != ''">and a.Recharge_Amt = #{rechargeAmt}</if>
+            <if test="discount != null and discount != ''">and a.Discount = #{discount}</if>
+            <if test="frontImgUrl != null and frontImgUrl != ''">and a.Front_Img_Url = #{frontImgUrl}</if>
+            <if test="backImgUrl != null and backImgUrl != ''">and a.Back_Img_Url = #{backImgUrl}</if>
+            <if test="rightsInstructions != null and rightsInstructions != ''">and a.Rights_Instructions =
+                #{rightsInstructions}
+            </if>
+            <if test="isDefault != null and isDefault != ''">and a.Is_Default = #{isDefault}</if>
+            <if test="developUserCnt != null and developUserCnt != ''">and a.Develop_User_Cnt = #{developUserCnt}</if>
+        </where>
+        order by a.User_level_Id
+    </select>
+
+    <select id="findActivatedUserLevel" resultType="UserLevel">
+        select
+        <include refid="allColumns"/>
+        from user_level a
+        where
+        a.Status_Cd = '1' order by a.User_level_Id
+    </select>
+
+    <!-- 根据等级名称查询等级 -->
+    <select id="getUserLevelByLevelName" parameterType="java.lang.String" resultType="UserLevel">
+        select
+        <include refid="allColumns"/>
+        from user_level a
+        where a.Status_Cd = '1' and a.User_Level_Name=#{userLevelName}
+    </select>
+
+</mapper>

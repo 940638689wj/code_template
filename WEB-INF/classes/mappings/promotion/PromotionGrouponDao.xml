@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.promotion.dao.PromotionGrouponDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+		p1.Promotion_Id,
+		p1.Groupon_Init_Sale_Num,
+		p1.Groupon_Max_Sale_Num,
+		p1.Groupon_Person_Quota_Num,
+		p1.Groupon_Price,
+		p1.Create_Time,
+		p1.Last_Update_Time,
+		p1.GroupCoupon_Desc,
+		p1.Allow_Use_Start_Time,
+		p1.Allow_Use_End_Time,
+		p1.Real_Sale_Cnt
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="PromotionGroupon">
+		INSERT INTO promotion_groupon (
+		Promotion_Id,
+		Groupon_Init_Sale_Num,
+		Groupon_Max_Sale_Num,
+		Groupon_Person_Quota_Num,
+		Groupon_Price,
+		Create_Time,
+		GroupCoupon_Desc,
+		Allow_Use_Start_Time,
+		Allow_Use_End_Time
+		) VALUES (
+		#{promotionId},
+		#{grouponInitSaleNum},
+		#{grouponMaxSaleNum},
+		#{grouponPersonQuotaNum},
+		#{grouponPrice},
+		#{createTime},
+		#{groupcouponDesc},
+		#{allowUseStartTime},
+		#{allowUseEndTime}
+		)
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="PromotionGroupon">
+		UPDATE promotion_groupon SET
+		<if test="grouponInitSaleNum != null">
+			Groupon_Init_Sale_Num = #{grouponInitSaleNum},
+		</if>
+		<if test="grouponMaxSaleNum != null">
+			Groupon_Max_Sale_Num = #{grouponMaxSaleNum},
+		</if>
+		<if test="grouponPersonQuotaNum != null">
+			Groupon_Person_Quota_Num = #{grouponPersonQuotaNum},
+		</if>
+		<if test="grouponPrice != null">
+			Groupon_Price = #{grouponPrice},
+		</if>
+		<if test="createTime != null">
+			Create_Time = #{createTime},
+		</if>
+		<if test="groupcouponDesc != null">
+			GroupCoupon_Desc = #{groupcouponDesc},
+		</if>
+		<if test="allowUseStartTime != null">
+			Allow_Use_Start_Time = #{allowUseStartTime},
+		</if>
+		<if test="allowUseEndTime != null">
+			Allow_Use_End_Time = #{allowUseEndTime},
+		</if>
+		<if test="realSaleCnt != null">
+			Real_Sale_Cnt = #{realSaleCnt},
+		</if>
+		Last_Update_Time = #{lastUpdateTime}
+		WHERE
+		Promotion_Id = #{promotionId}
+	</update>
+
+	<!-- 根据主键获取 -->
+	<select id="getPromotionGrouponDTO" resultType="PromotionGrouponDTO"
+		parameterType="java.lang.Integer">
+		SELECT
+		  <include refid = "allColumns" />,
+		  p2.promotion_Name,
+		  p2.enable_Start_Time,
+		  p2.enable_End_Time,
+		  p2.Status_Cd,
+		  p2.Promotion_Audit_Status_Cd AS auditStatusCd,
+		  s1.Code_Cn_Name AS auditStatusName,
+		  s2.Code_Cn_Name AS statusName,
+		  PPX.`Product_Id`
+		FROM
+		  promotion_groupon p1
+		  LEFT JOIN promotion p2
+		    ON p1.promotion_Id = p2.promotion_Id
+		  LEFT JOIN system_code s1
+		    ON p2.Promotion_Audit_Status_Cd = s1.Code_Id
+		    AND s1.Code_Type_Cd = 'Promotion_Audit_Status_Cd'
+		  LEFT JOIN system_code s2
+		    ON p2.Status_Cd = s2.Code_Id
+		    AND s2.Code_Type_Cd = 'Status_Cd'
+		  LEFT JOIN promotion_product_xref PPX
+		    ON PPX.`Promotion_Id` = P1.`Promotion_Id`
+		WHERE p1.Promotion_Id = #{promotionId}
+	</select>
+
+	<select id="get" resultType="PromotionGroupon" parameterType="java.lang.Integer">
+		SELECT
+		<include refid="allColumns" />
+		FROM promotion_groupon p1 WHERE p1.Promotion_Id=#{promotionId}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="PromotionGroupon">
+		select
+		<include refid="allColumns" />
+		from promotion_groupon p1
+		<if test="order_col != null">order by p1.${order_col}</if>
+	</select>
+
+
+	<!-- 返回团购列表 -->
+	<select id="findGrouponList" resultType="GrouponDTO" parameterType="java.util.HashMap">
+		SELECT
+		  p1.Promotion_Id,
+		  p1.Promotion_Name,
+		  p1.Status_Cd,
+		  p1.Enable_Start_Time,
+		  p1.Enable_End_Time,
+		  p1.Reg_Start_Time,
+		  p1.Reg_End_Time,
+		  p1.Is_All_User_Level_Join,
+		  p1.Is_All_Area_Join,
+		  p2.Groupon_Init_Sale_Num,
+		  p2.Groupon_Min_Sale_Num,
+		  p2.Groupon_Max_Sale_Num,
+		  p2.Groupon_Person_Quota_Num,
+		  p2.Groupon_Price,
+		  p3.Product_Id
+		FROM
+		  promotion p1
+		  LEFT JOIN promotion_groupon p2
+		    ON p1.Promotion_Id = p2.Promotion_Id
+		  LEFT JOIN promotion_product_xref p3
+		    ON p3.Promotion_Id = p2.Promotion_Id
+		WHERE
+		p1.Promotion_Type_Cd = #{promotionTypeCd}
+		<if test="statusCd != null">and p1.Status_Cd = #{statusCd}</if>
+		<if test="isEnableTime!=null and isEnableTime!=''">
+            <![CDATA[
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d') >=  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d')   
+    			and DATE_FORMAT(#{isEnableTime}, '%Y-%m-%d') <=  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d') 
+    		]]>
+		</if>
+		<if test="notEnableTime!=null and notEnableTime!=''">
+            <![CDATA[
+    			and (DATE_FORMAT(#{notEnableTime}, '%Y-%m-%d') <  DATE_FORMAT(p1.Enable_Start_Time, '%Y-%m-%d')   
+    			or DATE_FORMAT(#{notEnableTime}, '%Y-%m-%d') >  DATE_FORMAT(p1.Enable_End_Time, '%Y-%m-%d') )
+    		]]>
+		</if>
+		ORDER BY p1.Create_Time DESC
+	</select>
+
+	<select id="findListByStatus" resultType="PromotionGrouponDTO"
+		parameterType="java.util.Map">
+		SELECT
+		<include refid="allColumns" />
+		,
+		  p2.Status_Cd,
+		  p2.promotion_Name,
+		  p2.enable_Start_Time,
+		  p2.enable_End_Time,
+		  p2.Promotion_Audit_Status_Cd AS auditStatusCd,
+		  s1.Code_Cn_Name AS auditStatusName,
+		  s2.Code_Cn_Name AS statusName
+		FROM
+		  promotion_groupon p1
+		  LEFT JOIN promotion p2
+		    ON p1.promotion_Id = p2.promotion_Id
+		  LEFT JOIN system_code s1
+		    ON p2.Promotion_Audit_Status_Cd = s1.Code_Id
+		    AND s1.Code_Type_Cd = 'Promotion_Audit_Status_Cd'
+		  LEFT JOIN system_code s2
+		    ON p2.Status_Cd = s2.Code_Id
+		    AND s2.Code_Type_Cd = 'Status_Cd'
+		WHERE
+		<if test="statusCd == 0 or statusCd == 1">
+			p2.Enable_End_Time &gt; NOW()
+			AND p2.status_Cd = #{statusCd}
+		</if>
+		<if test="statusCd == -1">
+			p2.Enable_End_Time &lt; NOW()
+			AND p2.status_Cd = 1
+		</if>
+		<if test="promotionName !='' and promotionName !=null">
+			AND p2.promotion_Name LIKE CONCAT('%',#{promotionName},'%')
+		</if>
+		<if test="allowUseStartForStartTime != null">
+			AND p1.Allow_Use_Start_Time &gt;= #{allowUseStartForStartTime}
+		</if>
+		<if test="allowUseStartForEndTime != null">
+			AND p1.Allow_Use_Start_Time &lt;= #{allowUseStartForEndTime}
+		</if>
+		<if test="allowUseEndForStartTime != null">
+			AND p1.Allow_Use_End_Time &gt;= #{allowUseEndForStartTime}
+		</if>
+		<if test="allowUseEndForEndTime != null">
+			AND p1.Allow_Use_End_Time &lt;= #{allowUseEndForEndTime}
+		</if>
+		ORDER BY p1.Promotion_Id DESC
+	</select>
+
+	<select id="findWxGrouponList" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT DISTINCT
+		  pg.`GroupCoupon_Desc` AS grouponDesc,
+		  pg.`Groupon_Price` AS grouponPrice,
+		  pg.Create_Time AS createTime,
+		  p.promotion_id AS promotionId,
+		  p.Promotion_Name AS promotionName,
+		  DATE_FORMAT(p.Enable_End_Time,'%Y-%m-%d %T') AS enableEndTime,
+		  pro.Product_Id AS productId,
+		  pro.Default_Price AS tagPrice,
+		  ppi.Pic_Url AS picUrl,
+		  (
+		    pg.`Groupon_Init_Sale_Num` + pg.Real_Sale_Cnt
+		  ) AS saleNum
+		FROM
+		  promotion_groupon pg
+		  LEFT JOIN promotion p
+		    ON (
+		      p.`promotion_id` = pg.`Promotion_Id`
+		    )
+		  LEFT JOIN promotion_coupon_code pcc
+		    ON (
+		      pcc.`Promotion_Id` = p.`promotion_id`
+		    )
+		  LEFT JOIN promotion_product_xref ppx
+		    ON (
+		      ppx.`Promotion_Id` = p.`promotion_id`
+		    )
+		  LEFT JOIN product pro
+		    ON (pro.Product_Id = ppx.Product_Id)
+		  LEFT JOIN product_pic_info ppi
+		    ON (
+		      ppi.Product_Id = pro.Master_Product_ID
+		      AND ppi.Is_Default_Pic = 1
+		    )
+		WHERE Promotion_Type_Cd = 70
+		  AND p.Status_Cd = 1
+		AND p.Promotion_Audit_Status_Cd = 1
+		AND NOW() &gt;= p.Enable_Start_Time
+		AND NOW() &lt;= p.Enable_End_Time
+		AND pg.Groupon_Max_Sale_Num &gt;= pg.Real_Sale_Cnt
+		AND pro.`Product_Status_Cd` = 1
+		<if test="promotionName != null and promotionName != ''">
+			AND p.Promotion_Name like #{promotionName}
+		</if>
+		<if test="orderByPrice != null and orderByPrice == 1">
+			ORDER BY pg.`Groupon_Price` ASC
+		</if>
+		<if test="orderByPrice != null and orderByPrice == -1">
+			ORDER BY pg.`Groupon_Price` DESC
+		</if>
+		<if test="orderBySaleNum != null and orderBySaleNum == 1">
+			ORDER BY saleNum ASC
+		</if>
+		<if test="orderBySaleNum != null and orderBySaleNum == -1">
+			ORDER BY saleNum DESC
+		</if>
+		LIMIT #{page},#{size}
+	</select>
+
+	<select id="countGrouponList" resultType="java.lang.Integer"
+		parameterType="java.util.Map">
+		SELECT
+		  COUNT(DISTINCT p.promotion_id)
+		FROM
+		  promotion p
+		  LEFT JOIN promotion_groupon pg
+		    ON (
+		      p.`promotion_id` = pg.`Promotion_Id`
+		    )
+		  LEFT JOIN promotion_coupon_code pcc
+		    ON (
+		      pcc.`Promotion_Id` = p.`promotion_id`
+		    )
+		WHERE Promotion_Type_Cd = 70
+		  AND p.Status_Cd = 1
+		AND p.Promotion_Audit_Status_Cd = 1
+		AND NOW() &gt;= p.Enable_Start_Time
+		AND NOW() &lt;= p.Enable_End_Time
+		AND pg.Groupon_Max_Sale_Num &gt;= pg.Real_Sale_Cnt
+		<if test="promotionName != null and promotionName != ''">
+			AND p.Promotion_Name like #{promotionName}
+		</if>
+	</select>
+
+	<select id="getGrouponDetail" resultType="java.util.Map" parameterType="java.lang.Long">
+		SELECT 
+		  p.promotion_id AS promotionId,
+		  p.Promotion_Name AS promotionName,
+		  p.Enable_End_Time AS enableEndTime,
+		  pro.SKU_KEY_Json_Str AS sku,
+		  pro.Default_Price AS tagPrice,
+		  pro.Product_Id AS productId,
+		  pro.Master_Product_ID AS masterProductID,
+		  pro.Product_Type_Cd AS productTypeCd,
+		  pg.Groupon_Max_Sale_Num - pg.Real_Sale_Cnt AS realStock,
+		  pg.`GroupCoupon_Desc` AS grouponDesc,
+		  pg.`Groupon_Price` AS grouponPrice,
+		  pg.Groupon_Person_Quota_Num AS grouponPersonQuotaNum,
+		  (
+		    pg.`Groupon_Init_Sale_Num` + pg.Real_Sale_Cnt
+		  ) AS saleNum,
+		  pe.Product_M_Detail_Desc AS productDetailDesc 
+		FROM
+		  promotion p 
+		  LEFT JOIN promotion_groupon pg 
+		    ON (
+		      p.`promotion_id` = pg.`Promotion_Id`
+		    ) 
+		  LEFT JOIN promotion_product_xref ppx 
+		    ON (
+		      ppx.`Promotion_Id` = p.`promotion_id`
+		    ) 
+		  LEFT JOIN product pro 
+		    ON (pro.Product_Id = ppx.Product_Id) 
+		  LEFT JOIN product_extend pe 
+		    ON (
+		      pe.Product_Id = pro.Master_Product_ID
+		    ) 
+		WHERE p.promotion_id = #{promotionId} 
+	</select>
+
+	<select id="getPicUrlsByPromotionId" parameterType="Long" resultType="String">
+		SELECT 
+		  GROUP_CONCAT(ppi.`Pic_Url`) 
+		FROM
+		  product_pic_info ppi 
+		  LEFT JOIN product pro  ON ppi.`Product_Id` = pro.`Master_Product_ID` 
+		  LEFT JOIN promotion_product_xref ppx  ON pro.Product_Id = ppx.Product_Id 
+		  LEFT JOIN promotion p ON ppx.`Promotion_Id` = p.`promotion_id` 
+		WHERE p.`promotion_id` = #{promotionId} 
+	</select>
+
+	<select id="checkStock" resultType="Map" parameterType="Map">
+		SELECT
+			pg.Groupon_Max_Sale_Num - pg.Real_Sale_Cnt AS stock,
+			COUNT(pcc.Coupon_Code_Id) AS countUserBuyNum
+		FROM 
+			promotion_groupon pg
+		LEFT JOIN promotion_coupon_code pcc ON pcc.Promotion_Id = pg.Promotion_Id
+		WHERE pg.Promotion_Id = #{promotionId} AND pcc.User_Id = #{userId}
+	</select>
+
+	<select id="getGrouponPayData" resultType="Map" parameterType="Map">
+		SELECT 
+		  p.Promotion_Name AS promotionName,
+		  pg.`GroupCoupon_Desc` AS grouponDesc,
+		  pg.`Groupon_Price` AS grouponPrice,
+		  pro.Product_Id AS productId,
+		  pro.Category_Id AS categoryId,
+		  pro.SKU_KEY_Json_Str AS sku,
+		  Groupon_Max_Sale_Num - Real_Sale_Cnt AS realStock,
+		  pg.Groupon_Person_Quota_Num AS personQuotaNum,
+		  ppi.Pic_Url AS picUrl,
+		  COUNT(Coupon_Code_Id) AS currentUserNum
+		FROM
+		  promotion p
+		LEFT JOIN promotion_groupon pg ON p.`promotion_id` = pg.`Promotion_Id`
+		LEFT JOIN promotion_product_xref ppx ON ppx.`Promotion_Id` = p.`promotion_id`
+		LEFT JOIN product pro ON ppx.`Product_Id` = pro.`Product_Id`
+		LEFT JOIN product_pic_info ppi ON ppi.Product_Id = pro.Master_Product_ID AND ppi.Is_Default_Pic = 1
+		LEFT JOIN promotion_coupon_code pcc ON pcc.Promotion_Id = p.`promotion_id` AND User_Id = #{userId}
+		WHERE p.`promotion_id` = #{promotionId}
+	</select>
+
+	<select id="getUserBalance" resultType="Map" parameterType="Integer">
+		SELECT
+			u.Pay_Password AS payPassword,
+			ucc.`User_Balance` AS userBalance
+		FROM USER u
+		LEFT JOIN user_consume_calc ucc ON u.`User_Id` = ucc.`User_Id`
+		WHERE u.`User_Id` = #{userId}
+	</select>
+
+	<select id="getPromotionCouponCodeByCouponCode" resultType="String"
+		parameterType="String">
+		SELECT
+			pcc.Coupon_Code_Id couponCodeId
+		FROM
+			promotion_coupon_code pcc
+		LEFT JOIN promotion p ON pcc.`Promotion_Id` = p.`promotion_id`
+		WHERE pcc.Coupon_Code = #{couponCode}
+		AND NOW() &gt;= p.Enable_Start_Time
+		AND NOW() &lt;= p.Enable_End_Time
+		AND Promotion_Audit_Status_Cd = 1
+	</select>
+
+	<update id="updateRealSaleCnt" parameterType="PromotionGrouponDTO">
+		UPDATE promotion_groupon 
+		SET Real_Sale_Cnt = #{realSaleCnt} 
+		WHERE Promotion_Id = #{promotionId}
+	</update>
+	<select id="findListByLimitAndDTO" resultType="cn.yr.chile.promotion.dto.PromotionGrouponDTO" parameterType="cn.yr.chile.products.dto.PromotionGrouponLimitDTO">
+		SELECT
+		<include refid="allColumns" />,
+		p2.Promotion_Name,
+		pcc.Take_Time,
+		pcc.Coupon_Status_Cd,
+		pcc.Coupon_Code,
+		pcc.Coupon_Code_Id,
+		sc1.Code_Cn_Name as statusName
+		FROM promotion_groupon p1
+		LEFT JOIN promotion p2 ON p2.Promotion_Id = p1.Promotion_Id
+		LEFT JOIN promotion_coupon_code pcc ON pcc.Promotion_Id = p1.Promotion_Id
+		LEFT JOIN system_code sc1 ON sc1.Code_Id = pcc.Coupon_Status_Cd AND sc1.Code_Type_Cd = "COUPON_STATUS_CD"
+		WHERE pcc.User_Id = #{userId}
+		Order BY pcc.Coupon_Code_Id
+		LIMIT #{start},#{pageSize}
+	</select>
+	<select id="getPageCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM promotion_coupon_code pcc
+		LEFT JOIN promotion p on pcc.Promotion_Id = p.promotion_id
+		WHERE pcc.User_Id = #{0} and p.Promotion_Type_Cd = 70
+	</select>
+</mapper>

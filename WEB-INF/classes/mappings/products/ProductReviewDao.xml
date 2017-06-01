@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.products.dao.ProductReviewDao">
+
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+        a.Review_Id,
+        a.Product_Id,
+        a.Order_Id,
+        a.Review_Status_Cd,
+        a.Reviewer_User_Id,
+        a.Reviewer_Name,
+        a.Reviewer_Phone,
+        a.Product_Match_Score,
+        a.Review_Time,
+        a.Review_Content,
+        a.Reply_Time,
+        a.Reply_User_Id,
+        a.Reply_Content,
+        a.Main_Review_Id,
+        a.Is_Append
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ProductReview" useGeneratedKeys="true" keyProperty="reviewId">
+	    INSERT INTO product_review (
+	        Product_Id, Order_Id, Review_Status_Cd, Reviewer_User_Id, Reviewer_Name, Reviewer_Phone, Product_Match_Score, Review_Time,
+	        Review_Content, Reply_Time, Reply_User_Id, Reply_Content, Main_Review_Id, Is_Append
+	    ) VALUES (
+	        #{productId}, #{orderId}, #{reviewStatusCd}, #{reviewerUserId}, #{reviewerName}, #{reviewerPhone}, #{productMatchScore}, 
+	        #{reviewTime},  #{reviewContent}, #{replyTime}, #{replyUserId}, #{replyContent}, #{mainReviewId}, #{isAppend}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ProductReview">
+	   UPDATE product_review SET
+		   Product_Id = #{productId}, 
+		   Order_Id = #{orderId}, 
+		   Review_Status_Cd = #{reviewStatusCd}, 
+		   Reviewer_User_Id = #{reviewerUserId}, 
+		   Reviewer_Name = #{reviewerName}, 
+		   Reviewer_Phone = #{reviewerPhone},
+		   Product_Match_Score = #{productMatchScore}, 
+		   <if test="reviewTime != null"> Review_Time = #{reviewTime},</if>
+		   Review_Content = #{reviewContent}, 
+		   Reply_Time = #{replyTime}, 
+		   Reply_User_Id = #{replyUserId}, 
+		   Reply_Content = #{replyContent},
+		   Main_Review_Id = #{mainReviewId}, 
+		   Is_Append = #{isAppend}
+	   WHERE 
+		   Review_Id = #{reviewId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM product_review where Review_Id = #{reviewId}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ProductReview" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />,
+		 p2.Login_Name,
+		 p3.Product_Name
+	     FROM product_review a
+		 LEFT JOIN user p2 on a.Reviewer_User_Id = p2.User_Id
+		 LEFT JOIN product p3 on a.Product_Id = p3.Product_Id
+	     WHERE
+			a.Review_Id = #{reviewId}
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ProductReview">  
+	    select 
+		<include refid="allColumns" />
+	    from product_review a
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findProductReviewList" resultType="ProductReview" parameterType="java.util.Map">  
+	    select 
+		<include refid="allColumns" />,
+		p2.Login_Name,
+		p4.Product_Name
+	    from product_review a
+		LEFT JOIN user p2 on a.Reviewer_User_Id = p2.User_Id
+		LEFT JOIN product p3 on a.Product_Id = p3.Product_Id
+		LEFT JOIN product p4 on p4.product_id = p3.Master_Product_ID
+	    where 1 = 1
+		<if test="productId != null"> and a.Product_Id = #{productId}</if>
+		<if test="loginName !='' and loginName !=null">
+			and p2.Login_Name LIKE ('%${loginName}%')
+		</if>
+			<if test="reviewStatus == 0">
+				and a.Review_Status_Cd = 2
+			</if>
+			<if test="reviewStatus == 1">
+					and a.Review_Status_Cd &lt;&gt; 2
+			</if>
+			<if test="reviewStatus == 2">
+					and a.Review_Status_Cd &lt;&gt; -1
+			</if>
+		<if test="reviewStatusCd !='' and reviewStatusCd !=null">
+			and a.Review_Status_Cd = #{reviewStatusCd}
+		</if>
+	    ORDER BY a.review_time DESC
+	</select>
+	
+	<!-- 返回列表 -->
+	<select id="findProductReviewDTOList" resultType="ProductReviewDTO" parameterType="java.util.Map">
+	    select 
+			p1.Review_Id as reviewId, 
+	        p1.Product_Id as productId, 
+	        p1.Order_Id as orderId, 
+	        p1.Review_Status_Cd as reviewStatusCd, 
+	        p1.Reviewer_User_Id as reviewerUserId, 
+	        p1.Reviewer_Name as reviewerName, 
+	        p1.Reviewer_Phone as reviewerPhone, 
+	        p1.Product_Match_Score as productMatchScore, 
+	        p1.Review_Time as reviewTime,
+	        p1.Review_Content as reviewContent,
+	        p1.Reply_Time as replyTime,
+	        p1.Reply_User_Id as replyUserId,
+	        p1.Reply_Content as replyContent,
+	        p1.Main_Review_Id as mainReviewId,
+	        p1.Is_Append as isAppend,       
+	        p3.Head_Portrait_Url as headPortraitUrl,
+	        a.pics,
+	        p4.User_level_Name,
+	        c.area_name,
+	        o.Create_Time
+	    from 
+	    	product_review p1
+	    	left join user p3 on p1.Reviewer_User_Id = p3.User_Id
+	    	left join (select Product_Id,GROUP_CONCAT(Pic_Url) pics,review_id from product_review_pic_info group by 3) a on a.review_id=p1.review_id
+	    	left join user_level p4 on p3.User_Level_Id=p4.User_level_Id
+	   		left join area c ON c.id = p3.County_Id
+	   		left join order_header o on o.Order_Id = p1.Order_Id
+	    where
+	    	p1.Review_Status_Cd = 1 
+		<if test="productId != null"> and p1.Product_Id = #{productId}</if>				
+		<if test=" productMatchScore != null">
+	        	AND  p1.Product_Match_Score in  
+	        	<foreach item="item" index="index" collection="productMatchScore" 
+                         open="(" separator="," close=")">
+                        #{item}
+                </foreach>
+	     </if>
+	     <if test=" productIds != null">
+	        	AND  p1.Product_Id in  
+	        	<foreach item="item" index="index" collection="productIds" 
+                         open="(" separator="," close=")">
+                        #{item}
+                </foreach>
+	     </if>
+	     Order BY p1.Review_time DESC
+	     <if test="size != null and sum != null">
+	     	LIMIT #{sum},#{size}
+	     </if>
+	</select>
+	<select id="findProductReviewTopTwo" resultType="ProductReviewDTO" parameterType="java.util.Map">
+		select 
+			p1.Review_Id as reviewId, 
+	        p1.Product_Id as productId, 
+	        p1.Order_Id as orderId, 
+	        p1.Review_Status_Cd as reviewStatusCd, 
+	        p1.Reviewer_User_Id as reviewerUserId, 
+	        p1.Reviewer_Name as reviewerName, 
+	        p1.Reviewer_Phone as reviewerPhone, 
+	        p1.Product_Match_Score as productMatchScore, 
+	        p1.Review_Time as reviewTime,
+	        p1.Review_Content as reviewContent,
+	        p1.Reply_Time as replyTime,
+	        p1.Reply_User_Id as replyUserId,
+	        p1.Reply_Content as replyContent,
+	        p1.Main_Review_Id as mainReviewId,
+	        p1.Is_Append as isAppend,
+	        p2.Main_Review_Cnt as mainReviewCnt, 
+	        p2.Product_Match_Score_Avg as productMatchScoreAvg,
+	        p3.Head_Portrait_Url as headPortraitUrl,
+	        p4.User_level_Name,
+	        c.area_name
+	    from 
+	    	product_review p1
+	    	left join product_sum_info p2 on p1.Product_Id = p2.Product_Id 
+	    	left join user p3 on p1.Reviewer_User_Id = p3.User_Id
+	    	left join user_level p4 on p3.User_Level_Id=p4.User_level_Id
+	    	left join area c ON c.id = p3.County_Id
+	    where
+	    	p1.Review_Status_Cd = 1 
+	    <if test="reviewId != null"> and p1.Review_Id = #{reviewId}</if>
+		<if test="productId != null"> and p1.Product_Id = #{productId}</if>
+		<if test="orderId != null"> and p1.Order_Id = #{orderId}</if>
+		<if test="reviewerUserId != null"> and p1.Reviewer_User_Id = #{reviewerUserId}</if>
+		<if test="reviewerName != null"> and p1.Reviewer_Name = #{reviewerName}</if>
+		<if test="reviewerPhone != null"> and p1.Reviewer_Phone = #{reviewerPhone}</if>
+		<if test="productMatchScore != null"> and p1.Product_Match_Score = #{productMatchScore}</if>
+		<if test="reviewTime != null"> and p1.Review_Time = #{reviewTime}</if>
+		<if test="reviewContent != null"> and p1.Review_Content = #{reviewContent}</if>
+		<if test="replyTime != null"> and p1.Reply_Time = #{replyTime}</if>
+		<if test="replyUserId != null"> and p1.Reply_User_Id = #{replyUserId}</if>
+		<if test="replyContent != null"> and p1.Reply_Content = #{replyContent}</if>
+		<if test="mainReviewId != null"> and p1.Main_Review_Id = #{mainReviewId}</if>
+		<if test="isAppend != null"> and p1.Is_Append = #{isAppend}</if>
+			ORDER BY p1.Review_Time DESC LIMIT 0,3
+	</select>
+	
+	<!-- 主评论数 -->
+	<select id="findProductReviewCountList" resultType="int" parameterType="int">  
+	    select 
+		count(*)
+	    from product_review
+	    where 1 = 1
+	    and Product_Id = #{productId}
+	   	and Review_Status_Cd = '1' 
+	</select>
+	
+	<!-- 主评论数 -->
+	<select id="findProductReviewSumList" resultType="String" parameterType="int">  
+	    select 
+			COALESCE(sum(Product_Match_Score),0)
+	    from product_review
+	    where 1 = 1
+	    and Product_Id = #{productId}
+	    and Review_Status_Cd = '1'
+	</select>
+	
+	<!-- 获取通过审核评论记录总数 -->
+	<select id="getPassCount" resultType="Integer" parameterType="Integer">  
+	    SELECT
+			count(*)
+		FROM
+			product_review
+		WHERE
+			Review_Status_Cd = #{reviewStatusCd}
+	</select>
+	
+	<!-- 好评/中评/差评论数 -->
+	<select id="findReviewScoreCount" resultType="Integer" parameterType="java.util.Map">  
+	    select 
+			count(1)
+	    from product_review p1
+	    where 1 = 1
+	    and Product_Id = #{productId}
+	    and p1.Review_Status_Cd=1
+	    <if test=" productMatchScore != null">
+	        	AND  p1.Product_Match_Score in  
+	        	<foreach item="item" index="index" collection="productMatchScore" 
+                         open="(" separator="," close=")">
+                        #{item}
+                </foreach>
+	     </if>
+	     <if test=" productIds != null">
+	        	AND  p1.Product_Id in  
+	        	<foreach item="item" index="index" collection="productIds" 
+                         open="(" separator="," close=")">
+                        #{item}
+                </foreach>
+	     </if>
+	</select>
+	
+	<!-- 移动端 获取已评论所有信息 -->
+	<select id="findLimitByDTO" resultType="ProductReview" parameterType="cn.yr.chile.user.dto.EvaluationLimitDTO">
+		SELECT 
+		<include refid="allColumns"/>,
+		b.Product_Name,
+		c.Pic_Url
+		FROM
+		product_review a
+		LEFT JOIN product b ON b.Product_Id = a.Product_Id
+		LEFT JOIN product_pic_info c ON c.Product_Id = a.Product_Id and c.Is_Default_Pic = 1
+		WHERE a.Reviewer_User_Id = #{userId}
+		Order By a.Review_Id
+		LIMIT #{start},#{pageSize}
+	</select>
+	<select id="getPageCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM
+		product_review a
+		LEFT JOIN product b ON b.Product_Id = a.Product_Id
+		LEFT JOIN product_pic_info c ON c.Product_Id = a.Product_Id 
+		WHERE a.Reviewer_User_Id = #{userId} and c.Is_Default_Pic = 1
+	</select>
+</mapper>

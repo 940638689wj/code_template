@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.user.dao.ThirdPartyUserDao">
+	<!-- 用于select查询公用抽取的列 -->
+	<sql id="allColumns">
+			p1.Third_Party_Id,
+			p1.User_Id,
+			p1.Third_Party_Type_Cd,
+			p1.Third_Party_User_Id,
+			p1.Third_Party_User_Name,
+			p1.Create_Time,
+			p1.Last_Update_Time
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="insert" parameterType="ThirdPartyUser" useGeneratedKeys="true" keyProperty="thirdPartyId">
+	    INSERT INTO third_party_user (
+			<if test="userId != null"> User_Id, </if>
+			Third_Party_Type_Cd, 
+			Third_Party_User_Id, 
+			Third_Party_User_Name, 
+			Create_Time, 
+			Last_Update_Time
+	    ) VALUES (
+			<if test="userId != null"> #{userId}, </if>
+			#{thirdPartyTypeCd},
+			#{thirdPartyUserId}, 
+			#{thirdPartyUserName}, 
+			#{createTime}, 
+			#{lastUpdateTime}
+	    )
+	</insert>
+
+	<!-- 修改 -->
+	<update id="update" parameterType="ThirdPartyUser">
+	   UPDATE third_party_user SET
+	   		User_Id = #{userId}, 
+	   		Third_Party_Type_Cd = #{thirdPartyTypeCd}, 
+	   		Third_Party_User_Id = #{thirdPartyUserId}, 
+	   		Third_Party_User_Name = #{thirdPartyUserName}, 
+	   		Create_Time = #{createTime}, 
+	   		Last_Update_Time = #{lastUpdateTime}
+	   WHERE 
+			Third_Party_Id = #{thirdPartyId}
+	</update>
+
+	<!-- 修改 userId -->
+	<update id="updateUserId" parameterType="ThirdPartyUser">
+	   UPDATE third_party_user SET
+	   		User_Id = #{userId},
+	   		Last_Update_Time = #{lastUpdateTime}
+	   WHERE
+			Third_Party_Id = #{thirdPartyId}
+	</update>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM third_party_user where id = #{id}
+	</delete>
+
+	<!-- 根据主键获取 -->
+    <select id="get" resultType="ThirdPartyUser" parameterType="int">  
+		SELECT
+		<include refid="allColumns" />
+	     FROM third_party_user p1
+	     WHERE
+			p1.id=#{id}
+	</select>
+
+	<!-- 根据 thirdPartyUserId 获取 -->
+    <select id="getByThirdPartyUserId" resultType="ThirdPartyUser" parameterType="java.lang.String">
+		SELECT
+		<include refid="allColumns" />
+	     FROM third_party_user p1
+	     WHERE
+			p1.Third_Party_User_Id=#{0}
+	</select>
+
+	<!-- 返回列表 -->
+	<select id="findAllList" resultType="ThirdPartyUser">  
+	    select 
+		<include refid="allColumns" />
+	    from third_party_user p1
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+	
+	<!-- 分页返回列表 -->
+	<select id="findList" resultType="ThirdPartyUser" parameterType="java.util.HashMap">  
+	    select 
+		<include refid="allColumns" />
+	    from third_party_user p1
+	    where a.deleted=0
+		<if test="thirdPartyId != null"> and p1.Third_Party_Id = #{thirdPartyId}</if>
+		<if test="userId != null"> and p1.User_Id = #{userId}</if>
+		<if test="thirdPartyTypeCd != null"> and p1.Third_Party_Type_Cd = #{thirdPartyTypeCd}</if>
+		<if test="thirdPartyUserId != null"> and p1.Third_Party_User_Id = #{thirdPartyUserId}</if>
+		<if test="thirdPartyUserName != null"> and p1.Third_Party_User_Name = #{thirdPartyUserName}</if>
+		<if test="createTime != null"> and p1.Create_Time = #{createTime}</if>
+		<if test="lastUpdateTime != null"> and p1.Last_Update_Time = #{lastUpdateTime}</if>
+		<if test="order_col != null"> order by p1.${order_col}</if>
+	</select>
+
+</mapper>

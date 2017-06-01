@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.analysis.dao.ReturnStatisticsDao">
+
+    <!-- 查询发货统计数据 -->
+    <select id="findList" resultType="cn.yr.chile.analysis.domain.ReturnStatistics">
+        SELECT
+        o.Order_Id AS orderId,
+        o.Order_Number AS orderNumber,
+        o.Order_Express_Amt AS orderExpressAmt,
+        ori.Apply_Time AS applyTime,
+        ori.Last_Update_User_ID AS lastUpdateUserId,
+        au.User_Name AS operUserName,
+        e.Express_Name AS expressName,
+        ori.Return_Express_Num AS returnExpressNum,
+        u.Login_Name AS userLoginName
+        FROM
+        order_return_info ori
+        LEFT JOIN order_header o ON ori.Order_Id = o.Order_Id
+        LEFT JOIN express e ON e.Express_Id = ori.Return_Express_ID
+        LEFT JOIN user u ON u.User_Id = o.User_Id
+        LEFT JOIN admin_user au ON au.Admin_User_Id = ori.Last_Update_User_ID
+        WHERE ori.Apply_Status_Cd = 4
+    </select>
+
+    <!-- 查询发货总数 -->
+    <select id="getTotal" resultType="cn.yr.chile.analysis.domain.ReturnStatistics">
+        SELECT
+        COUNT(*) AS orderQuantity
+        FROM
+        order_return_info ori
+        LEFT JOIN order_header o ON ori.Order_Id = o.Order_Id
+        LEFT JOIN express e ON e.Express_Id = ori.Return_Express_ID
+        LEFT JOIN user u ON u.User_Id = o.User_Id
+        LEFT JOIN admin_user au ON au.Admin_User_Id = ori.Last_Update_User_ID
+        WHERE ori.Apply_Status_Cd = 4
+        ORDER BY ori.Apply_Time
+    </select>
+
+</mapper>

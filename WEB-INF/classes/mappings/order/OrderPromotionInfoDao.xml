@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN" "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.yr.chile.order.dao.OrderPromotionInfoDao">
+    <!--<resultMap id="orderPromotionInfoMap" type="OrderPromotionInfo"> <result
+        property="id" column="id" /> <result property="orderId" column="Order_Id"
+        /> <result property="paymentsTypeCd" column="Payments_Type_Cd" /> <result
+        property="promotionTypeCd" column="Promotion_Type_Cd" /> <result property="promotionId"
+        column="Promotion_Id" /> <result property="promotionRuleId" column="Promotion_Rule_Id"
+        /> <result property="orderItemId" column="Order_Item_Id" /> <result property="promotionName"
+        column="Promotion_Name" /> <result property="promotionDesc" column="Promotion_Desc"
+        /> <result property="ruleDesc" column="Rule_Desc" /> <result property="couponCodeId"
+        column="Coupon_Code_Id" /> <result property="consume" column="Consume" />
+        <result property="discount" column="Discount" /> </resultMap> -->
+
+    <!-- 用于select查询公用抽取的列 -->
+    <sql id="allColumns">
+		id, 
+		Order_Id, 
+		Payments_Type_Cd, 
+		Promotion_Type_Cd, 
+		Promotion_Id,
+		Promotion_Rule_Id, 
+		Order_Item_Id, 
+		Promotion_Name, 
+		Promotion_Desc,
+		Rule_Desc, 
+		Coupon_Code_Id, 
+		Discount
+	</sql>
+
+    <sql id="systemcode">
+		s.Code_Cn_Name as promotion_type_desc
+	</sql>
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="OrderPromotionInfo" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO order_promotion_info (
+		  Order_Id,
+		  Payments_Type_Cd,
+		  Promotion_Type_Cd,
+		  Promotion_Id,
+		  Promotion_Rule_Id,
+		  Order_Item_Id,
+		  Promotion_Name,
+		  Promotion_Desc,
+		  Rule_Desc,
+		  Coupon_Code_Id,
+		  Discount
+		) 
+		VALUES
+		  (
+		    #{orderId}, #{paymentsTypeCd}, #{promotionTypeCd}, #{promotionId},
+		    #{promotionRuleId}, #{orderItemId}, #{promotionName},
+		    #{promotionDesc}, #{ruleDesc}, #{couponCodeId}, #{discount}
+		  )
+	</insert>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="OrderPromotionInfo">
+		UPDATE 
+		  order_promotion_info 
+		SET
+		  Order_Id = #{orderId},
+		  Payments_Type_Cd = #{paymentsTypeCd},
+		  Promotion_Type_Cd = #{promotionTypeCd},
+		  Promotion_Id = #{promotionId},
+		  Promotion_Rule_Id = #{promotionRuleId},
+		  Order_Item_Id = #{orderItemId},
+		  Promotion_Name = #{promotionName},
+		  Promotion_Desc = #{promotionDesc},
+		  Rule_Desc = #{ruleDesc},
+		  Coupon_Code_Id = #{couponCodeId},
+		  Discount = #{discount}
+		WHERE id = #{id} 
+	</update>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="int">
+		DELETE FROM order_promotion_info where id = #{id}
+	</delete>
+
+    <!-- 根据主键获取 -->
+    <select id="get" resultType="OrderPromotionInfo" parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_promotion_info
+        WHERE
+        id=#{id}
+    </select>
+
+    <!-- 根据订单产品Id获取 -->
+    <select id="getOrderItemId" resultType="OrderPromotionInfo"
+            parameterType="Integer">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_promotion_info
+        WHERE
+        Order_Item_Id = #{orderItemId}
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findAllList" resultType="OrderPromotionInfo">
+        select
+        <include refid="allColumns"/>
+        from order_promotion_info
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <!-- 返回列表 -->
+    <select id="findList" resultType="OrderPromotionInfo"
+            parameterType="java.util.HashMap">
+        select
+        <include refid="allColumns"/>
+        from order_promotion_info a
+        where 1=1
+        <if test="id != null">and a.id = #{id}</if>
+        <if test="orderId != null">and a.Order_Id = #{orderId}</if>
+        <if test="paymentsTypeCd != null">and a.Payments_Type_Cd = #{paymentsTypeCd}</if>
+        <if test="promotionTypeCd != null">and a.Promotion_Type_Cd = #{promotionTypeCd}</if>
+        <if test="promotionId != null">and a.Promotion_Id = #{promotionId}</if>
+        <if test="promotionRuleId != null">and a.Promotion_Rule_Id = #{promotionRuleId}</if>
+        <if test="orderItemId != null">and a.Order_Item_Id = #{orderItemId}</if>
+        <if test="promotionName != null">and a.Promotion_Name = #{promotionName}</if>
+        <if test="promotionDesc != null">and a.Promotion_Desc = #{promotionDesc}</if>
+        <if test="ruleDesc != null">and a.Rule_Desc = #{ruleDesc}</if>
+        <if test="couponCodeId != null">and a.Coupon_Code_Id = #{couponCodeId}</if>
+        <if test="discount != null">and a.Discount = #{discount}</if>
+        <if test="order_col != null">order by ${order_col}</if>
+    </select>
+
+    <!--根据订单号查询 订单参加的所有的优惠活动 -->
+    <select id="findOrderPInfoByOrderId" resultType="OrderPromotionInfo">
+        select
+        <include refid="allColumns"/>
+        ,
+        <include refid="systemcode"/>
+        from order_promotion_info a
+        left join system_code s
+        on a.Promotion_Type_Cd = s.Code_Id and s.Code_Type_Cd =
+        'Promotion_Type_Cd'
+        WHERE a.order_Id = #{orderId}
+    </select>
+
+    <!--根据订单号查询 订单参加的所有的优惠活动（不包含商品参加的活动） -->
+    <select id="findOrderPInfoByOrderIdExceptItem" resultType="OrderPromotionInfo">
+        select
+        <include refid="allColumns"/>
+        ,
+        <include refid="systemcode"/>
+        from order_promotion_info a
+        left join system_code s on a.Promotion_Type_Cd = s.Code_Id and s.Code_Type_Cd = 'Promotion_Type_Cd'
+        WHERE a.order_Id = #{orderId} AND a.Order_Item_Id IS NULL
+    </select>
+
+    <!-- 根据活动Id,用户Id，商品Id，获取使用该活动所购买的商品数量 -->
+    <select id="getPromotionProductNumBy" resultType="Integer" parameterType="java.util.HashMap">
+		SELECT 
+		  SUM(o3.Quantity) 
+		FROM
+		  order_promotion_info o1 
+		  LEFT JOIN order_header o2 
+		    ON o1.Order_Id = o2.Order_Id 
+		  LEFT JOIN order_item o3 
+		    ON o1.Order_Id = o3.Order_Id 
+		WHERE o1.Promotion_Id = #{promotionId}
+		  AND o2.User_Id = #{userId}
+		  AND o3.Product_Id = #{productId} 
+	</select>
+
+    <!-- 根据 -->
+    <select id="getByOrderId" resultType="OrderPromotionInfo"
+            parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_promotion_info
+        WHERE order_id = #{orderId}
+        and Promotion_Type_Cd in (53,54,55)
+    </select>
+
+    <select id="getRedPacketByOrderId" resultType="OrderPromotionInfo"
+            parameterType="int">
+        SELECT
+        <include refid="allColumns"/>
+        FROM order_promotion_info
+        WHERE order_id = #{orderId}
+        and Promotion_Type_Cd = 56
+    </select>
+
+    <select id="getGroupPurchasePromotionIdByOrderId" resultType="Integer"
+            parameterType="Integer">
+		SELECT Promotion_Id FROM order_promotion_info WHERE
+		Order_Id = #{orderId} AND PROMOTION_TYPE_CD = 70
+	</select>
+
+    <select id="getCrowdFundPromotionIdByOrderId" resultType="Integer"
+            parameterType="Integer">
+		SELECT Promotion_Id FROM order_promotion_info WHERE
+		Order_Id = #{orderId} AND PROMOTION_TYPE_CD = 80
+	</select>
+
+</mapper>
