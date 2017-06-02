@@ -8,6 +8,7 @@ import shutil
 import string
 from werkzeug.utils import secure_filename
 from datetime import datetime,timedelta
+import subprocess
 
 from auto_code import *
 from mysql_service import *
@@ -75,7 +76,7 @@ def generate_template():
   param['options'] = [request.form['isSave'] == '1' and True or False,
                       request.form['isDel'] == '1' and True or False]
   param['fields'] = deal_fields()
-  param['path'] = 'E:\\sublimeWorkspace\\code_template\\impl\\template\\'
+  param['path'] = '/home/data/autoCode/code_template/impl/template/'
   auto_code(param)
   return jsonify({'data': {'result': True}})
 
@@ -106,6 +107,7 @@ def download():
   '''
   download_time = str(time.strftime(
       '%Y%m%d_%H%M%S', time.localtime(time.time())))
+  path = '/home/data/autoCode/code_template'
   with zipfile.ZipFile('zip_file/template_' + download_time + '.zip', 'w', zipfile.ZIP_DEFLATED) as z:
     startdir = "impl/template"
     for dirpath, dirnames, filenames in os.walk(startdir):
@@ -212,8 +214,9 @@ def validate_nginx():
   '''
   检查nginx配置文件语法
   '''
-  result = os.popen(nginx_head_path + '/sbin/nginx -t -c ' + nginx_file_path)
-  return str(result)
+  result = subprocess.Popen(nginx_head_path + '/sbin/nginx -t -c ' + nginx_file_path ,shell=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  result.wait()
+  return str(result.stdout.read()).replace('\\n','<br>')[2:-1]
 
 @app.route('/edit_nginx/reload_nginx', methods=['GET', 'POST'])
 def reload_nginx():
@@ -224,5 +227,5 @@ def reload_nginx():
   return 'true'
 
 if __name__ == '__main__':
-  app.run(port=8125)
-  # app.run(host='192.168.10.232',port=8125)
+  # app.run(port=8125)
+  app.run(host='192.168.10.232',port=8125)
