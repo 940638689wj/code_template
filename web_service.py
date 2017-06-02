@@ -229,3 +229,4 @@ def reload_nginx():
 if __name__ == '__main__':
   # app.run(port=8125)
   app.run(host='192.168.10.232',port=8125)
+
